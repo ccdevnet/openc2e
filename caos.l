@@ -22,10 +22,17 @@ WORDINIT    [a-zA-Z:?!]
 [-+]?{DIGIT}*\.{DIGIT}+  return make_float(atof(yytext));
 [-+]?{DIGIT}+            return make_int(atoi(yytext));
 
+"<"                       return make_word("lt");
+">"                       return make_word("gt");
+"<="                      return make_word("le");
+">="                      return make_word("ge");
+"<>"                      return make_word("ne");
+"="                       return make_word("eq");
+
 "["         BEGIN(BYTESTR);
 
 <BYTESTR>[0-9]+         push_bytestr(atoi(yytext));
-<BYTESTR>[ \t\n]
+<BYTESTR>[ \t\n\r]
 <BYTESTR>"]"            BEGIN(INITIAL); return make_bytestr();
 
 \"          BEGIN(STRING);
@@ -33,7 +40,7 @@ WORDINIT    [a-zA-Z:?!]
 <STRING>[^"]            push_string_lit(yytext[0]);
 <STRING>\"              BEGIN(INITIAL); return make_string();
 
-[ \t\n]     // eat whitespace
+[ \t\n\r]     // eat whitespace
 .           parse_error(yytext);
 %%
 int main() {
