@@ -60,7 +60,7 @@ OPENC2E = \
 	streamutils.o \
 	Vehicle.o \
 	World.o \
-	PathResolver.o
+	PathResolver.o \
 
 XLDFLAGS=$(LDFLAGS) -lboost_filesystem $(shell sdl-config --static-libs) -lz -lm -lSDL_net
 COREFLAGS=-ggdb3 $(shell sdl-config --cflags) -I.
@@ -68,6 +68,12 @@ XCFLAGS=$(CFLAGS) $(COREFLAGS)
 XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
 
 all: openc2e tools/filetests tools/praydumper
+
+lex.yy.cpp lex.yy.h: caos.l
+	flex -o lex.yy.cpp --header-file=lex.yy.h caos.l
+
+lextest: lex.yy.o
+	$(CXX) $(XCPPFLAGS) -o $@ $<
 
 %.o: %.cpp
 	$(CXX) $(XCPPFLAGS) -o $@ -c $<
