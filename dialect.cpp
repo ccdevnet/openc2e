@@ -3,10 +3,12 @@
 #include "token.h"
 #include <string>
 #include <cctype>
+#include <cmath>
 #include "caosScript.h"
 #include "cmddata.h"
 #include "exceptions.h"
 #include "caosVar.h"
+#include "Agent.h"
 
 Dialect *cmd_dialect, *exp_dialect;
 
@@ -29,10 +31,10 @@ bool Dialect::parseOne(caosScript *s) {
 
 void Dialect::handleToken(caosScript *s, token *t) {
     if (t->type != TOK_WORD)
-        throw parseFailure("unexpected non-word");
+        throw parseFailure(std::string("unexpected non-word ") + t->dump());
     std::string word = t->word;
     if (delegates.find(word) == delegates.end())
-        throw parseException("no delegate for word");
+        throw parseException(std::string("no delegate for word ") + word);
     parseDelegate &p = *delegates[word];
     p(s, this);
 }
@@ -51,7 +53,31 @@ class ConstOp : public caosOp {
         }
 };
 
-class ExprDialect : public BaseExprDialect {
+class opVAxx : public caosOp {
+    protected:
+        const int index;
+    public:
+        opVAxx(int i) : index(i) { assert(i >= 0 && i < 100); evalcost = 0; }
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            vm->valueStack.push_back(&vm->var[index]);
+        }
+};
+
+class opOVxx : public caosOp {
+    protected:
+        const int index;
+    public:
+        opOVxx(int i) : index(i) { assert(i >= 0 && i < 100); evalcost = 0; }
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            caos_assert(vm->targ);
+            vm->valueStack.push_back(&vm->targ->var[index]);
+        }
+};
+
+
+class ExprDialect : public OneShotDialect {
     public:
         void handleToken(caosScript *s, token *t) {
             switch (t->type) {
@@ -59,8 +85,22 @@ class ExprDialect : public BaseExprDialect {
                     s->current->thread(new ConstOp(t->constval));
                     break;
                 case TOK_WORD:
-                    // TODO: VAxx, OVxx
-                    
+                    {
+                        std::string word = t->word;
+                        if (word.size() == 4) {
+                            if (word[0] == 'v' && word[1] == 'a') {
+                                if(!(isdigit(word[2]) && isdigit(word[3])))
+                                    throw parseException("bad vaxx");
+                                s->current->thread(new opVAxx(atoi(word.c_str() + 2)));
+                                return;
+                            } else if (word[0] == 'o' && word[1] == 'v') {
+                                if(!(isdigit(word[2]) && isdigit(word[3])))
+                                    throw parseException("bad ovxx");
+                                s->current->thread(new opOVxx(atoi(word.c_str() + 2)));
+                                return;
+                            } 
+                        }
+                    }
                     Dialect::handleToken(s, t);
                     return;
                 case TOK_BYTESTR:
@@ -104,12 +144,12 @@ void DoifDialect::handleToken(class caosScript *s, token *t) {
             return;
         }
     }
-    CommandDialect::handleToken(s, t);
+    Dialect::handleToken(s, t);
 }
 
     
 void registerDelegates() {
-    cmd_dialect = new CommandDialect();
+    cmd_dialect = new Dialect();
     exp_dialect = new ExprDialect();
     registerAutoDelegates();
 }
