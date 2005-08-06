@@ -134,6 +134,35 @@ class NamespaceDelegate : public parseDelegate {
         }
 };
 
+class REPE : public parseDelegate {
+    public:
+        void operator() (class caosScript *s, class Dialect *curD) {
+            curD->stop = true;
+        }
+};
+
+class parseREPS : public parseDelegate {
+    public:
+        void operator() (class caosScript *s, class Dialect *curD) {
+            caosOp *exit = new caosNoop();
+            s->current->addOp(exit);
+            
+            exp_dialect->parseOne(s); // repcount
+            caosOp *entry = new caosREPS(exit);
+            s->current->thread(entry);
+
+            Dialect d;
+            REPE r;
+            d.delegates = cmd_dialect->delegates;
+            d.delegates["repe"] = &r;
+
+            d.doParse(s);
+            s->current->last->setSuccessor(entry);
+            s->current->last = exit;
+        }
+};
+            
+
 void registerDelegates();
 
 #endif
