@@ -75,7 +75,6 @@ class DoifParser : public parseDelegate {
             
             parseCondition(s, success, failure);
             
-            s->current->thread(failure);
             s->current->last = success;
             DoifDialect d(success, failure, exit);
             d.doParse(s);
