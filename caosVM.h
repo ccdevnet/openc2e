@@ -57,6 +57,14 @@ struct vmStackItem {
             bytestring = bs;
             type = BYTESTR;
         }
+
+        vmStackItem(const vmStackItem &orig) {
+            type = orig.type;
+            i_val = orig.i_val;
+            if (orig.p_val == &orig.i_val) p_val = &i_val;
+            else p_val = orig.p_val;
+            bytestring = orig.bytestring;
+        }
 };
 
 typedef class caosVM *caosVM_p;

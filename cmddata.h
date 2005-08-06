@@ -1,14 +1,12 @@
 #ifndef CMDDATA_H
 #define CMDDATA_H 1
 
-#include "dialect.h"
-
 extern "C" struct cmdinfo {
     const char *name;
     const char *docs;
-    int argcount;
+    int argc;
     // TODO: arg types
-    parseDelegate *parser;
+    class parseDelegate *parser;
 };
 
 extern const cmdinfo cmds[];

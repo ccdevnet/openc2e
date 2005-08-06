@@ -3,7 +3,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <climits>
 
 void scheduleCollect(class Collectable *obj);
 void doCollect(void);
@@ -27,7 +26,7 @@ class Collectable {
         }
         Collectable() : refcount(1), scheduled(false) { release(); }
         ~Collectable() {
-            refcount = INT_MIN;
+            refcount = -400;
         }
 };
         
