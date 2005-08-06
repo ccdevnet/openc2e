@@ -32,12 +32,6 @@ using std::string;
 
 class unexpectedEOIexception { };
 
-static std::string slurp(std::istream &in) {
-    std::stringbuf sb;
-    in.get(sb);
-    return sb.str();
-}
-
 void script::addOp(caosOp *op) {
     allOps.push_back(op);
 }
@@ -120,8 +114,7 @@ caosScript::caosScript(std::istream &in) {
     current = installer = new script();
     removal = NULL;
 
-    string s = slurp(in);
-    yy_scan_string(s.c_str());
+    yyrestart(&in);
 
     BaseDialect d;
     d.doParse(this);

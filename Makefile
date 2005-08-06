@@ -78,21 +78,16 @@ cmddata.cpp: commandinfo.yml writecmds.pl
 	perl writecmds.pl commandinfo.yml > cmddata.cpp
 
 lex.yy.cpp lex.yy.h: caos.l
-	flex -o lex.yy.cpp --header-file=lex.yy.h caos.l
+	flex -+ -d -o lex.yy.cpp --header-file=lex.yy.h caos.l
 
 ## lex.yy.h deps aren't detected evidently
-caosScript.cpp: lex.yy.h lex.yy.cpp
+caosScript.o: lex.yy.h lex.yy.cpp
 
 %.o: %.cpp
 	$(CXX) $(XCPPFLAGS) -o $@ -c $<
 
 %.o: %.c
 	$(CC) $(XCFLAGS) -o $@ -c $<
-
-caosdata.cpp caoshashes.cpp: $(wildcard caosVM_*.cpp)
-	cd caosdata; \
-	chmod u+x *.sh *.pl; \
-	./build.sh
 
 # shamelessly ripped from info make, with tweaks
 .deps/%.d: %.c

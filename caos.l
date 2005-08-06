@@ -7,6 +7,7 @@
 %}
 
 %option noyywrap
+%option nodefault
 %x L_BYTESTR
 %x L_STRING
 %x L_COMMENT
@@ -45,6 +46,6 @@ WORDINIT    [a-zA-Z:?!]
 <L_STRING>.               push_string_lit(yytext[0]);
 
 [ \t\n\r]     // eat whitespace
-.*           parse_error(yytext);
+.                         throw parseException("XXX");
 %%
 
