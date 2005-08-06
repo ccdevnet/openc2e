@@ -26,16 +26,11 @@
 
 /**
  VAxx (variable)
+ %param noparse
 
  script-local variables, 00 to 99
  */
-void caosVM::v_VAxx() {
-	VM_VERIFY_SIZE(0)
-	assert(varnumber > -1);
-	assert(varnumber < 100);
-	result = var[varnumber];
-	result.setVariable(&var[varnumber]);
-}
+// TODO: parser for VAxx
 
 /**
  ADDS (command) var (variable) value (string)
@@ -97,17 +92,11 @@ void caosVM::c_SETA() {
 
 /**
  OVxx (variable)
+ %param noparse
 
  agent-local variables from TARG, 00 to 99
  */
-void caosVM::v_OVxx() {
-	VM_VERIFY_SIZE(0)
-	assert(varnumber > -1);
-	assert(varnumber < 100);
-	assert(targ);
-	result = targ->var[varnumber];
-	result.setVariable(&(targ->var[varnumber]));
-}
+// TODO: OVxx parser
 
 /**
  MODV (command) var (variable) mod (integer)
@@ -396,6 +385,7 @@ void caosVM::v_SQRT() {
 
 /**
  _P1_ (variable)
+ %pragma noparse
 */
 void caosVM::v_P1() {
 	VM_VERIFY_SIZE(0)
@@ -406,6 +396,7 @@ void caosVM::v_P1() {
 
 /**
  _P2_ (variable)
+ %pragma noparse
 */
 void caosVM::v_P2() {
 	VM_VERIFY_SIZE(0)

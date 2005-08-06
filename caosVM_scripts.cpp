@@ -29,7 +29,7 @@ using std::cerr;
  */
 void caosVM::c_INST() {
 	VM_VERIFY_SIZE(0)
-	noschedule = true;
+    inst = true;
 	// TODO: do we need a state similar to locked? i commented it out because it doesn't seem right - fuzzie
 	//locked = true;
 }
@@ -42,7 +42,7 @@ void caosVM::c_INST() {
 void caosVM::c_SLOW() {
 	VM_VERIFY_SIZE(0)
 	
-	noschedule = false;
+	inst = false;
 }
 
 /**
@@ -52,7 +52,7 @@ void caosVM::c_SLOW() {
  */
 void caosVM::c_LOCK() {
 	VM_VERIFY_SIZE(0)
-	locked = true;
+	lock = true;
 }
 
 /**
@@ -63,7 +63,7 @@ void caosVM::c_LOCK() {
 void caosVM::c_UNLK() {
 	VM_VERIFY_SIZE(0)
 	
-	locked = false;
+	lock = false;
 }
 
 /**
@@ -71,11 +71,11 @@ void caosVM::c_UNLK() {
 
  stop the script from running for a number of ticks
  */
-void caosVM::c_WAIT() {
+void caosVM::c_WAIT() { STUB; /*
 	VM_VERIFY_SIZE(1)
 	VM_PARAM_INTEGER(ticks)
 	assert(ticks > 0); // todo: is this right?
-	blockingticks = ticks;
+	blockingticks = ticks; */
 }
 
 /**
@@ -83,7 +83,7 @@ void caosVM::c_WAIT() {
 */
 void caosVM::c_STOP() {
 	VM_VERIFY_SIZE(0)
-	currentline = currentscript->lines.size();
+    stop();
 }
 
 /**

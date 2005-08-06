@@ -62,7 +62,6 @@ void Agent::fireScript(unsigned short event) {
 	if (dying) return;
 
 	script &s = world.scriptorium.getScript(family, genus, species, event);
-	if (s.lines.empty()) return;
 	if (!vm) vm = world.getVM(this);
 	if (vm->fireScript(s, (event == 9)))
 		vm->setTarg(this);
@@ -168,6 +167,11 @@ void Agent::tick() {
 
 	if (vm)
 		vm->tick();
+    if (vm->stopped()) {
+        world.freeVM(vm);
+        vm = NULL;
+    }
+        
 }
 
 void Agent::kill() {

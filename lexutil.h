@@ -9,78 +9,94 @@
 #include <cctype>
 #include <vector>
 
+#include "token.h"
+
 using namespace std;
 
-static vector<int> bytestr;
-static string temp_str;
+void lexreset();
 
-static int make_int(int v) {
-    printf("matched int: %d\n", v);
+extern vector<int> bytestr;
+extern string temp_str;
+
+static inline int make_int(int v) {
+    lasttok.type = TOK_CONST;
+    lasttok.constval.setInt(v);
     return 1;
 }
 
-static int make_bin(const char *str) {
+static inline int make_bin(const char *str) {
     int temp = 0, pos;
     str++; // skip %
     for (pos = 0; pos < 8; pos++) {
         temp <<= 1;
         temp += str[pos] - '0';
     }
-    printf("matched bin: '%d'\n", temp);
-    return 1;
+    return make_int(temp);
 //    return temp;
 }
 
-static int make_float(float f) {
-    printf("matched float: %f\n", f);
+static inline int make_float(float f) {
+    lasttok.type = TOK_CONST;
+    lasttok.constval.setFloat(f);
     return 1;
 }
 
-static int make_word(const char *str) {
+static inline int make_word(const char *str) {
     int len = 0;
     string result;
-    const char *start = str;
-    char *buf = NULL;
     while (isalpha(*str) || isdigit(*str)
             || *str == ':' || *str == '?'
             || *str == '!'
           ) {
         result += *str++;
     }
-    printf("matched word: '%s'\n", result.c_str());
+    lasttok.type = TOK_WORD;
+    transform(result.begin(), result.end(), result.begin(), (int(*)(int))tolower);
+    lasttok.word = result;
     return 1;
 }
 
-static void push_string_escape(char c) {
-    temp_str += c; // XXX
+static inline void push_string_escape(char c) {
+    switch (c) {
+        case 'n':
+            temp_str += '\n';
+            break;
+        case 'r':
+            temp_str += '\r';
+            break;
+        case 't':
+            temp_str += '\t';
+            break;
+        default:
+            temp_str += c;
+            break;
+    }
 }
 
-static void push_string_lit(char c) {
+static inline void push_string_lit(char c) {
     temp_str += c;
 }
 
-static int make_string() {
-    cout << "made string: " << temp_str << endl;
+static inline int make_string() {
+    lasttok.type = TOK_CONST;
+    lasttok.constval.setString(temp_str);
     temp_str = "";
     return 1;
 }
 
-static int push_bytestr(int bs) {
+static inline int push_bytestr(int bs) {
     bytestr.push_back(bs);
     return 1;
 }
 
-static int make_bytestr() {
-    vector<int>::iterator i = bytestr.begin();
-    cout << "matched bytestr: [ ";
-    while (i != bytestr.end()) {
-        cout << *i++ << " ";
-    }
-    cout << "]" << endl;
+static inline int make_bytestr() {
+    lasttok.type = TOK_BYTESTR;
+    lasttok.bytestr = bytestr;
+    bytestr.clear();
     return 1;
 }
    
-static void parse_error(const char *str) {
+static inline void parse_error(const char *str) {
     char sbuf[32];
     strncpy(sbuf, str, 31);
     sbuf[31] = '\0';

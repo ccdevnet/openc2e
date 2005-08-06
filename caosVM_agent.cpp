@@ -289,7 +289,7 @@ void caosVM::v_POSE() {
 void caosVM::c_KILL() {
 	VM_VERIFY_SIZE(1)
 	VM_PARAM_AGENT(a)
-	if (a != world.hand())
+	if (a != AgentRef(world.hand()))
 		a->kill();
 }
 
@@ -471,9 +471,8 @@ void caosVM::c_MESG_WRIT() {
 void caosVM::c_MESG_WRT() {
 	VM_VERIFY_SIZE(5)
 	VM_PARAM_INTEGER(delay)
-	// TODO: make into macros
-	caosVar param_2 = params.back(); params.pop_back();
-	caosVar param_1 = params.back(); params.pop_back();
+    VM_PARAM_VALUE(param_2)
+    VM_PARAM_VALUE(param_1)
 	VM_PARAM_INTEGER(message_id)
 	VM_PARAM_AGENT(agent)
 
@@ -562,6 +561,8 @@ void caosVM::c_FRAT() {
  wait until the animation of the target agent or part is over
 */
 void caosVM::c_OVER() {
+    STUB;
+    /*
 	VM_VERIFY_SIZE(0)
 
 	caos_assert(targ);
@@ -582,7 +583,7 @@ void caosVM::c_OVER() {
 
 	if (fno + 1 == animsize) blocking = false;
 	else if (animsize == 0) blocking = false;
-	else blocking = true;
+	else blocking = true; */
 }
 
 /**

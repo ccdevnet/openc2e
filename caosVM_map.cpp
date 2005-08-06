@@ -214,6 +214,7 @@ void caosVM::v_RGHT() {
 
 /**
  _UP_ (integer)
+ %pragma noparse
  
  returns the up constant (2)
 */
