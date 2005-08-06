@@ -56,6 +56,21 @@ class caosREPS : public caosOp {
         }
 };
         
+class caosGSUB : public caosOp {
+    protected:
+        caosOp *targ;
+    public:
+        caosGSUB(caosOp *targ_) : targ(targ_) {}
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            callStackItem i;
+            i.valueStack = vm->valueStack; // XXX: a bit slow?
+            i.nip = vm->nip;
+            vm->callStack.push_back(i);
+            vm->valueStack.clear();
+            vm->nip = targ;
+        }
+};
 
 // Condition classes
 #define CEQ 1

@@ -93,7 +93,7 @@ void caosVM::resetScriptState() {
 void caosVM::resetCore() {
 
     valueStack.clear();
-    miscStack.clear(); // XXX memory leak?
+    callStack.clear();
 
     inst = lock = 0;
     timeslice = 0;

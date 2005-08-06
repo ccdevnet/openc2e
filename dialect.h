@@ -140,7 +140,6 @@ class UNTL : public parseDelegate {
         }
 };
 
-            
 class parseLOOP : public parseDelegate {
     public:
         void operator() (class caosScript *s, class Dialect *curD) {
@@ -160,6 +159,37 @@ class parseLOOP : public parseDelegate {
             // No need to thread - if we use UNTL, we _will_ go to either
             // entry or exit
             s->current->last = exit;
+        }
+};
+
+
+class parseGSUB : public parseDelegate {
+    public:
+        void operator() (class caosScript *s, class Dialect *curD) {
+            token *t = getToken(TOK_WORD);
+            std::string label = t->word;
+            caosOp *targ = s->current->gsub[label];
+            if (!targ) {
+                targ = new caosNoop();
+                s->current->addOp(targ);
+                s->current->gsub[label] = targ;
+            }
+            s->current->thread(new caosGSUB(targ));
+        }
+};
+
+class parseSUBR : public parseDelegate {
+    public:
+        void operator() (class caosScript *s, class Dialect *curD) {
+            token *t = getToken(TOK_WORD);
+            std::string label = t->word;
+            caosOp *targ = s->current->gsub[label];
+            if (!targ) {
+                targ = new caosNoop();
+                s->current->addOp(targ);
+                s->current->gsub[label] = targ;
+            }
+            s->current->last = targ;
         }
 };
 
