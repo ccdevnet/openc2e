@@ -415,7 +415,7 @@ static inline void VM_STACK_CHECK(const caosVM *vm) {
 #define VM_PARAM_VALUE(name) caosVar name; { VM_STACK_CHECK(vm); \
     vmStackItem __x = vm->valueStack.back(); \
     if (!(__x.type & LVAL)) { throw badParamException(); } \
-    name = *__x.p_val; }
+    name = *__x.p_val; } vm->valueStack.pop_back();
 #define VM_PARAM_STRING(name) std::string name; { VM_STACK_CHECK(vm); vmStackItem __x = vm->valueStack.back(); \
     if (!(__x.type & LVAL)) { throw badParamException(); } \
 	if (!__x.p_val->hasString()) { throw badParamException(); } \
