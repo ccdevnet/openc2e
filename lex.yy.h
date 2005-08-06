@@ -203,6 +203,7 @@ extern char *yytext;
 #define INITIAL 0
 #define L_BYTESTR 1
 #define L_STRING 2
+#define L_COMMENT 3
 
 #endif
 
@@ -277,9 +278,9 @@ extern int yylex (void);
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 47 "caos.l"
+#line 49 "caos.l"
 
 
-#line 284 "lex.yy.h"
+#line 285 "lex.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

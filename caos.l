@@ -9,13 +9,15 @@
 %option noyywrap
 %x L_BYTESTR
 %x L_STRING
+%x L_COMMENT
 
 STRINGBIT   \\.|[^\\]
 DIGIT       [0-9]
 WORDINIT    [a-zA-Z:?!]
 %%
 
-"*".*\n     // eat comments
+\*[^\r\n]*
+
 \\.         return make_int(yytext[1]);
 %[01][01][01][01][01][01][01][01]   return make_bin(yytext);
 {WORDINIT}({WORDINIT}|{DIGIT})*         return make_word(yytext);
@@ -43,6 +45,6 @@ WORDINIT    [a-zA-Z:?!]
 <L_STRING>.               push_string_lit(yytext[0]);
 
 [ \t\n\r]     // eat whitespace
-.           parse_error(yytext);
+.*           parse_error(yytext);
 %%
 
