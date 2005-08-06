@@ -4,6 +4,7 @@
 #include "caosVar.h"
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 void yyrestart(std::istream *stream);
 
@@ -26,37 +27,38 @@ struct token {
         constval = cp.constval;
     }
 
-    void dump_token() {
+    std::string dump() {
+        std::ostringstream oss;
         switch(type) {
             case TOK_CONST:
-                std::cout << "constval ";
+                oss << "constval ";
                 if (constval.hasInt())
-                    std::cout << "int " << constval.getInt();
+                    oss << "int " << constval.getInt();
                 else if (constval.hasFloat())
-                    std::cout << "float " << constval.getFloat();
+                    oss << "float " << constval.getFloat();
                 else if (constval.hasString())
-                    std::cout << "string " << constval.getString();
+                    oss << "string " << constval.getString();
                 else if (constval.hasAgent())
-                    std::cout << "agent (BAD!)";
+                    oss << "agent (BAD!)";
                 else
-                    std::cout << "(BAD)";
+                    oss << "(BAD)";
                 break;
             case TOK_WORD:
-                std::cout << "word " << word;
+                oss << "word " << word;
                 break;
             case TOK_BYTESTR:
                 {
                     std::vector<int>::iterator i = bytestr.begin();
-                    std::cout << "bytestr ";
+                    oss << "bytestr ";
                     while (i != bytestr.end())
-                        std::cout << *i++ << " ";
+                        oss << *i++ << " ";
                 }
                 break;
             default:
-                std::cout << "BROKEN";
+                oss << "BROKEN";
                 break;
         }
-        std::cout << std::endl;
+        return oss.str();
     }
 };
 

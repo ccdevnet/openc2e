@@ -5,7 +5,10 @@ use warnings;
 
 use YAML;
 
+$SIG{__WARN__} = sub { die $_[0] };
+
 my %data;
+my %ns;
 
 while (<>) {
     my $file = $ARGV[0];
@@ -14,6 +17,8 @@ while (<>) {
     defined $_ or exit;
     next unless m{
         ^\s*
+        # DBG: and the like
+        ( \S+ \s+ )?
         # eg MOWS (command), LAWN (agent)
         (\w+) \s* \((\w+)\) \s*
         ( (?:
@@ -24,7 +29,29 @@ while (<>) {
         )* )
         \s*$
     }x;
-    my ($cname, $ctype, $argdata) = ($1, $2, $3);
+    my ($cns, $cname, $ctype, $argdata) = ($1, $2, $3, $4);
+    if (defined $cns) {
+        $cns =~ s/\s//g;
+    }
+
+    my $fullname = ($cns ? "$cns " : "") . $cname;
+
+    my $impl;
+    if ($ctype eq 'command') {
+        $impl .= 'c_';
+    } else {
+        $impl .= 'v_';
+    }
+    if ($cns && $cns ne '') {
+        $_ = $cns . "_";
+        $_ =~ s/://g;
+        $impl .= uc $_;
+    }
+    $_ = $cname;
+    $_ =~ s/://g;
+    $impl .= $_;
+    my $key = $impl;
+    $impl = "caosVM::$impl";
 
     my @args;
     while ($argdata =~ s/.*?(\w+)\s*\((\w+)\)\s*//) {
@@ -57,26 +84,32 @@ while (<>) {
         }
     }
 
+    if ($pragma{implementation}) {
+        $impl = $pragma{implementation};
+    }
+
     my $desc = join("\n", @lines);
     $desc .= "\n";
     
-    my $key = $cname;
-    if ($ctype eq 'command') {
-        $key = "c_$key";
-    } else {
-        $key = "v_$key";
-    }
-    
     $data{$key} = {
         type => $ctype,
-        name => $cname,
+        name => $fullname,
+        match => $cname,
         arguments => \@args,
         description => @lines ? $desc : undef,
         filename => $file,
+        implementation => $impl,
     };
+    if ($cns && $cns ne '') {
+        $data{$key}{namespace} = lc $cns;
+        $ns{lc $cns} = 1;
+    }
     if (%pragma) {
         $data{$key}{pragma} = \%pragma;
     }
 }
 
-print Dump \%data;
+print Dump {
+    ops => \%data,
+    namespaces => [keys %ns],
+};

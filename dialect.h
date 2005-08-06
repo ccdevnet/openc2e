@@ -39,15 +39,7 @@ class Dialect {
 
 extern Dialect *cmd_dialect, *exp_dialect;
 
-class CommandDialect : public Dialect {
-    public:
-        void doParse(class caosScript *s) {
-            stop = false;
-            Dialect::doParse(s);
-        }
-};
-
-class BaseExprDialect : public Dialect {
+class OneShotDialect : public Dialect {
     public:
         void doParse(class caosScript *s) {
             Dialect::parseOne(s);
@@ -56,7 +48,7 @@ class BaseExprDialect : public Dialect {
 
 // XXX: these don't really belong here
 
-class DoifDialect : public CommandDialect {
+class DoifDialect : public Dialect {
     protected:
         caosOp *success, *failure, *exit;
     public:
@@ -131,6 +123,14 @@ class DoifParser : public parseDelegate {
         }
 };
         
+class NamespaceDelegate : public parseDelegate {
+    public:
+        OneShotDialect dialect;
+        void operator() (class caosScript *s, class Dialect *curD) {
+            dialect.parseOne(s);
+        }
+};
+
 void registerDelegates();
 
 #endif

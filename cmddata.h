@@ -3,6 +3,7 @@
 
 extern "C" struct cmdinfo {
     const char *name;
+    const char *fullname;
     const char *docs;
     int argc;
     // TODO: arg types
