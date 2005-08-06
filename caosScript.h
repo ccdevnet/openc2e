@@ -24,6 +24,7 @@
 #include <list>
 #include <string>
 #include <istream>
+#include <map>
 #include "caosVar.h"
 #include "gc.h"
 
@@ -32,6 +33,7 @@ class caosOp;
 
 struct script : public Collectable {
 	std::vector<class caosOp *> allOps;
+    std::map<std::string, class caosOp *> gsub;
     caosOp *entry, *last;
 
     // add op as the next opcode

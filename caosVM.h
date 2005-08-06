@@ -67,6 +67,11 @@ struct vmStackItem {
         }
 };
 
+struct callStackItem {
+    std::vector<vmStackItem> valueStack;
+    caosOp *nip;
+};
+
 typedef class caosVM *caosVM_p;
 
 class caosVM {
@@ -84,7 +89,7 @@ public:
     int timeslice;
 
     std::vector<vmStackItem> valueStack;
-    std::vector<void *> miscStack; // FIXME
+    std::vector<callStackItem> callStack;
     
 	std::ostream *outputstream;
 

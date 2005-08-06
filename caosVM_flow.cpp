@@ -90,38 +90,18 @@
 
 /**
  GSUB (command) label (label)
+ %pragma parser new parseGSUB()
  
  Jump to a subroutine defined by SUBR with label 'label'.
 */
-void caosVM::c_GSUB() {
-    STUB;/*
-	VM_VERIFY_SIZE(1)
-	VM_PARAM_STRING(label)
-	cmdinfo *subr = getCmdInfo("SUBR", true); assert(subr != 0);
-	for (unsigned int i = 0; i < currentscript->lines.size(); i++) {
-		std::list<token>::iterator j = currentscript->lines[i].begin();
-		// we're assuming that ++j is a label here, but the parser should force that issue
-		if (((*j).func == subr) && ((*++j).data == label)) {
-			linestack.push_back(currentline + 1);
-			currentline = i + 1;
-			return;
-		}
-	}
-	std::cerr << "warning: GSUB didn't find matching SUBR for " << label << " in " << (owner ? owner->identify() : "unowned script") << ", ignoring\n";*/
-}
 
 /**
  SUBR (command) label (label)
+ %pragma parser new parseSUBR()
  
  Define the start of a subroute to be called with GSUB, with label 'label'.
  If the command is encountered during execution, it acts like a STOP.
 */
-void caosVM::c_SUBR() {
-    STUB;/*
-	VM_VERIFY_SIZE(1)
-	VM_PARAM_STRING(label)
-	c_STOP();*/
-}
 
 /**
  RETN (command)
@@ -129,11 +109,11 @@ void caosVM::c_SUBR() {
  Return from a subroutine called with GSUB.
 */
 void caosVM::c_RETN() {
-    STUB;/*
-	VM_VERIFY_SIZE(0)
-	assert(!linestack.empty());
-	currentline = linestack.back();
-	linestack.pop_back();*/
+    if (callStack.empty())
+        throw creaturesException("RETN with an empty callstack");
+    nip = callStack.back().nip;
+    valueStack = callStack.back().valueStack;
+    callStack.pop_back();
 }
 
 /**
