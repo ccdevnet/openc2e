@@ -114,10 +114,40 @@ class caosCond : public caosOp {
                     cres = CGT;
                 else
                     cres = CEQ;
-            } else cres = 0;
+            } else if (arg2.hasAgent() && arg1.hasAgent()) {
+                if (cond != CEQ && cond != CNE)
+                    throw creaturesException("invalid comparison for agents");
+                Agent *a1, *a2;
+                a1 = arg1.getAgent();
+                a2 = arg2.getAgent();
+                if (a1 == a2)
+                    cres = CEQ;
+                else
+                    cres = CNE;
+            } else throw creaturesException("type mismatch in comparison");
 
             if (cres & cond)
                 vm->nip = branch;
+        }
+};
+
+class caosENUM_POP : public caosOp {
+    protected:
+        caosOp *exit;
+    public:
+        caosENUM_POP(caosOp *exit_) : exit(exit_) {}
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            VM_PARAM_VALUE(v);
+            if (v.isNull()) { // no more values
+                vm->nip = exit;
+                return;
+            }
+            if (v.getAgent() == NULL) { // killed?
+                vm->nip = vm->cip;
+                return;
+            }
+            vm->setTarg(v.getAgent());
         }
 };
 

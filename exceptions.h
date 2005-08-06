@@ -4,6 +4,7 @@
 #include <exception>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 
 class creaturesException : public std::exception {
 protected:
@@ -24,6 +25,19 @@ public:
     }
 	const char* what() const throw() { return r; }
 };
+
+static inline std::string buildExceptionString(const char *s, const char *file, int line) {
+    std::ostringstream oss;
+    oss << s << " at " << file << ':' << line;
+    return oss.str();
+}
+    
+
+struct tracedAssertFailure : public creaturesException {
+    tracedAssertFailure(const char *s, const char *file, int line)
+    : creaturesException(buildExceptionString(s, file, line)) { }
+};
+        
 
 class tokeniseFailure : public creaturesException {
 public:
