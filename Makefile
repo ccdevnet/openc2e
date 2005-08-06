@@ -61,6 +61,7 @@ OPENC2E = \
 	cmddata.o \
 	gc.cpp \
 	lex.yy.o \
+	lexutil.o \
 	dialect.o
 
 XLDFLAGS=$(LDFLAGS) -lboost_filesystem $(shell sdl-config --static-libs) -lz -lm -lSDL_net

@@ -17,7 +17,7 @@ class caosOp {
             evalcost = cost;
         }
         caosOp() : evalcost(1), successor(NULL) {}
-        virtual ~caosOp();
+        virtual ~caosOp() {};
     protected:
         int evalcost;
         caosOp *successor;
