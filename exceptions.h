@@ -17,6 +17,13 @@ public:
 	tokeniseFailure(const char *s) throw() : creaturesException(s) { }
 };
 
+class parseFailure : public creaturesException {
+public:
+	parseFailure(const char *s) throw() : creaturesException(s) { }
+};
+
+typedef parseFailure parseException;
+
 class genomeException : public creaturesException {
 public:
 	genomeException(const char *s) throw() : creaturesException(s) { }

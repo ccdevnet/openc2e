@@ -25,63 +25,47 @@
 #include <string>
 #include <istream>
 #include "caosVar.h"
+#include "gc.h"
 
 class Agent;
+class caosOp;
 
-enum comparisonType {
-	NONE, EQ, NE, GT, GE, LT, LE, AND, OR
+struct script : public Collectable {
+	std::vector<class caosOp *> allOps;
+    caosOp *entry, *last;
+
+    // add op as the next opcode
+    void thread(caosOp *op);
+    void addOp(caosOp *op);
+    script();
+    ~script();
+//	std::string dump();
+//	std::string dumpLine(unsigned int);
 };
 
-struct token {
-	enum { CAOSVAR, FUNCTION, BYTESTRING, COMPARISON, POSSIBLEFUNC, LABEL } type;
+struct residentScript {
+    int fmly, gnus, spcs, scrp;
+    script *s;
 
-	// CAOSVAR
-	caosVar var;
+    ~residentScript() {
+        s->release();
+    }
 
-	// FUNCTION
-	struct cmdinfo *func;
-	signed char varnumber;
-
-	// BYTESTRING
-	unsigned int len;
-	unsigned char *bytes;
-
-	// COMPARISON
-	comparisonType comparison;
-
-	// POSSIBLEFUNC/LABEL
-	std::string data;
-
-	std::string dump();
-
-	token() { }
-	token(const token &t) {
-		var = t.var;
-		func = t.func;
-		varnumber = t.varnumber;
-		len = t.len;
-		bytes = t.bytes;
-		comparison = t.comparison;
-		data = t.data;
-		type = t.type;
-	}
+    residentScript(int f, int g, int s_, int scrp_, script *scr)
+        : fmly(f), gnus(g), spcs(s_), scrp(scrp_), s(scr) {
+            s->retain();
+    }
 };
 
-struct script {
-	std::vector<std::list<token> > lines;
-
-	std::string dump();
-	std::string dumpLine(unsigned int);
-};
-
-class caosScript {
+class caosScript : Collectable {
 public:
-	script installer, removal;
-	std::vector<script> scripts;
+    int ok;
+	script *installer, *removal;
+	std::vector<residentScript> scripts;
+    script *current;
 
 	caosScript(std::istream &);
-
-	std::string dump();
+    ~caosScript();
 };
 
 #endif

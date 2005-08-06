@@ -15,13 +15,10 @@ OPENC2E = \
 	blkImage.o \
 	c16Image.o \
 	Camera.o \
-	caosdata.o \
-	caoshashes.o \
 	caosScript.o \
 	caosVar.o \
 	caosVM_agent.o \
 	caosVM_camera.o \
-	caosVM_cmdinfo.o \
 	caosVM_compound.o \
 	caosVM_core.o \
 	caosVM.o \
@@ -61,6 +58,10 @@ OPENC2E = \
 	Vehicle.o \
 	World.o \
 	PathResolver.o \
+	cmddata.o \
+	gc.cpp \
+	lex.yy.o \
+	dialect.o
 
 XLDFLAGS=$(LDFLAGS) -lboost_filesystem $(shell sdl-config --static-libs) -lz -lm -lSDL_net
 COREFLAGS=-ggdb3 $(shell sdl-config --cflags) -I.
@@ -69,11 +70,17 @@ XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
 
 all: openc2e tools/filetests tools/praydumper
 
+commandinfo.yml: $(wildcard caosVM_*.cpp) parsedocs.pl
+	perl parsedocs.pl $(wildcard caosVM_*.cpp) > commandinfo.yml
+
+cmddata.cpp: commandinfo.yml writecmds.pl
+	perl writecmds.pl commandinfo.yml > cmddata.cpp
+
 lex.yy.cpp lex.yy.h: caos.l
 	flex -o lex.yy.cpp --header-file=lex.yy.h caos.l
 
-lextest: lex.yy.o
-	$(CXX) $(XCPPFLAGS) -o $@ $<
+## lex.yy.h deps aren't detected evidently
+caosScript.cpp: lex.yy.h lex.yy.cpp
 
 %.o: %.cpp
 	$(CXX) $(XCPPFLAGS) -o $@ -c $<
@@ -119,5 +126,6 @@ tools/praydumper: tools/praydumper.o pray.o
 clean:
 	rm -f *.o openc2e filetests praydumper tools/*.o
 	rm -rf .deps
+	rm -f commandinfo.yml lex.yy.cpp lex.yy.h cmddata.cpp
 
 .PHONY: clean all dep

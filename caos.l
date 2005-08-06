@@ -7,8 +7,8 @@
 %}
 
 %option noyywrap
-%x BYTESTR
-%x STRING
+%x L_BYTESTR
+%x L_STRING
 
 STRINGBIT   \\.|[^\\]
 DIGIT       [0-9]
@@ -28,17 +28,19 @@ WORDINIT    [a-zA-Z:?!]
 ">="                      return make_word("ge");
 "<>"                      return make_word("ne");
 "="                       return make_word("eq");
+"&&"                      return make_word("and");
+"||"                      return make_word("or");
 
-"["         BEGIN(BYTESTR);
+"["         BEGIN(L_BYTESTR);
 
-<BYTESTR>[0-9]+         push_bytestr(atoi(yytext));
-<BYTESTR>[ \t\n\r]
-<BYTESTR>"]"            BEGIN(INITIAL); return make_bytestr();
+<L_BYTESTR>[0-9]+         push_bytestr(atoi(yytext));
+<L_BYTESTR>[ \t\n\r]
+<L_BYTESTR>"]"            BEGIN(INITIAL); return make_bytestr();
 
-\"          BEGIN(STRING);
-<STRING>\\.             push_string_escape(yytext[1]);
-<STRING>[^"]            push_string_lit(yytext[0]);
-<STRING>\"              BEGIN(INITIAL); return make_string();
+\"          BEGIN(L_STRING);
+<L_STRING>\\.             push_string_escape(yytext[1]);
+<L_STRING>\"              BEGIN(INITIAL); return make_string();
+<L_STRING>.               push_string_lit(yytext[0]);
 
 [ \t\n\r]     // eat whitespace
 .           parse_error(yytext);

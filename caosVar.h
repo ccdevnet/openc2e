@@ -52,6 +52,10 @@ class caosVar {
 			vptr = NULL;
 		}
 
+        bool isNull() {
+            return type == NULLTYPE;
+        }
+
 		caosVar() {
 			vptr = NULL;
 			type = INTEGER;
@@ -79,6 +83,7 @@ class caosVar {
 		bool hasAgent() const { return type == AGENT; }
 		bool hasString() const { return type == STRING; }
 		bool hasDecimal() const { return type == INTEGER || type == FLOAT; }
+        bool hasNumber() const { return hasDecimal(); }
 		
 		void setInt(int i) { reset(); type = INTEGER; values.intValue = i; }
 		void setFloat(float i) { reset(); type = FLOAT; values.floatValue = i; }
