@@ -39,6 +39,24 @@ class simpleCaosOp : public caosOp {
         }
 };
 
+class caosREPS : public caosOp {
+    protected:
+        caosOp *exit;
+    public:
+        caosREPS(caosOp *exit_) : exit(exit_) {}
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            VM_PARAM_INTEGER(i)
+            caos_assert(i >= 0);
+            if (i == 0) {
+                vm->nip = exit;
+                return;
+            }
+            vm->result.setInt(i - 1);
+        }
+};
+        
+
 // Condition classes
 #define CEQ 1
 #define CLT 2

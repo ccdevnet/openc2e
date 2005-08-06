@@ -54,31 +54,18 @@
 
 /**
  REPS (command) reps (integer)
+ %pragma parser new parseREPS()
+
+ The start of a REPS...REPE loop. The body of the loop will be executed (reps)
+ times.
 */
-void caosVM::c_REPS() {
-    STUB;/*
-	VM_VERIFY_SIZE(1)
-	VM_PARAM_INTEGER(reps)
-	assert(reps > 0);
-	repstack.push_back(reps);
-	linestack.push_back(currentline + 1);*/
-}
 
 /**
  REPE (command)
+ %pragma noparse
+
+ The end of a REPS...REPE loop.
 */
-void caosVM::c_REPE() {
-    STUB;/*
-	VM_VERIFY_SIZE(0)
-	assert(!linestack.empty());
-	assert(!repstack.empty());
-	int i = repstack.back() - 1;
-	repstack.pop_back();
-	if (i) {
-		repstack.push_back(i);
-		currentline = linestack.back();
-	} else linestack.pop_back();*/
-}
 
 /**
  LOOP (command)
