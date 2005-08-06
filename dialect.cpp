@@ -12,6 +12,56 @@
 
 Dialect *cmd_dialect, *exp_dialect;
 
+void parseCondition(caosScript *s, caosOp *success, caosOp *failure) {
+    while(1) {
+        exp_dialect->doParse(s);
+        token *comparison = getToken(TOK_WORD);
+        std::string cword = comparison->word;
+        int compar;
+        if (cword == "eq")
+            compar = CEQ;
+        else if (cword == "gt")
+            compar = CGT;
+        else if (cword == "ge")
+            compar = CGE;
+        else if (cword == "lt")
+            compar = CLT;
+        else if (cword == "le")
+            compar = CLE;
+        else if (cword == "ne")
+            compar = CNE;
+        exp_dialect->doParse(s);
+        
+
+        /*
+         * If the next bind is or, we jump to success.
+         * Otherwise, we negate and jump to failure.
+         * The last item is always considered or-ed.
+         */
+        int isOr = 1;
+        int isLast = 0;
+
+        struct token *peek = tokenPeek();
+        if (!peek)
+            throw parseException("unexpected eoi");
+        if (peek->type == TOK_WORD) {
+            if (peek->word == "and") {
+                getToken();
+                isOr = 0;
+            } else if (peek->word == "or")
+                getToken();
+            else
+                isLast = 1;
+        }
+
+        caosOp *jumpTarget = isOr ? success : failure;
+        if (!isOr) compar = ~compar;
+        
+        s->current->thread(new caosCond(compar, jumpTarget));
+        if (isLast) return;
+    }
+}
+
 void DefaultParser::operator()(class caosScript *s, class Dialect *curD) {
     int argc = cmds[idx].argc;
     while(argc--)

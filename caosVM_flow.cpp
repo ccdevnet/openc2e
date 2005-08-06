@@ -69,38 +69,24 @@
 
 /**
  LOOP (command)
+ %pragma parser new parseLOOP()
  
  The start of a LOOP..EVER or LOOP..UNTL loop.
 */
-void caosVM::c_LOOP() {
-    STUB;/*
-	VM_VERIFY_SIZE(0)
-	linestack.push_back(currentline + 1);*/
-}
 
 /**
  EVER (command)
+ %pragma noparse
  
  Jump back to the matching LOOP, no matter what.
 */
-void caosVM::c_EVER() {
-    STUB;/*
-	VM_VERIFY_SIZE(0)
-	assert(!linestack.empty());
-	currentline = linestack.back();*/
-}
 
 /**
  UNTL (command) condition (condition)
+ %pragma noparse
  
  Jump back to the matching LOOP unless the condition evaluates to true.
 */
-void caosVM::c_UNTL() {STUB;/*
-	VM_VERIFY_SIZE(0)
-	assert(!linestack.empty());
-	if (!truth) currentline = linestack.back();
-	else linestack.pop_back();*/
-}
 
 /**
  GSUB (command) label (label)
