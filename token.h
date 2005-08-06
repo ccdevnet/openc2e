@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 
+void yyrestart(std::istream *stream);
+
 enum toktype { ANYTOKEN = 0, EOI = 0, TOK_CONST, TOK_WORD, TOK_BYTESTR };
 
 struct token {

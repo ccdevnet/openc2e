@@ -7,6 +7,13 @@ string temp_str;
 static token *peektok = NULL;
 token lasttok;
 
+static yyFlexLexer lexer; // XXX!
+
+void yyrestart(std::istream *is) {
+    lexreset();
+    lexer.yyrestart(is);
+}
+
 void lexreset() {
     bytestr = vector<int>();
     temp_str = "";
@@ -24,7 +31,7 @@ token *getToken(toktype expected) {
 token *tokenPeek() {
     if (peektok)
         return peektok;
-    if (!yylex())
+    if (!lexer.yylex())
         return NULL;
     peektok = &lasttok;
     return peektok;

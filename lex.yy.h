@@ -18,16 +18,30 @@
 #define FLEX_BETA
 #endif
 
+/* %if-c++-only */
+    /* The c++ scanner is a mess. The FlexLexer.h header file relies on the
+     * following macro.
+     */
+    #define yyFlexLexer yyFlexLexer
+/* %endif */
+
+/* %if-c-only */
+/* %endif */
+
+/* %if-c-only */
+/* %endif */
+
 /* First, we deal with  platform-specific or compiler-specific issues. */
 
 /* begin standard C headers. */
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <stdlib.h>
+/* %if-c-only */
+/* %endif */
 
+/* %if-tables-serialization */
+/* %endif */
 /* end standard C headers. */
 
+/* %if-c-or-c++ */
 /* flex integer type definitions */
 
 #ifndef FLEXINT_H
@@ -83,6 +97,17 @@ typedef unsigned int flex_uint32_t;
 
 #endif /* ! FLEXINT_H */
 
+/* %endif */
+
+/* %if-c++-only */
+/* begin standard C++ headers. */
+#include <iostream> 
+#include <errno.h>
+#include <cstdlib>
+#include <cstring>
+/* end standard C++ headers. */
+/* %endif */
+
 #ifdef __cplusplus
 
 /* The "const" storage-class-modifier is valid. */
@@ -103,14 +128,30 @@ typedef unsigned int flex_uint32_t;
 #define yyconst
 #endif
 
+/* %not-for-header */
+
+/* %not-for-header */
+
+/* %if-reentrant */
+/* %endif */
+
+/* %if-not-reentrant */
+
+/* %endif */
+
 #ifndef YY_TYPEDEF_YY_BUFFER_STATE
 #define YY_TYPEDEF_YY_BUFFER_STATE
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
 
+/* %if-not-reentrant */
 extern int yyleng;
+/* %endif */
 
-extern FILE *yyin, *yyout;
+/* %if-c-only */
+/* %if-not-reentrant */
+/* %endif */
+/* %endif */
 
 /* The following is because we cannot portably get our hands on size_t
  * (without autoconf's help, which isn't available because we want
@@ -126,7 +167,12 @@ typedef unsigned int yy_size_t;
 #define YY_STRUCT_YY_BUFFER_STATE
 struct yy_buffer_state
 	{
-	FILE *yy_input_file;
+/* %if-c-only */
+/* %endif */
+
+/* %if-c++-only */
+	std::istream* yy_input_file;
+/* %endif */
 
 	char *yy_ch_buf;		/* input buffer */
 	char *yy_buf_pos;		/* current position in input buffer */
@@ -173,31 +219,37 @@ struct yy_buffer_state
 	};
 #endif /* !YY_STRUCT_YY_BUFFER_STATE */
 
-void yyrestart (FILE *input_file  );
-void yy_switch_to_buffer (YY_BUFFER_STATE new_buffer  );
-YY_BUFFER_STATE yy_create_buffer (FILE *file,int size  );
-void yy_delete_buffer (YY_BUFFER_STATE b  );
-void yy_flush_buffer (YY_BUFFER_STATE b  );
-void yypush_buffer_state (YY_BUFFER_STATE new_buffer  );
-void yypop_buffer_state (void );
+/* %if-c-only Standard (non-C++) definition */
+/* %not-for-header */
 
-YY_BUFFER_STATE yy_scan_buffer (char *base,yy_size_t size  );
-YY_BUFFER_STATE yy_scan_string (yyconst char *yy_str  );
-YY_BUFFER_STATE yy_scan_bytes (yyconst char *bytes,int len  );
+/* %endif */
+
+/* %if-c-only Standard (non-C++) definition */
+/* %if-not-reentrant */
+/* %not-for-header */
+
+/* %endif */
+/* %endif */
 
 void *yyalloc (yy_size_t  );
 void *yyrealloc (void *,yy_size_t  );
 void yyfree (void *  );
 
+/* %% [1.0] yytext/yyin/yyout/yy_state_type/yylineno etc. def's & init go here */
 /* Begin user sect3 */
 
 #define yywrap(n) 1
 #define YY_SKIP_YYWRAP
 
-extern int yylineno;
+#define FLEX_DEBUG
 
-extern char *yytext;
 #define yytext_ptr yytext
+#define YY_INTERACTIVE
+
+#include <FlexLexer.h>
+
+/* %if-c-only Standard (non-C++) definition */
+/* %endif */
 
 #ifdef YY_HEADER_EXPORT_START_CONDITIONS
 #define INITIAL 0
@@ -212,24 +264,27 @@ extern char *yytext;
  * down here because we want the user's section 1 to have been scanned first.
  * The user has a chance to override it with an option.
  */
+/* %if-c-only */
+/* %endif */
+/* %if-c++-only */
 #include <unistd.h>
+/* %endif */
 #endif
 
 #ifndef YY_EXTRA_TYPE
 #define YY_EXTRA_TYPE void *
 #endif
 
-/* Macros after this point can all be overridden by user definitions in
- * section 1.
- */
+/* %if-c-only Reentrant structure and macros (non-C++). */
+/* %if-reentrant */
+/* %if-reentrant */
+/* %endif */
+/* %if-bison-bridge */
+/* %endif */
+/* %endif End reentrant structures and macros. */
+/* %not-for-header */
 
-#ifndef YY_SKIP_YYWRAP
-#ifdef __cplusplus
-extern "C" int yywrap (void );
-#else
-extern int yywrap (void );
-#endif
-#endif
+/* %endif */
 
 #ifndef yytext_ptr
 static void yy_flex_strncpy (char *,yyconst char *,int );
@@ -240,8 +295,14 @@ static int yy_flex_strlen (yyconst char * );
 #endif
 
 #ifndef YY_NO_INPUT
+/* %if-c-only Standard (non-C++) definition */
+/* %not-for-header */
 
+/* %endif */
 #endif
+
+/* %if-c-only */
+/* %endif */
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
@@ -253,18 +314,34 @@ static int yy_flex_strlen (yyconst char * );
 #define YY_START_STACK_INCR 25
 #endif
 
+/* %if-tables-serialization structures and prototypes */
+/* %not-for-header */
+
+/* %not-for-header */
+
 /* Default declaration of generated scanner - a define so the user can
  * easily add parameters.
  */
 #ifndef YY_DECL
 #define YY_DECL_IS_OURS 1
-
-extern int yylex (void);
-
-#define YY_DECL int yylex (void)
+/* %if-c-only Standard (non-C++) definition */
+/* %endif */
+/* %if-c++-only C++ definition */
+#define YY_DECL int yyFlexLexer::yylex()
+/* %endif */
 #endif /* !YY_DECL */
 
+/* %not-for-header */
+
+/* %if-c++-only */
+/* %not-for-header */
+
+/* %endif */
+
 /* yy_get_previous_state - get the state just before the EOB char was reached */
+
+/* %if-c-only */
+/* %not-for-header */
 
 #undef YY_NEW_FILE
 #undef YY_FLUSH_BUFFER
@@ -278,9 +355,9 @@ extern int yylex (void);
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 49 "caos.l"
+#line 50 "caos.l"
 
 
-#line 285 "lex.yy.h"
+#line 362 "lex.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */
