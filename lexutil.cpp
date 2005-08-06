@@ -16,6 +16,8 @@ void lexreset() {
 token *getToken(toktype expected) {
     token *ret = tokenPeek();
     peektok = NULL;
+    if (expected != ANYTOKEN && ret->type != expected)
+        throw parseException("unexpected token");
     return ret;
 }
 
@@ -25,4 +27,5 @@ token *tokenPeek() {
     if (!yylex())
         return NULL;
     peektok = &lasttok;
+    return peektok;
 }

@@ -10,13 +10,21 @@
 
 Dialect *cmd_dialect, *exp_dialect;
 
-void Dialect::doParse(caosScript *s) {
+void DefaultParser::operator()(class caosScript *s, class Dialect *curD) {
+    int argc = cmds[idx].argc;
+    while(argc--)
+        exp_dialect->doParse(s);
+    s->current->thread(new simpleCaosOp(handler));
+}
+
+
+bool Dialect::parseOne(caosScript *s) {
     token *t;
-    while (!stop) {
-        t = getToken();
-        if (!t) break;
-        handleToken(s, t);
-    }
+    t = getToken();
+    if (!t)
+        return false;
+    handleToken(s, t);
+    return true;
 }
 
 void Dialect::handleToken(caosScript *s, token *t) {

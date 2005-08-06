@@ -39,7 +39,9 @@ caosVM::caosVM(const AgentRef &o)
     : vm(this)
 {
     owner = o;
-	resetScriptState();
+    currentscript = NULL;
+    cip = nip = NULL;
+	resetCore();
 }
 
 inline void caosVM::runOp() {
@@ -66,7 +68,8 @@ inline void caosVM::stop() {
 void caosVM::runEntirely(script *s) {
 	currentscript = s;
     currentscript->retain();
-	while (cip)
+    cip = nip = s->entry;
+	while (nip)
 		runOp();
     stop(); // probably redundant, but eh
 }
@@ -78,6 +81,7 @@ bool caosVM::fireScript(script &s, bool nointerrupt) {
 	resetScriptState();
 	currentscript = &s;
     currentscript->retain();
+    cip = nip = s.entry;
 	return true;
 }
 

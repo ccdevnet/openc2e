@@ -4,6 +4,7 @@
 #include "token.h"
 #include "bytecode.h"
 #include "caosScript.h"
+#include "cmddata.h"
 #include <map>
 
 class parseDelegate {
@@ -19,9 +20,7 @@ class DefaultParser : public parseDelegate {
     public:
         DefaultParser(void (caosVM::*h)(), int i) :
             handler(h), idx(i) {}
-        virtual void operator()(class caosScript *s, class Dialect *curD) {
-            s->current->thread(new simpleCaosOp(handler));
-        }
+        virtual void operator()(class caosScript *s, class Dialect *curD);
 };
 
 class Dialect {
@@ -31,7 +30,10 @@ class Dialect {
         Dialect() : stop(false) {}
         
         std::map<std::string, parseDelegate *> delegates;
-        virtual void doParse(class caosScript *s);
+        virtual void doParse(class caosScript *s) {
+            while (!stop && parseOne(s));
+        }
+        virtual bool parseOne(class caosScript *s);
         virtual void handleToken(class caosScript *s, token *t);
 };
 
@@ -48,8 +50,7 @@ class CommandDialect : public Dialect {
 class BaseExprDialect : public Dialect {
     public:
         void doParse(class caosScript *s) {
-            stop = true;
-            Dialect::doParse(s);
+            Dialect::parseOne(s);
         }
 };
 
