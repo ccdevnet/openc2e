@@ -53,7 +53,9 @@ class DoifDialect : public Dialect {
         caosOp *success, *failure, *exit;
     public:
         DoifDialect(caosOp *s, caosOp *f, caosOp *e)
-            : success(s), failure(f), exit(e) {}
+            : success(s), failure(f), exit(e) {
+                delegates = cmd_dialect->delegates; // XXX
+            }
         void handleToken(class caosScript *s, token *t); 
 };
 
@@ -114,6 +116,7 @@ class DoifParser : public parseDelegate {
                 if (!isOr) compar = ~compar;
                 
                 s->current->thread(new caosCond(compar, jumpTarget));
+                if (isLast) break;
             }
             
             s->current->thread(failure);
