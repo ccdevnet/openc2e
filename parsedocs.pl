@@ -11,7 +11,7 @@ my %data;
 my %ns;
 
 while (<>) {
-    my $file = $ARGV[0];
+    my $file = $ARGV;
     next unless (m{/\*\*});
     $_ = <>;
     defined $_ or exit;

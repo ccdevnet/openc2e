@@ -39,7 +39,11 @@ foreach my $key (keys %$data) {
     } elsif ($data->{$key}{pragma}{parser}) {
         $delegate = $data->{$key}{pragma}{parser};
     } else {
-        $delegate = qq{new DefaultParser(&$data->{$key}{implementation}, $idx)};
+        my $class = 'DefaultParser';
+        if ($data->{$key}{pragma}{parserclass}) {
+            $class = $data->{$key}{pragma}{parserclass};
+        }
+        $delegate = qq{new $class(&$data->{$key}{implementation}, $idx)};
     }
         
     $data->{$key}{delegate} = $delegate;

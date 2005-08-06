@@ -118,40 +118,26 @@ void caosVM::c_RETN() {
 
 /**
  NEXT (command)
+ %pragma noparse
+
 */
-void caosVM::c_NEXT() {
-    STUB;/*
-	VM_VERIFY_SIZE(0)
-	assert(!enumstack.empty());
-	* Remove any agents which disappeared mysteriously *
-	while (!enumstack.back().empty() && !enumstack.back().back())
-		enumstack.back().pop_back();
-	* If we're the first line in the enumeration block, or are out of
-	 * agents to enumerate, pop off the stack and just return.
-	 *
-	if (currentline == linestack.back() || enumstack.back().empty()) {
-		enumstack.pop_back();
-		linestack.pop_back();
-		setTarg(owner);
-		return;
-	}
-	setTarg(enumstack.back().back());
-	enumstack.back().pop_back();
-	currentline = linestack.back();*/
-}
 
 /**
  ENUM (command) family (integer) genus (integer) species (integer)
+ %pragma parserclass ENUMhelper
+
+ Loop through all agents with the given classifier. 0 on any field is a
+ wildcard. The loop body is terminated by a NEXT.
 */
 void caosVM::c_ENUM() {
-    STUB;/*
 	VM_VERIFY_SIZE(3)
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 
-	enumstack.push_back(std::vector<AgentRef>());
-	linestack.push_back(currentline + 1); // loop entry
+    caosVar nullv;
+    nullv.reset();
+	valueStack.push_back(nullv);
 	
 	for (std::multiset<Agent *, agentzorder>::iterator i
 			= world.agents.begin(); i != world.agents.end(); i++) {
@@ -160,10 +146,9 @@ void caosVM::c_ENUM() {
 		if (genus && genus != a->genus) continue;
 		if (family && family != a->family) continue;
 
-		enumstack.back().push_back(a);
+        caosVar v; v.setAgent(a);
+		valueStack.push_back(v);
 	}
-
-	jumpToEquivalentNext();*/
 }
 
 /**
@@ -171,16 +156,12 @@ void caosVM::c_ENUM() {
  
  like ENUM, but iterate through agents OWNR can see (todo: document exact rules)
 */
-void caosVM::c_ESEE() {
-    STUB;/*
+void caosVM::c_ESEE() { STUB; /*
 	VM_VERIFY_SIZE(3)
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 
-	enumstack.push_back(std::vector<AgentRef>());
-	linestack.push_back(currentline + 1); // loop entry
-	
 	for (std::multiset<Agent *, agentzorder>::iterator i
 			= world.agents.begin(); i != world.agents.end(); i++) {
 		Agent *a = (*i);

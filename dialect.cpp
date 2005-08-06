@@ -58,8 +58,9 @@ void parseCondition(caosScript *s, caosOp *success, caosOp *failure) {
         if (!isOr) compar = ~compar;
         
         s->current->thread(new caosCond(compar, jumpTarget));
-        if (isLast) return;
+        if (isLast) break;
     }
+    s->current->last->setSuccessor(failure);
 }
 
 void DefaultParser::operator()(class caosScript *s, class Dialect *curD) {

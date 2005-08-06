@@ -193,6 +193,38 @@ class parseSUBR : public parseDelegate {
         }
 };
 
+class NEXT : public parseDelegate {
+    public:
+        void operator() (class caosScript *s, class Dialect *curD) {
+            curD->stop = true;
+        }
+};
+
+class ENUMhelper : public parseDelegate {
+    protected:
+        DefaultParser p;
+    public:
+        ENUMhelper(void (caosVM::*h)(), int i) :
+            p(h,i) {}
+
+        void operator() (class caosScript *s, class Dialect *curD) {
+            (p)(s, curD);
+            caosOp *exit = new caosNoop();
+            caosOp *entry = new caosENUM_POP(exit);
+            s->current->thread(entry);
+            s->current->addOp(exit);
+            
+            Dialect d;
+            NEXT n;
+            d.delegates = cmd_dialect->delegates;
+            d.delegates["next"] = &n;
+            
+            d.doParse(s);
+            s->current->thread(entry);
+            s->current->last = exit;
+        }
+};
+
 void registerDelegates();
 
 #endif
