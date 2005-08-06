@@ -1,4 +1,5 @@
 #include "lexutil.h"
+#include "lex.yy.h"
 #include "token.h"
 vector<int> bytestr;
 string temp_str;
@@ -12,7 +13,7 @@ void lexreset() {
     peektok = NULL;
 }
 
-token *getToken(toktype expected = 0) {
+token *getToken(toktype expected) {
     token *ret = tokenPeek();
     peektok = NULL;
     return ret;
@@ -24,3 +25,4 @@ token *tokenPeek() {
     if (!yylex())
         return NULL;
     peektok = &lasttok;
+}

@@ -45,8 +45,4 @@ WORDINIT    [a-zA-Z:?!]
 [ \t\n\r]     // eat whitespace
 .           parse_error(yytext);
 %%
-int main() {
-    yyrestart(stdin);
-    while(yylex());
-    return 0;
-}
+

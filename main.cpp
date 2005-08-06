@@ -12,6 +12,7 @@
 #include "caosVM.h"
 #include "SimpleAgent.h"
 #include "SDLBackend.h"
+#include "dialect.h"
 
 #include "SDL_gfxPrimitives.h" // remove once code is moved to SDLBackend
 #include "SDL_net.h"
@@ -88,7 +89,7 @@ extern "C" int main(int argc, char *argv[]) {
 		
 	std::cout << "openc2e, built " __DATE__ " " __TIME__ "\nCopyright (c) 2004-2005 Alyssa Milburn\n\n";
 
-	setupCommandPointers();
+    registerDelegates();
 	world.init();
 	world.catalogue.initFrom("data/Catalogue/");
 	// moved backend.init() here because we need the camera to be valid - fuzzie
