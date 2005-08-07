@@ -210,6 +210,8 @@ public:
 	void c_ANDV();
 	void c_ORRV();
 	void c_ADDS();
+	void v_VTOS();
+	void v_AVAR();
 
 	// flow
 	void c_DOIF();
@@ -296,7 +298,9 @@ public:
 	void c_HAND();
 	void v_HAND();
 	void v_TOUC();
-
+	void v_TICK();
+	void c_PUPT();
+	
 	// motion
 	void c_ELAS();
 	void c_MVTO();
@@ -348,7 +352,8 @@ public:
 	void c_MVFT();
 	void c_CHEM();
 	void v_CREA();
-
+	void c_VOCB();
+	
 	// sounds
 	void c_SNDE();
 	void c_SNDC();

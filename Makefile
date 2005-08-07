@@ -65,7 +65,7 @@ OPENC2E = \
 	dialect.o
 
 CFLAGS += -W -Wall -Wno-conversion -Wno-unused
-XLDFLAGS=$(LDFLAGS) -lboost_filesystem $(shell sdl-config --static-libs) -lz -lm -lSDL_net
+XLDFLAGS=$(LDFLAGS) -lboost_filesystem $(shell sdl-config --static-libs) -lz -lm -lSDL_net -lSDL_mixer
 COREFLAGS=-ggdb3 $(shell sdl-config --cflags) -I.
 XCFLAGS=$(CFLAGS) $(COREFLAGS)
 XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
