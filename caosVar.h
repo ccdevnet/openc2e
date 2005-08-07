@@ -30,7 +30,7 @@ class Agent;
 class caosVar {
 	protected:
 		enum variableType {
-			NULLTYPE = 0, AGENT, INTEGER, FLOAT, STRING, VARREF
+			NULLTYPE = 0, AGENT, INTEGER, FLOAT, STRING
 		};
 
 		variableType type;
@@ -42,14 +42,11 @@ class caosVar {
 		AgentRef agent;
 
 		std::string string;
-		// XXX: GET RID OF THIS
-		caosVar *vptr;
 
 	public:
 		void reset() {
 			string.clear();
 			type = NULLTYPE;
-			vptr = NULL;
 		}
 
         bool isNull() {
@@ -57,7 +54,6 @@ class caosVar {
         }
 
 		caosVar() {
-			vptr = NULL;
 			type = INTEGER;
 			values.intValue = 0;
 		}
@@ -66,15 +62,14 @@ class caosVar {
 			string = copyFrom.string;
 			type = copyFrom.type;
 			values = copyFrom.values;
-			vptr = copyFrom.vptr;
 		}
 
 		caosVar &operator=(const caosVar &copyFrom) {
 			string = copyFrom.string;
 			type = copyFrom.type;
 			values = copyFrom.values;
-			vptr = copyFrom.vptr;
 			agent = copyFrom.agent;
+            return *this;
 		}
 
 		bool isEmpty() const { return type == NULLTYPE; }
@@ -134,17 +129,6 @@ class caosVar {
 		const AgentRef &getAgentRef() const {
 			caos_assert(hasAgent());
 			return agent;
-		}
-
-		// XXX: GET RID OF THIS
-		void setVariable(caosVar *v) {
-			vptr = v;
-		}
-		bool hasVariable() const {
-			return vptr;
-		}
-		caosVar *getVariable() const {
-			return vptr;
 		}
 
 		bool operator == (const caosVar &v) const;

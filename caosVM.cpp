@@ -41,7 +41,25 @@ caosVM::caosVM(const AgentRef &o)
     owner = o;
     currentscript = NULL;
     cip = nip = NULL;
+    blocking = NULL;
 	resetCore();
+}
+
+inline bool caosVM::isBlocking() {
+    if (!blocking) return false;
+    bool bl = (*blocking)();
+    if (!bl) {
+        blocking->release();
+        blocking = NULL;
+    }
+    return bl;
+}
+
+void caosVM::startBlocking(blockCond *whileWhat) {
+    if (blocking)
+        throw creaturesException("trying to block with a block condition in-place");
+    blocking = whileWhat;
+    blocking->retain();
 }
 
 inline void caosVM::runOp() {
@@ -52,7 +70,13 @@ inline void caosVM::runOp() {
         return;
     }
     result.reset(); // xxx this belongs in opcode maybe
-    cip->execute(this);
+    try {
+        cip->execute(this);
+    } catch (creaturesException &e) {
+        std::cerr << "script stopped due to exception " << e.what() << endl;
+        stop();
+        return;
+    }
     if (!result.isNull())
         valueStack.push_back(result);
 }
@@ -69,19 +93,27 @@ void caosVM::runEntirely(script *s) {
 	currentscript = s;
     currentscript->retain();
     cip = nip = s->entry;
-	while (nip)
-		runOp();
+	while (nip) {
+        runOp();
+        if (blocking) {
+            blocking->release();
+            blocking = NULL;
+            throw creaturesException("blocking in an installation script");
+        }
+    }
     stop(); // probably redundant, but eh
 }
 
-bool caosVM::fireScript(script &s, bool nointerrupt) {
+bool caosVM::fireScript(script *s, bool nointerrupt) {
+    if (!s) return false;
 	if (lock) return false; // can't interrupt scripts which called LOCK
 	if (currentscript && nointerrupt) return false; // don't interrupt scripts with a timer script
 
 	resetScriptState();
-	currentscript = &s;
+	currentscript = s;
     currentscript->retain();
-    cip = nip = s.entry;
+    cip = nip = s->entry;
+    targ = owner;
 	return true;
 }
 
@@ -92,6 +124,10 @@ void caosVM::resetScriptState() {
 
 void caosVM::resetCore() {
 
+    if (blocking)
+        blocking->release();
+    blocking = NULL;
+    
     valueStack.clear();
     callStack.clear();
 
@@ -113,7 +149,9 @@ void caosVM::tick() {
 
 void caosVM::runTimeslice(int units) {
     timeslice = units;
-    while (currentscript && (timeslice || inst))
+    while (currentscript && (timeslice || inst)) {
+        if (isBlocking()) return;
         runOp();
+    }
 }
 

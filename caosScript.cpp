@@ -27,12 +27,15 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <cstring>
 
 using std::string;
 
 class unexpectedEOIexception { };
 
 void script::addOp(caosOp *op) {
+    if (op->owned) return;
+    op->owned = true;
     allOps.push_back(op);
 }
 
@@ -55,19 +58,10 @@ script::script() {
 }
 
 
-
-class ScriptDialect : public Dialect {
+class ENDM : public parseDelegate {
     public:
-        ScriptDialect() {
-            delegates = cmd_dialect->delegates;
-        }
-
-        virtual void handleToken(class caosScript *s, token *t) {
-            if (t->type == TOK_WORD && t->word == "endm") {
-                stop = true;
-                return;
-            }
-            Dialect::handleToken(s, t);
+        void operator() (class caosScript *s, Dialect *curD) {
+            curD->stop = true;
         }
 };
 
@@ -83,6 +77,8 @@ class BaseDialect : public Dialect {
                     if (s->removal)
                         throw parseException("multiple rscr not allowed");
                     s->current = s->removal = new script();
+                    s->removal->retain();
+                    return;
                 }
                 if (t->word == "scrp") {
                     if (s->removal)
@@ -99,36 +95,59 @@ class BaseDialect : public Dialect {
                     token scrp = *getToken(TOK_CONST);
                     if (!scrp.constval.hasInt())
                        throw parseException("classifier values must be ints");
-                    ScriptDialect sd;
-                    sd.doParse(s);
-                    if (!sd.stop)
+                    Dialect d;
+                    ENDM endm;
+                    d.delegates = cmd_dialect->delegates;
+                    d.delegates["endm"] = &endm;
+                    struct residentScript scr(
+                            fmly.constval.getInt(),
+                            gnus.constval.getInt(),
+                            spcs.constval.getInt(),
+                            scrp.constval.getInt(),
+                            new script());
+                    s->current = scr.s;
+                    d.doParse(s);
+                    s->current = s->installer;
+                    assert(s->current);
+                    s->scripts.push_back(scr);
+                    if (!d.stop)
                        throw parseException("expected endm");
+                    return;
                 }
                 Dialect::handleToken(s, t);
             } // if (t->type == TOK_WORD)
         }
 };
 
-caosScript::caosScript(std::istream &in) {
-    ok = 0;
+caosScript::caosScript() {
     current = installer = new script();
+    current->retain();
     removal = NULL;
+}
+
+void caosScript::parse(std::istream &in) {
 
     yyrestart(&in);
 
     BaseDialect d;
     d.doParse(this);
 
-    current->retain();
-    if (removal)
-        removal->retain();
-    ok = 1;
 }
 
 caosScript::~caosScript() {
-    if (ok) {
-        installer->release();
-        if (removal)
-            removal->release();
+    installer->release();
+    if (removal)
+        removal->release();
+    std::vector<residentScript>::iterator i = scripts.begin();
+    while (i != scripts.end())
+        i++->s->release();
+}
+
+void caosScript::installScripts() {
+    std::vector<residentScript>::iterator i = scripts.begin();
+    while (i != scripts.end()) {
+        world.scriptorium.addScript(i->fmly, i->gnus, i->spcs, i->scrp, i->s);
+        i++;
     }
 }
+

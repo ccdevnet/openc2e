@@ -57,17 +57,24 @@ struct residentScript {
         : fmly(f), gnus(g), spcs(s_), scrp(scrp_), s(scr) {
             s->retain();
     }
+
+    residentScript(const residentScript &rs) {
+        fmly = rs.fmly; gnus = rs.gnus; spcs = rs.spcs; scrp = rs.scrp;
+        s = rs.s;
+        s->retain();
+    }
 };
 
 class caosScript : Collectable {
 public:
-    int ok;
 	script *installer, *removal;
 	std::vector<residentScript> scripts;
     script *current;
 
-	caosScript(std::istream &);
+	caosScript();
+    void parse(std::istream &in);
     ~caosScript();
+    void installScripts();
 };
 
 #endif

@@ -61,8 +61,10 @@ struct vmStackItem {
         vmStackItem(const vmStackItem &orig) {
             type = orig.type;
             i_val = orig.i_val;
-            if (orig.p_val == &orig.i_val) p_val = &i_val;
-            else p_val = orig.p_val;
+            if (type & RVAL) {
+                p_val = orig.p_val;
+            }
+            else p_val = &i_val;
             bytestring = orig.bytestring;
         }
 };
@@ -74,8 +76,19 @@ struct callStackItem {
 
 typedef class caosVM *caosVM_p;
 
+class blockCond : public Collectable {
+    public:
+        virtual bool operator()() = 0;
+        virtual ~blockCond() {}
+};
+
 class caosVM {
 public:
+    
+    blockCond *blocking;
+
+    void startBlocking(blockCond *whileWhat);
+    bool isBlocking();
     
     // nb, ptr is immutable, class is mutable
     // This is so the stack manipulation macros work in the op classes as well
@@ -100,6 +113,11 @@ public:
 	unsigned int part;
 	
 	void resetScriptState(); // resets everything except OWNR
+
+protected:
+    inline void returnVariable(caosVar &cv) {
+        valueStack.push_back(&cv);
+    }
 private:
     void resetCore();
 public:
@@ -307,6 +325,8 @@ public:
 	void c_WAIT();
 	void c_STOP();
 
+    void c_RGAM();
+
 	// compound
 	void c_PART();
 	void c_PAT_DULL();
@@ -393,7 +413,7 @@ public:
 
 	void tick();
 	void stop();
-	bool fireScript(script &s, bool nointerrupt);
+	bool fireScript(script *s, bool nointerrupt);
 
 	caosVM(const AgentRef &o);
 
@@ -405,7 +425,10 @@ public:
 typedef void (caosVM::*caosVMmethod)();
 
 class notEnoughParamsException { };
-class badParamException { };
+class badParamException : public creaturesException {
+    public:
+        badParamException() : creaturesException("parameter type mismatch") {}
+};
 
 #define VM_VERIFY_SIZE(n) // no-op, we assert in the pops. orig: if (params.size() != n) { throw notEnoughParamsException(); }
 static inline void VM_STACK_CHECK(const caosVM *vm) {
@@ -439,7 +462,12 @@ static inline void VM_STACK_CHECK(const caosVM *vm) {
     if (!(__x.type & LVAL)) { throw badParamException(); } \
     if (!__x.p_val->hasDecimal()) { throw badParamException(); } \
     name = *__x.p_val; } vm->valueStack.pop_back();
+#define VM_PARAM_BYTESTR(name) std::vector<unsigned int> name; { \
+    VM_STACK_CHECK(vm); \
+    vmStackItem __x = vm->valueStack.back(); \
+    if (!(__x.type & BYTESTR)) { throw badParamException(); } \
+    name = __x.bytestring; } vm->valueStack.pop_back();
 
-#define STUB caos_assert(false)
+#define STUB throw creaturesException("stub in " __FILE__)
 
 #endif

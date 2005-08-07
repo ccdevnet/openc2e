@@ -55,6 +55,8 @@ public:
 	void trackAgent(class Agent *a, int xp, int yp, trackstyle s, cameratransition transition);
 
 	void tick();
+
+    virtual ~Camera() {}
 };
 
 class MainCamera : public Camera {

@@ -127,6 +127,17 @@ class opOVxx : public caosOp {
         }
 };
 
+class opBytestr : public caosOp {
+    protected:
+        std::vector<unsigned int> bytestr;
+    public:
+        opBytestr(const std::vector<unsigned int> &bs) : bytestr(bs) {}
+        void execute(caosVM *vm) {
+            caosOp::execute(vm);
+            vm->valueStack.push_back(bytestr);
+        }
+};
+
 
 class ExprDialect : public OneShotDialect {
     public:
@@ -155,8 +166,7 @@ class ExprDialect : public OneShotDialect {
                     Dialect::handleToken(s, t);
                     return;
                 case TOK_BYTESTR:
-                    // TODO
-                    abort();
+                    s->current->thread(new opBytestr(t->bytestr));
                     break;
                 default:
                     assert(false);
