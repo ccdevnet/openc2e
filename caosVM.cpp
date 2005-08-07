@@ -81,7 +81,7 @@ inline void caosVM::runOp() {
         valueStack.push_back(result);
 }
 
-inline void caosVM::stop() {
+void caosVM::stop() {
     cip = nip = NULL;
     if (currentscript)
         currentscript->release();
