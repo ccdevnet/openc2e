@@ -59,7 +59,7 @@ ENDDATA
 }
 
 print <<ENDTAIL;
-    { NULL, NULL, 0 }
+    { NULL, NULL, NULL, 0 }
 };
 
 void registerAutoDelegates() {

@@ -11,16 +11,16 @@ void yyrestart(std::istream *stream);
 enum toktype { ANYTOKEN = 0, EOI = 0, TOK_CONST, TOK_WORD, TOK_BYTESTR };
 
 struct token {
-    int yypos; // TODO
+    int yyline;
 
     toktype type;
-    std::vector<int> bytestr;
+    std::vector<unsigned int> bytestr;
     std::string word;
     caosVar constval;
 
     token() {}
     token(const token &cp) {
-        yypos = cp.yypos;
+        yyline = cp.yyline;
         type = cp.type;
         bytestr = cp.bytestr;
         word = cp.word;
@@ -48,7 +48,7 @@ struct token {
                 break;
             case TOK_BYTESTR:
                 {
-                    std::vector<int>::iterator i = bytestr.begin();
+                    std::vector<unsigned int>::iterator i = bytestr.begin();
                     oss << "bytestr ";
                     while (i != bytestr.end())
                         oss << *i++ << " ";

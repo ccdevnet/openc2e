@@ -66,16 +66,30 @@ void caosVM::c_UNLK() {
 	lock = false;
 }
 
+class blockUntilTime : public blockCond {
+    protected:
+        unsigned int end;
+    public:
+        bool operator()() {
+            if (world.ticktime < end)
+                return true;
+            return false;
+        }
+
+        blockUntilTime(int delta) : end(world.ticktime + delta) {}
+};
+
 /**
  WAIT (command) ticks (integer)
 
  stop the script from running for a number of ticks
  */
-void caosVM::c_WAIT() { STUB; /*
+void caosVM::c_WAIT() {
 	VM_VERIFY_SIZE(1)
 	VM_PARAM_INTEGER(ticks)
-	assert(ticks > 0); // todo: is this right?
-	blockingticks = ticks; */
+
+	caos_assert(ticks > 0); // todo: is this right?
+    startBlocking(new blockUntilTime(ticks));
 }
 
 /**

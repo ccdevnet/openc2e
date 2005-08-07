@@ -50,8 +50,7 @@ void caosVM::c_MVTO() {
 void caosVM::v_VELX() {
 	VM_VERIFY_SIZE(0)
 	assert(targ);
-	result = targ->velx;
-	result.setVariable(&targ->velx);
+    vm->valueStack.push_back(&targ->velx);
 }
 
 /**
@@ -61,8 +60,7 @@ void caosVM::v_VELY() {
 	VM_VERIFY_SIZE(0)
 
 	assert(targ);
-	result = targ->vely;
-	result.setVariable(&targ->vely);
+    vm->valueStack.push_back(&targ->vely);
 }
 
 /**

@@ -2,6 +2,9 @@
 #define BYTECODE_H 1
 
 #include "caosVM.h"
+#include "lexutil.h"
+
+class script;
 
 typedef void (caosVM::*ophandler)();
 class caosOp {
@@ -16,11 +19,14 @@ class caosOp {
         void setCost(int cost) {
             evalcost = cost;
         }
-        caosOp() : evalcost(1), successor(NULL) {}
+        caosOp() : evalcost(1), successor(NULL), owned(false), yyline(lex_lineno) {}
         virtual ~caosOp() {};
     protected:
+        int yyline; // HORRIBLE HACK
         int evalcost;
         caosOp *successor;
+        bool owned; // if it's been addOp()ed
+        friend void script::addOp(caosOp *op);
 };
 
 class caosNoop : public caosOp {
@@ -124,7 +130,8 @@ class caosCond : public caosOp {
                     cres = CEQ;
                 else
                     cres = CNE;
-            } else throw creaturesException("type mismatch in comparison");
+                // the next bit is needed for some missing GAME etc
+            } else cres = CNE;
 
             if (cres & cond)
                 vm->nip = branch;
@@ -141,6 +148,7 @@ class caosENUM_POP : public caosOp {
             VM_PARAM_VALUE(v);
             if (v.isNull()) { // no more values
                 vm->nip = exit;
+                vm->targ = vm->owner;
                 return;
             }
             if (v.getAgent() == NULL) { // killed?

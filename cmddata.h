@@ -7,7 +7,6 @@ extern "C" struct cmdinfo {
     const char *docs;
     int argc;
     // TODO: arg types
-    class parseDelegate *parser;
 };
 
 extern const cmdinfo cmds[];

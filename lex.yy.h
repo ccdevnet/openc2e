@@ -355,7 +355,7 @@ static int yy_flex_strlen (yyconst char * );
 #undef YY_DECL_IS_OURS
 #undef YY_DECL
 #endif
-#line 50 "caos.l"
+#line 52 "caos.l"
 
 
 #line 362 "lex.yy.h"

@@ -20,12 +20,12 @@ while (<>) {
         # DBG: and the like
         ( \S+ \s+ )?
         # eg MOWS (command), LAWN (agent)
-        (\w+) \s* \((\w+)\) \s*
+        (\S+) \s* \((\w+)\) \s*
         ( (?:
             # argument bit
             # we parse this in more detail later
             (?:\w+) \s*
-            (?:\(\w+\)) \s*
+            (?:\([^)]+\)) \s*
         )* )
         \s*$
     }x;
@@ -44,17 +44,17 @@ while (<>) {
     }
     if ($cns && $cns ne '') {
         $_ = $cns . "_";
-        $_ =~ s/://g;
+        $_ =~ s/[^a-zA-Z0-9_]//g;
         $impl .= uc $_;
     }
     $_ = $cname;
-    $_ =~ s/://g;
+    $_ =~ s/[^a-zA-Z0-9_]//g;
     $impl .= $_;
     my $key = $impl;
     $impl = "caosVM::$impl";
 
     my @args;
-    while ($argdata =~ s/.*?(\w+)\s*\((\w+)\)\s*//) {
+    while ($argdata =~ s/.*?(\w+)\s*\(([^)]+)\)\s*//) {
         my ($argname, $argtype) = ($1, $2);
         push @args, {
             name => $argname,

@@ -3,10 +3,13 @@
 
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 
 void scheduleCollect(class Collectable *obj);
 void doCollect(void);
+extern bool gc__nowcollecting;
 
+// Do _NOT_ exception out of a Collectable constructor.
 class Collectable {
     private:
         int refcount;
@@ -24,8 +27,11 @@ class Collectable {
         void retain() {
             assert(++refcount);
         }
-        Collectable() : refcount(1), scheduled(false) { release(); }
+        Collectable() : refcount(1), scheduled(false) {
+            release();
+        }
         ~Collectable() {
+            assert(gc__nowcollecting);
             refcount = -400;
         }
 };

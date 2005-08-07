@@ -153,15 +153,20 @@ void caosVM::c_ENUM() {
 
 /**
  ESEE (command) family (integer) genus (integer) species (integer)
+ %pragma parserclass ENUMhelper
  
  like ENUM, but iterate through agents OWNR can see (todo: document exact rules)
 */
-void caosVM::c_ESEE() { STUB; /*
+void caosVM::c_ESEE() {
 	VM_VERIFY_SIZE(3)
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
-
+    
+    caosVar nullv;
+    nullv.reset();
+	valueStack.push_back(nullv);
+    
 	for (std::multiset<Agent *, agentzorder>::iterator i
 			= world.agents.begin(); i != world.agents.end(); i++) {
 		Agent *a = (*i);
@@ -178,18 +183,18 @@ void caosVM::c_ESEE() { STUB; /*
 		double distance = sqrt(deltax + deltay);
 		if (distance > owner->range) continue;
 
-		enumstack.back().push_back(a);
+        caosVar v; v.setAgent(a);
+        valueStack.push_back(v);
 	}
-
-	jumpToEquivalentNext();*/
 }
 
 /**
  ETCH (command) family (integer) genus (integer) species (integer)
+ %pragma parserclass ENUMhelper
 
  like ENUM, but iterate through agents OWNR is touching
 */
-void caosVM::c_ETCH() {STUB;/*
+void caosVM::c_ETCH() {
 	VM_VERIFY_SIZE(3)
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
@@ -197,26 +202,25 @@ void caosVM::c_ETCH() {STUB;/*
 
 	// TODO: should probably implement this (ESEE)
 	
-	setTarg(owner);
-	jumpToEquivalentNext();
-	currentline++;*/
+    caosVar nullv; nullv.reset();
+    valueStack.push_back(nullv);
 }
 
 /**
  EPAS (command) family (integer) genus (integer) species (integer)
+ %pragma parserclass ENUMhelper
 
  like ENUM, but iterate through OWNR vehicle's passengers
 */
-void caosVM::c_EPAS() {STUB;/*
+void caosVM::c_EPAS() {
 	VM_VERIFY_SIZE(3)
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 
 	// TODO: should probably implement this (ESEE)
-	
-	setTarg(owner);
-	jumpToEquivalentNext();
-	currentline++;*/
+
+    caosVar nullv; nullv.reset();
+    valueStack.push_back(nullv);
 }
 

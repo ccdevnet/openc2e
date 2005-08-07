@@ -21,6 +21,7 @@
 #include "caosVM.h" // for setupCommandPointers()
 #include "SimpleAgent.h"
 #include <limits.h> // for MAXINT
+#include "gc.h"
 
 World world;
 

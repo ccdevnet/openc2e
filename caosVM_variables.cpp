@@ -385,23 +385,21 @@ void caosVM::v_SQRT() {
 
 /**
  _P1_ (variable)
- %pragma noparse
+ %pragma implementation caosVM::v_P1
 */
 void caosVM::v_P1() {
 	VM_VERIFY_SIZE(0)
 
-	result = _p_[0];
-	result.setVariable(&_p_[0]);
+    vm->valueStack.push_back(&_p_[0]);
 }
 
 /**
  _P2_ (variable)
- %pragma noparse
+ %pragma implementation caosVM::v_P2
 */
 void caosVM::v_P2() {
 	VM_VERIFY_SIZE(0)
 		
-	result = _p_[1];
-	result.setVariable(&_p_[1]);
+    vm->valueStack.push_back(&_p_[1]);
 }
 

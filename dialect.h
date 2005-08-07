@@ -35,6 +35,7 @@ class Dialect {
         }
         virtual bool parseOne(class caosScript *s);
         virtual void handleToken(class caosScript *s, token *t);
+        virtual ~Dialect() {};
 };
 
 extern Dialect *cmd_dialect, *exp_dialect;

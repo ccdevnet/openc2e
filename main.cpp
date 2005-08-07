@@ -129,11 +129,19 @@ extern "C" int main(int argc, char *argv[]) {
 		std::cout << "executing script " << *i << "...\n";
 		std::cout.flush();
 		std::cerr.flush();
-		caosScript script(s);
-		caosVM vm(0);
-		vm.runEntirely(script.installer);
+        try {
+    		caosScript *script = new caosScript();
+            script->parse(s);
+    		caosVM vm(0);
+            script->installScripts();
+    		vm.runEntirely(script->installer);
+        } catch (creaturesException &e) {
+            std::cerr << "script exec failed due to exception " << e.what();
+            std::cerr << std::endl;
+        }
 		std::cout.flush();
 		std::cerr.flush();
+        doCollect();
 	}
 
 	if (world.map.getMetaRoomCount() == 0) {
@@ -182,6 +190,7 @@ extern "C" int main(int argc, char *argv[]) {
 	unsigned int ticktime[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	unsigned int ticktimeptr = 0;
 	while (!done) {
+        doCollect();
 		/*
 		 we calculate PACE below, but it's inaccurate because drawWorld(), our biggest cpu consumer, isn't in the loop
 		 this is because it makes the game seem terribly unresponsive..
@@ -220,11 +229,13 @@ extern "C" int main(int argc, char *argv[]) {
 			}
 
 			std::istringstream s(data);
-			caosScript script(s);
+			caosScript *script = new caosScript();
+            script->parse(s);
+            script->installScripts();
 			caosVM vm(0);
 			std::ostringstream o;
 			vm.setOutputStream(o);
-			vm.runEntirely(script.installer);
+			vm.runEntirely(script->installer);
 			SDLNet_TCP_Send(connection, (void *)o.str().c_str(), o.str().size());
 
 			SDLNet_TCP_Close(connection);
