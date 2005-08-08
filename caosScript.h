@@ -31,6 +31,7 @@ class Agent;
 class caosOp;
 
 struct script { //: public Collectable {
+    std::string filename;
 	std::vector<class caosOp *> allOps;
     std::map<std::string, class caosOp *> gsub;
     caosOp *entry, *last;
@@ -38,13 +39,14 @@ struct script { //: public Collectable {
     // add op as the next opcode
     void thread(caosOp *op);
     void addOp(caosOp *op);
-    script();
+    script(const std::string &fn);
     ~script();
 //	std::string dump();
 //	std::string dumpLine(unsigned int);
 
     void release(){}
     void retain(){}
+
 };
 
 struct residentScript {
@@ -69,11 +71,12 @@ struct residentScript {
 
 class caosScript { //: Collectable {
 public:
+    std::string filename;
 	script *installer, *removal;
 	std::vector<residentScript> scripts;
     script *current;
 
-	caosScript();
+	caosScript(const std::string &fn);
     void parse(std::istream &in);
     ~caosScript();
     void installScripts();

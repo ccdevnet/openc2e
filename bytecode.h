@@ -22,6 +22,7 @@ class caosOp {
         }
         caosOp() : evalcost(1), successor(NULL), owned(false), yyline(lex_lineno) {}
         virtual ~caosOp() {};
+        int getlineno() const { return yyline; }
     protected:
         int yyline; // HORRIBLE HACK
         int evalcost;

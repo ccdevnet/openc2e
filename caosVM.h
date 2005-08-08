@@ -430,9 +430,9 @@ public:
 typedef void (caosVM::*caosVMmethod)();
 
 class notEnoughParamsException { };
-class badParamException : public creaturesException {
+class badParamException : public caosException {
     public:
-        badParamException() : creaturesException("parameter type mismatch") {}
+        badParamException() : caosException("parameter type mismatch") {}
 };
 
 #define VM_VERIFY_SIZE(n) // no-op, we assert in the pops. orig: if (params.size() != n) { throw notEnoughParamsException(); }
@@ -473,6 +473,6 @@ static inline void VM_STACK_CHECK(const caosVM *vm) {
     if (!(__x.type & BYTESTR)) { throw badParamException(); } \
     name = __x.bytestring; } vm->valueStack.pop_back();
 
-#define STUB throw creaturesException("stub in " __FILE__)
+#define STUB throw caosException("stub in " __FILE__)
 
 #endif

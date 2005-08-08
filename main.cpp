@@ -130,7 +130,7 @@ extern "C" int main(int argc, char *argv[]) {
 		std::cout.flush();
 		std::cerr.flush();
         try {
-    		caosScript *script = new caosScript();
+    		caosScript *script = new caosScript(*i);
             script->parse(s);
     		caosVM vm(0);
             script->installScripts();
@@ -229,7 +229,7 @@ extern "C" int main(int argc, char *argv[]) {
 			}
 
 			std::istringstream s(data);
-			caosScript *script = new caosScript();
+			caosScript *script = new caosScript("<network>");
             script->parse(s);
             script->installScripts();
 			caosVM vm(0);
@@ -276,7 +276,14 @@ extern "C" int main(int argc, char *argv[]) {
 									handAgent = 0;
 							}
 						}
-					}
+					} else if (event.button.button = SDL_BUTTON_MIDDLE) {
+                        Agent *a = world.agentAt(event.button.x + world.camera.getX(), event.button.y + world.camera.getY(), true);
+                        if (a)
+                            std::cout << "Agent under mouse is " << a->identify();
+                        else
+                            std::cout << "No agent under cursor";
+                        std::cout << std::endl;
+                    }
 					break;
 				case SDL_KEYDOWN:
 					if (event.key.type == SDL_KEYDOWN) {
