@@ -21,13 +21,13 @@
 #include "caosVM.h" // for setupCommandPointers()
 #include "SimpleAgent.h"
 #include <limits.h> // for MAXINT
-#include "gc.h"
 
 World world;
 
 World::World() {
 	handName = "hand";
 	ticktime = 50;
+    tickcount = 0;
 }
 
 // annoyingly, if we put this in the constructor, imageGallery isn't available yet
@@ -62,6 +62,7 @@ void World::tick() {
 		assert(rip->dying);
 		delete rip;
 	}
+    tickcount++;
 	// todo: tick rooms
 }
 

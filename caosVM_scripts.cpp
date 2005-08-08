@@ -71,12 +71,12 @@ class blockUntilTime : public blockCond {
         unsigned int end;
     public:
         bool operator()() {
-            if (world.ticktime < end)
+            if (world.tickcount < end)
                 return true;
             return false;
         }
 
-        blockUntilTime(int delta) : end(world.ticktime + delta) {}
+        blockUntilTime(int delta) : end(world.tickcount + delta) {}
 };
 
 /**

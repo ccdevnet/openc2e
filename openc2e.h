@@ -21,6 +21,7 @@
 #define __OPENC2E_H
 
 #include <iostream>
+#include <cassert>
 #include "exceptions.h"
 
 // assertFailure segfaults the app
@@ -29,8 +30,6 @@ public:
 	assertFailure(const char *x) throw() : creaturesException(x) { }
 };
 
-#undef assert
 #define caos_assert(x) if (!(x)) { throw tracedAssertFailure(#x, __FILE__, __LINE__); }
-#define assert(x) caos_assert(x)
 
 #endif
