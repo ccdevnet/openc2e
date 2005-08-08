@@ -74,6 +74,9 @@ all: openc2e tools/filetests tools/praydumper
 commandinfo.yml: $(wildcard caosVM_*.cpp) parsedocs.pl
 	perl parsedocs.pl $(wildcard caosVM_*.cpp) > commandinfo.yml
 
+docs.html: writedocs.pl commandinfo.yml
+	perl writedocs.pl > docs.html
+
 cmddata.cpp: commandinfo.yml writecmds.pl
 	perl writecmds.pl commandinfo.yml > cmddata.cpp
 
