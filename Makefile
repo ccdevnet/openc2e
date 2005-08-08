@@ -69,7 +69,9 @@ COREFLAGS=-ggdb3 $(shell sdl-config --cflags) -I.
 XCFLAGS=$(CFLAGS) $(COREFLAGS)
 XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
 
-all: openc2e tools/filetests tools/praydumper
+all: openc2e tools/filetests tools/praydumper docs
+
+docs: docs.html
 
 commandinfo.yml: $(wildcard caosVM_*.cpp) parsedocs.pl
 	perl parsedocs.pl $(wildcard caosVM_*.cpp) > commandinfo.yml
@@ -127,4 +129,4 @@ clean:
 	rm -rf .deps
 	rm -f commandinfo.yml lex.yy.cpp lex.yy.h cmddata.cpp
 
-.PHONY: clean all dep
+.PHONY: clean all dep docs
