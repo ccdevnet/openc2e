@@ -67,7 +67,7 @@ void DefaultParser::operator()(class caosScript *s, class Dialect *curD) {
     int argc = cmds[idx].argc;
     while(argc--)
         exp_dialect->doParse(s);
-    s->current->thread(new simpleCaosOp(handler));
+    s->current->thread(new simpleCaosOp(handler, idx));
 }
 
 
