@@ -3,6 +3,7 @@
 
 #include "caosVM.h"
 #include "lexutil.h"
+#include "cmddata.h"
 
 class script;
 
@@ -37,11 +38,22 @@ class caosNoop : public caosOp {
 class simpleCaosOp : public caosOp {
     protected:
         ophandler handler;
+        int idx;
     public:
-        simpleCaosOp(ophandler h) : handler(h) {}
+        simpleCaosOp(ophandler h, int i) : handler(h), idx(i) {}
         void execute(caosVM *vm) {
             caosOp::execute(vm);
+            int stackc = vm->valueStack.size();
             (vm->*handler)();
+            int delta = vm->valueStack.size() - stackc;
+            if (!vm->result.isNull())
+                delta++;
+            if (cmds[idx].retc != -1 && 
+                    delta != cmds[idx].retc - cmds[idx].argc) {
+                std::cerr << "Warning: return count mismatch for op "
+                    << cmds[idx].fullname << ", delta=" << delta
+                    << std::endl;
+            }
         }
 };
 

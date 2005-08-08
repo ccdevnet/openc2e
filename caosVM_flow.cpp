@@ -91,6 +91,7 @@
 /**
  GSUB (command) label (label)
  %pragma parser new parseGSUB()
+ %pragma retc -1
  
  Jump to a subroutine defined by SUBR with label 'label'.
 */
@@ -105,6 +106,7 @@
 
 /**
  RETN (command)
+ %pragma retc -1
  
  Return from a subroutine called with GSUB.
 */
@@ -125,6 +127,7 @@ void caosVM::c_RETN() {
 /**
  ENUM (command) family (integer) genus (integer) species (integer)
  %pragma parserclass ENUMhelper
+ %pragma retc -1
 
  Loop through all agents with the given classifier. 0 on any field is a
  wildcard. The loop body is terminated by a NEXT.
@@ -154,6 +157,7 @@ void caosVM::c_ENUM() {
 /**
  ESEE (command) family (integer) genus (integer) species (integer)
  %pragma parserclass ENUMhelper
+ %pragma retc -1
  
  like ENUM, but iterate through agents OWNR can see (todo: document exact rules)
 */
@@ -191,6 +195,7 @@ void caosVM::c_ESEE() {
 /**
  ETCH (command) family (integer) genus (integer) species (integer)
  %pragma parserclass ENUMhelper
+ %pragma retc -1
 
  like ENUM, but iterate through agents OWNR is touching
 */
@@ -209,6 +214,7 @@ void caosVM::c_ETCH() {
 /**
  EPAS (command) family (integer) genus (integer) species (integer)
  %pragma parserclass ENUMhelper
+ %pragma retc -1
 
  like ENUM, but iterate through OWNR vehicle's passengers
 */

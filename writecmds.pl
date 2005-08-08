@@ -28,11 +28,15 @@ my $idx = 0;
 
 $data = $data->{ops};
 
-foreach my $key (keys %$data) {
+foreach my $key (sort keys %$data) {
     my $cedocs = cescape($data->{$key}{description} || "UNDOCUMENTED");
     my $argc = scalar @{$data->{$key}{arguments}};
     my $name = lc $data->{$key}{match};
     my $fullname = $data->{$key}{name};
+    my $retc = $data->{$key}{type} eq 'command' ? 0 : 1;
+    if (defined $data->{$key}{pragma}{retc}) {
+        $retc = $data->{$key}{pragma}{retc};
+    }
     my $delegate;
     if ($data->{$key}{pragma}{noparse}) {
         $delegate = undef;
@@ -53,13 +57,14 @@ foreach my $key (keys %$data) {
         "$fullname",
         "$cedocs",
         $argc,
+        $retc
     },
 ENDDATA
     $idx++;
 }
 
 print <<ENDTAIL;
-    { NULL, NULL, NULL, 0 }
+    { NULL, NULL, NULL, 0, 0 }
 };
 
 void registerAutoDelegates() {
