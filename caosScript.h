@@ -26,12 +26,11 @@
 #include <istream>
 #include <map>
 #include "caosVar.h"
-#include "gc.h"
 
 class Agent;
 class caosOp;
 
-struct script : public Collectable {
+struct script { //: public Collectable {
 	std::vector<class caosOp *> allOps;
     std::map<std::string, class caosOp *> gsub;
     caosOp *entry, *last;
@@ -43,6 +42,9 @@ struct script : public Collectable {
     ~script();
 //	std::string dump();
 //	std::string dumpLine(unsigned int);
+
+    void release(){}
+    void retain(){}
 };
 
 struct residentScript {
@@ -65,7 +67,7 @@ struct residentScript {
     }
 };
 
-class caosScript : Collectable {
+class caosScript { //: Collectable {
 public:
 	script *installer, *removal;
 	std::vector<residentScript> scripts;
@@ -75,6 +77,9 @@ public:
     void parse(std::istream &in);
     ~caosScript();
     void installScripts();
+
+    void release() {}
+    void retain() {}
 };
 
 #endif

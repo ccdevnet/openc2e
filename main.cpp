@@ -141,7 +141,7 @@ extern "C" int main(int argc, char *argv[]) {
         }
 		std::cout.flush();
 		std::cerr.flush();
-        doCollect();
+//        Collectable::doCollect();
 	}
 
 	if (world.map.getMetaRoomCount() == 0) {
@@ -190,7 +190,7 @@ extern "C" int main(int argc, char *argv[]) {
 	unsigned int ticktime[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	unsigned int ticktimeptr = 0;
 	while (!done) {
-        doCollect();
+//        Collectable::doCollect();
 		/*
 		 we calculate PACE below, but it's inaccurate because drawWorld(), our biggest cpu consumer, isn't in the loop
 		 this is because it makes the game seem terribly unresponsive..

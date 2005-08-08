@@ -49,7 +49,7 @@ inline bool caosVM::isBlocking() {
     if (!blocking) return false;
     bool bl = (*blocking)();
     if (!bl) {
-        blocking->release();
+        delete blocking;
         blocking = NULL;
     }
     return bl;
@@ -59,7 +59,6 @@ void caosVM::startBlocking(blockCond *whileWhat) {
     if (blocking)
         throw creaturesException("trying to block with a block condition in-place");
     blocking = whileWhat;
-    blocking->retain();
 }
 
 inline void caosVM::runOp() {
@@ -96,7 +95,7 @@ void caosVM::runEntirely(script *s) {
 	while (nip) {
         runOp();
         if (blocking) {
-            blocking->release();
+            delete blocking;
             blocking = NULL;
             throw creaturesException("blocking in an installation script");
         }
@@ -125,7 +124,7 @@ void caosVM::resetScriptState() {
 void caosVM::resetCore() {
 
     if (blocking)
-        blocking->release();
+        delete blocking;
     blocking = NULL;
     
     valueStack.clear();

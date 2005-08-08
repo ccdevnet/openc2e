@@ -59,7 +59,6 @@ OPENC2E = \
 	World.o \
 	PathResolver.o \
 	cmddata.o \
-	gc.cpp \
 	lex.yy.o \
 	lexutil.o \
 	dialect.o
@@ -91,16 +90,16 @@ caosScript.o: lex.yy.h lex.yy.cpp
 	$(CC) $(XCFLAGS) -o $@ -c $<
 
 # shamelessly ripped from info make, with tweaks
-.deps/%.d: %.c
-	mkdir -p `dirname $@`; \
-	$(CC) -M $(XCPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+.deps/%.d: %.c lex.yy.h
+	mkdir -p `dirname $@` && \
+	$(CC) -M $(XCPPFLAGS) $< > $@.$$$$ && \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
 	rm -f $@.$$$$
 
-.deps/%.dpp: %.cpp
-	mkdir -p `dirname $@`; \
-	$(CXX) -M $(XCPPFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+.deps/%.dpp: %.cpp lex.yy.h
+	mkdir -p `dirname $@` && \
+	$(CXX) -M $(XCPPFLAGS) $< > $@.$$$$ && \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ && \
 	rm -f $@.$$$$
 
 .deps/meta: $(SOURCEDEPS)

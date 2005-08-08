@@ -76,7 +76,7 @@ struct callStackItem {
 
 typedef class caosVM *caosVM_p;
 
-class blockCond : public Collectable {
+class blockCond {
     public:
         virtual bool operator()() = 0;
         virtual ~blockCond() {}
