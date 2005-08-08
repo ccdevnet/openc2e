@@ -74,7 +74,7 @@ void caosVM::c_PAT_BUTT() {
 	VM_VERIFY_SIZE(10)
 	VM_PARAM_INTEGER(option)
 	VM_PARAM_INTEGER(messageid)
-	VM_PARAM_STRING(hoveranim)
+	VM_PARAM_BYTESTR(hoveranim)
 	VM_PARAM_INTEGER(plane)
 	VM_PARAM_INTEGER(y)
 	VM_PARAM_INTEGER(x)

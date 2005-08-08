@@ -22,7 +22,10 @@
 
 #include <iostream>
 #include <cassert>
+#include <vector>
 #include "exceptions.h"
+
+typedef std::vector<unsigned int> bytestring;
 
 // assertFailure segfaults the app
 class assertFailure : public creaturesException {

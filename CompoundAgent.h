@@ -57,7 +57,7 @@ protected:
 
 public:
 	ButtonPart(unsigned int _id, std::string spritefile, unsigned int fimg, unsigned int _x, unsigned int _y,
-			   unsigned int _z, std::string animhover, int msgid, int option);
+			   unsigned int _z, const bytestring &animhover, int msgid, int option);
 };
 
 class CameraPart : public CompoundPart {

@@ -52,7 +52,8 @@ script::~script() {
 }
 
 
-script::script() {
+script::script(const std::string &fn) {
+    filename = fn;
     entry = last = new caosNoop();
     allOps.push_back(entry);
 }
@@ -76,7 +77,7 @@ class BaseDialect : public Dialect {
                 if (t->word == "rscr") {
                     if (s->removal)
                         throw parseException("multiple rscr not allowed");
-                    s->current = s->removal = new script();
+                    s->current = s->removal = new script(s->filename);
                     s->removal->retain();
                     return;
                 }
@@ -104,7 +105,7 @@ class BaseDialect : public Dialect {
                             gnus.constval.getInt(),
                             spcs.constval.getInt(),
                             scrp.constval.getInt(),
-                            new script());
+                            new script(s->filename));
                     s->current = scr.s;
                     d.doParse(s);
                     s->current = s->installer;
@@ -119,10 +120,11 @@ class BaseDialect : public Dialect {
         }
 };
 
-caosScript::caosScript() {
-    current = installer = new script();
+caosScript::caosScript(const std::string &fn) {
+    current = installer = new script(fn);
     current->retain();
     removal = NULL;
+    filename = fn;
 }
 
 void caosScript::parse(std::istream &in) {

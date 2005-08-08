@@ -75,6 +75,11 @@ inline void caosVM::runOp() {
         std::cerr << "script stopped due to exception " << e.what() << endl;
         stop();
         return;
+    } catch (caosException &e) {
+        e.trace(currentscript->filename.c_str(), cip->getlineno(), cip);
+        std::cerr << "script stopped due to exception " << e.what() << endl;
+        stop();
+        return;
     }
     if (!result.isNull())
         valueStack.push_back(result);
