@@ -456,8 +456,8 @@ void caosVM::c_MESG_WRIT() {
 void caosVM::c_MESG_WRT() {
 	VM_VERIFY_SIZE(5)
 	VM_PARAM_INTEGER(delay)
-    VM_PARAM_VALUE(param_2)
-    VM_PARAM_VALUE(param_1)
+	VM_PARAM_VALUE(param_2)
+	VM_PARAM_VALUE(param_1)
 	VM_PARAM_INTEGER(message_id)
 	VM_PARAM_AGENT(agent)
 
@@ -541,34 +541,34 @@ void caosVM::c_FRAT() {
 }
 
 class blockUntilOver : public blockCond {
-    protected:
-        AgentRef targ;
-        int part;
-    public:
-        blockUntilOver(Agent *t, int p) : targ(t), part(p) {}
-        virtual bool operator()() {
-            bool blocking;
-            int fno, animsize;
+	protected:
+		AgentRef targ;
+		int part;
+	public:
+		blockUntilOver(Agent *t, int p) : targ(t), part(p) {}
+		virtual bool operator()() {
+			bool blocking;
+			int fno, animsize;
 
-            if (!targ) return false;
-            
-            CompoundAgent *c = dynamic_cast<CompoundAgent *>(targ.get());
-            if (c) {
-                CompoundPart *p = c->part(part);
-                fno = p->getFrameNo();
-                animsize = p->animation.size();
-            } else {
-                SimpleAgent *a = dynamic_cast<SimpleAgent *>(targ.get());
-                caos_assert(a);
-                fno = a->getFrameNo();
-                animsize = a->animation.size();
-            }
+			if (!targ) return false;
+			
+			CompoundAgent *c = dynamic_cast<CompoundAgent *>(targ.get());
+			if (c) {
+				CompoundPart *p = c->part(part);
+				fno = p->getFrameNo();
+				animsize = p->animation.size();
+			} else {
+				SimpleAgent *a = dynamic_cast<SimpleAgent *>(targ.get());
+				caos_assert(a);
+				fno = a->getFrameNo();
+				animsize = a->animation.size();
+			}
 
-            if (fno + 1 == animsize) blocking = false;
-            else if (animsize == 0) blocking = false;
-            else blocking = true; 
-            return blocking;
-        }
+			if (fno + 1 == animsize) blocking = false;
+			else if (animsize == 0) blocking = false;
+			else blocking = true; 
+			return blocking;
+		}
 };
   
 
@@ -578,9 +578,9 @@ class blockUntilOver : public blockCond {
  wait until the animation of the target agent or part is over
 */
 void caosVM::c_OVER() {
-    caos_assert(targ);
-    
-    startBlocking(new blockUntilOver(targ, part));
+	caos_assert(targ);
+	
+	startBlocking(new blockUntilOver(targ, part));
 }
 
 /**
@@ -804,3 +804,4 @@ void caosVM::c_PUPT() {
 	// TODO
 }
 
+/* vim: noet : */

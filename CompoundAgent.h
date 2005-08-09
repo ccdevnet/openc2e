@@ -92,7 +92,7 @@ public:
 
 class CompoundAgent : public Agent {
 protected:
-    std::vector<CompoundPart *> parts;
+	std::vector<CompoundPart *> parts;
 
 	unsigned int width, height;
 
@@ -113,3 +113,4 @@ public:
 
 	virtual void render(SDLBackend *renderer, int xoffset, int yoffset);
 };
+/* vim: noet : */

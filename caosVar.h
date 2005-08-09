@@ -49,9 +49,9 @@ class caosVar {
 			type = NULLTYPE;
 		}
 
-        bool isNull() {
-            return type == NULLTYPE;
-        }
+		bool isNull() {
+			return type == NULLTYPE;
+		}
 
 		caosVar() {
 			type = INTEGER;
@@ -69,7 +69,7 @@ class caosVar {
 			type = copyFrom.type;
 			values = copyFrom.values;
 			agent = copyFrom.agent;
-            return *this;
+			return *this;
 		}
 
 		bool isEmpty() const { return type == NULLTYPE; }
@@ -78,7 +78,7 @@ class caosVar {
 		bool hasAgent() const { return type == AGENT; }
 		bool hasString() const { return type == STRING; }
 		bool hasDecimal() const { return type == INTEGER || type == FLOAT; }
-        bool hasNumber() const { return hasDecimal(); }
+		bool hasNumber() const { return hasDecimal(); }
 		
 		void setInt(int i) { reset(); type = INTEGER; values.intValue = i; }
 		void setFloat(float i) { reset(); type = FLOAT; values.floatValue = i; }
@@ -155,3 +155,4 @@ class caosVar {
 #endif
 
 #endif
+/* vim: noet : */

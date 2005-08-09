@@ -111,11 +111,11 @@
  Return from a subroutine called with GSUB.
 */
 void caosVM::c_RETN() {
-    if (callStack.empty())
-        throw creaturesException("RETN with an empty callstack");
-    nip = callStack.back().nip;
-    valueStack = callStack.back().valueStack;
-    callStack.pop_back();
+	if (callStack.empty())
+		throw creaturesException("RETN with an empty callstack");
+	nip = callStack.back().nip;
+	valueStack = callStack.back().valueStack;
+	callStack.pop_back();
 }
 
 /**
@@ -138,8 +138,8 @@ void caosVM::c_ENUM() {
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 
-    caosVar nullv;
-    nullv.reset();
+	caosVar nullv;
+	nullv.reset();
 	valueStack.push_back(nullv);
 	
 	for (std::multiset<Agent *, agentzorder>::iterator i
@@ -149,7 +149,7 @@ void caosVM::c_ENUM() {
 		if (genus && genus != a->genus) continue;
 		if (family && family != a->family) continue;
 
-        caosVar v; v.setAgent(a);
+		caosVar v; v.setAgent(a);
 		valueStack.push_back(v);
 	}
 }
@@ -166,11 +166,11 @@ void caosVM::c_ESEE() {
 	VM_PARAM_INTEGER(species) assert(species >= 0); assert(species <= 65535);
 	VM_PARAM_INTEGER(genus) assert(genus >= 0); assert(genus <= 255);
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
-    
-    caosVar nullv;
-    nullv.reset();
+	
+	caosVar nullv;
+	nullv.reset();
 	valueStack.push_back(nullv);
-    
+	
 	for (std::multiset<Agent *, agentzorder>::iterator i
 			= world.agents.begin(); i != world.agents.end(); i++) {
 		Agent *a = (*i);
@@ -187,8 +187,8 @@ void caosVM::c_ESEE() {
 		double distance = sqrt(deltax + deltay);
 		if (distance > owner->range) continue;
 
-        caosVar v; v.setAgent(a);
-        valueStack.push_back(v);
+		caosVar v; v.setAgent(a);
+		valueStack.push_back(v);
 	}
 }
 
@@ -207,8 +207,8 @@ void caosVM::c_ETCH() {
 
 	// TODO: should probably implement this (ESEE)
 	
-    caosVar nullv; nullv.reset();
-    valueStack.push_back(nullv);
+	caosVar nullv; nullv.reset();
+	valueStack.push_back(nullv);
 }
 
 /**
@@ -226,7 +226,8 @@ void caosVM::c_EPAS() {
 
 	// TODO: should probably implement this (ESEE)
 
-    caosVar nullv; nullv.reset();
-    valueStack.push_back(nullv);
+	caosVar nullv; nullv.reset();
+	valueStack.push_back(nullv);
 }
 
+/* vim: noet : */

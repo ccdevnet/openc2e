@@ -89,7 +89,7 @@ extern "C" int main(int argc, char *argv[]) {
 		
 	std::cout << "openc2e, built " __DATE__ " " __TIME__ "\nCopyright (c) 2004-2005 Alyssa Milburn\n\n";
 
-    registerDelegates();
+	registerDelegates();
 	world.init();
 	world.catalogue.initFrom("data/Catalogue/");
 	// moved backend.init() here because we need the camera to be valid - fuzzie
@@ -129,16 +129,16 @@ extern "C" int main(int argc, char *argv[]) {
 		std::cout << "executing script " << *i << "...\n";
 		std::cout.flush();
 		std::cerr.flush();
-        try {
-    		caosScript *script = new caosScript(*i);
-            script->parse(s);
-    		caosVM vm(0);
-            script->installScripts();
-    		vm.runEntirely(script->installer);
-        } catch (creaturesException &e) {
-            std::cerr << "script exec failed due to exception " << e.what();
-            std::cerr << std::endl;
-        }
+		try {
+			caosScript *script = new caosScript(*i);
+			script->parse(s);
+			caosVM vm(0);
+			script->installScripts();
+			vm.runEntirely(script->installer);
+		} catch (creaturesException &e) {
+			std::cerr << "script exec failed due to exception " << e.what();
+			std::cerr << std::endl;
+		}
 		std::cout.flush();
 		std::cerr.flush();
 //        Collectable::doCollect();
@@ -230,8 +230,8 @@ extern "C" int main(int argc, char *argv[]) {
 
 			std::istringstream s(data);
 			caosScript *script = new caosScript("<network>");
-            script->parse(s);
-            script->installScripts();
+			script->parse(s);
+			script->installScripts();
 			caosVM vm(0);
 			std::ostringstream o;
 			vm.setOutputStream(o);
@@ -277,13 +277,13 @@ extern "C" int main(int argc, char *argv[]) {
 							}
 						}
 					} else if (event.button.button = SDL_BUTTON_MIDDLE) {
-                        Agent *a = world.agentAt(event.button.x + world.camera.getX(), event.button.y + world.camera.getY(), true);
-                        if (a)
-                            std::cout << "Agent under mouse is " << a->identify();
-                        else
-                            std::cout << "No agent under cursor";
-                        std::cout << std::endl;
-                    }
+						Agent *a = world.agentAt(event.button.x + world.camera.getX(), event.button.y + world.camera.getY(), true);
+						if (a)
+							std::cout << "Agent under mouse is " << a->identify();
+						else
+							std::cout << "No agent under cursor";
+						std::cout << std::endl;
+					}
 					break;
 				case SDL_KEYDOWN:
 					if (event.key.type == SDL_KEYDOWN) {
@@ -385,3 +385,4 @@ extern "C" int main(int argc, char *argv[]) {
 	return 0;
 }
 
+/* vim: noet : */

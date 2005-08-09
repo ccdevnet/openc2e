@@ -103,12 +103,12 @@ void Agent::tick() {
 			bool moved = false, collided = false;
 
 			int ix = x, iy = y, idestx = destx, idesty = desty;
-            int dx = (ix < idestx ? 1 : -1);
-            int dy = (iy < idesty ? 1 : -1);
+			int dx = (ix < idestx ? 1 : -1);
+			int dy = (iy < idesty ? 1 : -1);
 			
-            while (ix != idestx || iy != idesty) {
-                // We just alternate here. There's probably a more
-                // accurate method, but meh
+			while (ix != idestx || iy != idesty) {
+				// We just alternate here. There's probably a more
+				// accurate method, but meh
 
 				if (iy != idesty) {
 					iy += dy;
@@ -133,7 +133,7 @@ void Agent::tick() {
 						break;
 					}
 				}
-                moved = true;
+				moved = true;
 			}
 			
 			vely.setFloat(newvely);
@@ -167,12 +167,12 @@ void Agent::tick() {
 
 	if (vm) {
 		vm->tick();
-        if (vm->stopped()) {
-            world.freeVM(vm);
-            vm = NULL;
-        }
-    }
-        
+		if (vm->stopped()) {
+			world.freeVM(vm);
+			vm = NULL;
+		}
+	}
+		
 }
 
 void Agent::kill() {
@@ -196,9 +196,9 @@ void Agent::setZOrder(unsigned int z) {
 }
 
 int Agent::getUNID() {
-      if (unid != -1)
-              return unid;
-      return unid = world.getUNID(this);
+	  if (unid != -1)
+			  return unid;
+	  return unid = world.getUNID(this);
 }
 
 std::string Agent::identify() const {
@@ -218,3 +218,4 @@ bool agentzorder::operator ()(const Agent *s1, const Agent *s2) const {
 	return s1->zorder < s2->zorder;
 }
 
+/* vim: noet : */

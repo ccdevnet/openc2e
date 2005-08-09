@@ -73,7 +73,7 @@ void caosVM::v_GAME() {
 	VM_PARAM_STRING(name)
 
 	caosVar &i = world.variables[name];
-    valueStack.push_back(&i);
+	valueStack.push_back(&i);
 }
 
 /**
@@ -94,14 +94,14 @@ void caosVM::v_GAME() {
 */
 void caosVM::c_ISCR() {
 	VM_VERIFY_SIZE(0)
-    // STOP
+	// STOP
 }
 
 /**
  ENDM (command)
 */
 void caosVM::c_ENDM() {
-    stop();
+	stop();
 }
 
 
@@ -111,3 +111,4 @@ void caosVM::c_ENDM() {
  No-op for now.
  */
 void caosVM::c_RGAM() {}
+/* vim: noet : */

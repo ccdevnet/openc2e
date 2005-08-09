@@ -136,7 +136,8 @@ void caosVM::c_PRT_OZAP() {
 */
 void caosVM::c_PRT_SEND() { // TODO
 	VM_VERIFY_SIZE(2)
-    VM_PARAM_VALUE(data)
+	VM_PARAM_VALUE(data)
 	VM_PARAM_INTEGER(id)
 }
 
+/* vim: noet : */
