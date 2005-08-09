@@ -36,4 +36,4 @@ istream &operator >> (istream &i, attFile &f) {
 	return i;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

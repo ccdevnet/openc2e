@@ -28,4 +28,4 @@ for my $f (@hitlist) {
 	close $in;
 	# unlink "$f.bak" unless $ch;
 }
-# vim: noet : 
+# vim: set noet: 

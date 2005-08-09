@@ -69,4 +69,4 @@ extern token lasttok; // internal use only
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

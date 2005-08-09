@@ -83,4 +83,4 @@ bool caosVar::operator < (const caosVar &v) const {
 }
 
 
-/* vim: noet : */
+/* vim: set noet: */

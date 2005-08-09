@@ -44,4 +44,4 @@ token *tokenPeek() {
 	peektok = &lasttok;
 	return peektok;
 }
-/* vim: noet : */
+/* vim: set noet: */

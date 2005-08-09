@@ -150,4 +150,4 @@ s16Image::s16Image(mmapifstream *in) {
 
 	delete[] offsets;
 }
-/* vim: noet : */
+/* vim: set noet: */

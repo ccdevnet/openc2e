@@ -139,4 +139,4 @@ void caosVM::v_AGNT() {
 	result.setAgent(world.lookupUNID(id));
 }
 
-/* vim: noet : */
+/* vim: set noet: */

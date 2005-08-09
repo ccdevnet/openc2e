@@ -105,4 +105,4 @@ static inline void parse_error(const char *yytext, int yylineno) {
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

@@ -33,4 +33,4 @@ bool resolveFile(boost::filesystem::path &path);
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

@@ -36,4 +36,4 @@ void Scriptorium::delScript(unsigned char family, unsigned char genus, unsigned 
 script *Scriptorium::getScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short event) {
 	return getScripts(calculateValue(family, genus, species))[event];
 }
-/* vim: noet : */
+/* vim: set noet: */

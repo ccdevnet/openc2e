@@ -804,4 +804,4 @@ void caosVM::c_PUPT() {
 	// TODO
 }
 
-/* vim: noet : */
+/* vim: set noet: */

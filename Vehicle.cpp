@@ -19,4 +19,4 @@
 
 #include "Vehicle.h"
 
-/* vim: noet : */
+/* vim: set noet: */

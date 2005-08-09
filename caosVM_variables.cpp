@@ -439,4 +439,4 @@ void caosVM::v_VTOS() {
 	result.setString(buffer);
 }
 
-/* vim: noet : */
+/* vim: set noet: */

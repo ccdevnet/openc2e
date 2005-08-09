@@ -21,4 +21,4 @@ public:
 	void initFrom(boost::filesystem::path path);
 };
 
-/* vim: noet : */
+/* vim: set noet: */

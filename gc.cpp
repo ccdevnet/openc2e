@@ -50,4 +50,4 @@ void Collectable::doCollect() {
 		gc__nowcollecting = false;
 	}
 }
-/* vim: noet : */
+/* vim: set noet: */

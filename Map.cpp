@@ -85,4 +85,4 @@ Room *Map::roomAt(unsigned int _x, unsigned int _y) {
 	return 0;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

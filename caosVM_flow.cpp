@@ -230,4 +230,4 @@ void caosVM::c_EPAS() {
 	valueStack.push_back(nullv);
 }
 
-/* vim: noet : */
+/* vim: set noet: */

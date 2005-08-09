@@ -29,4 +29,4 @@ public:
 	void converts16(std::string directory, std::string name);
 	void convertblk(std::string directory, std::string name);
 };
-/* vim: noet : */
+/* vim: set noet: */

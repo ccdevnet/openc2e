@@ -174,4 +174,4 @@ class caosENUM_POP : public caosOp {
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

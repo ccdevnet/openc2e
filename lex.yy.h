@@ -361,4 +361,4 @@ static int yy_flex_strlen (yyconst char * );
 #line 362 "lex.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */
-/* vim: noet : */
+/* vim: set noet: */

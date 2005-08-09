@@ -46,4 +46,4 @@ typedef unsigned int uint32;
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

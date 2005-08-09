@@ -140,4 +140,4 @@ void caosVM::c_PRT_SEND() { // TODO
 	VM_PARAM_INTEGER(id)
 }
 
-/* vim: noet : */
+/* vim: set noet: */

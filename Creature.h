@@ -34,4 +34,4 @@ public:
 	Creature(genomeFile *g, unsigned char _family, bool is_female, unsigned char _variant);
 };
 
-/* vim: noet : */
+/* vim: set noet: */

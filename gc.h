@@ -103,4 +103,4 @@ class Collectable {
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

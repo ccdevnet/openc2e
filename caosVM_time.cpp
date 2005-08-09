@@ -34,4 +34,4 @@ void caosVM::v_PACE() {
 	result.setFloat(world.pace);
 }
 
-/* vim: noet : */
+/* vim: set noet: */

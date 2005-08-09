@@ -155,4 +155,4 @@ void caosVM::c_PRAY_REFR() {
 */
 void caosVM::v_PRAY_TEST() {
 }
-/* vim: noet : */
+/* vim: set noet: */

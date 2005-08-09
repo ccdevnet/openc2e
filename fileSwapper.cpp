@@ -115,4 +115,4 @@ void fileSwapper::convertblk(std::string directory, std::string name) {
 		delete (uint16 *)img.buffers[i];
 	}
 }
-/* vim: noet : */
+/* vim: set noet: */

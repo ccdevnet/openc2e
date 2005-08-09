@@ -113,4 +113,4 @@ void caosVM::c_SCRX() {
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 	world.scriptorium.delScript(family, genus, species, event);
 }
-/* vim: noet : */
+/* vim: set noet: */

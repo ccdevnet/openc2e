@@ -47,4 +47,4 @@ class MNGVariable : public MNGNode {
 class MNGUpdate : public MNGNode {
 };
 
-/* vim: noet : */
+/* vim: set noet: */

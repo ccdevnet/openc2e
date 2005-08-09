@@ -125,4 +125,4 @@ sub cescape {
 	$str =~ s/([\Q$ces\E])/$cescapes{$1}/ge;
 	return $str;
 }
-# vim: noet : 
+# vim: set noet: 

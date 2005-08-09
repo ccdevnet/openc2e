@@ -179,4 +179,4 @@ void SkeletalCreature::setPose(std::string s) {
 	recalculateSkeleton();
 }
 
-/* vim: noet : */
+/* vim: set noet: */

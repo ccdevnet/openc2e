@@ -23,4 +23,4 @@ if (($pass != 0) || ($fail != 0)) {
   print "test $test: $pass passed, $fail failed\n";
 }
 close TESTS;
-# vim: noet : 
+# vim: set noet: 

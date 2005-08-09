@@ -2004,4 +2004,4 @@ void yyfree (void * ptr )
 
 
 
-/* vim: noet : */
+/* vim: set noet: */

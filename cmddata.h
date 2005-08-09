@@ -16,4 +16,4 @@ void registerAutoDelegates();
 #endif
 
 
-/* vim: noet : */
+/* vim: set noet: */

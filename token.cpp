@@ -1,1 +1,1 @@
-/* vim: noet : */
+/* vim: set noet: */

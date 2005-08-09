@@ -111,4 +111,14 @@ void caosVM::c_ENDM() {
  No-op for now.
  */
 void caosVM::c_RGAM() {}
-/* vim: noet : */
+
+/**
+ MOWS (integer)
+
+ Returns whether the lawn was cut last sunday or not.
+ */
+void caosVM::v_MOWS() {
+	result.setInt(0); // We're too busy coding to mow the lawn.
+}
+
+/* vim: set noet: */

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# vim: noet : 
+# vim: set noet: 
 use strict;
 use warnings;
 

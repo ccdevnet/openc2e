@@ -30,4 +30,4 @@ public:
 	void readHeader(std::istream &in);
 	void writeHeader(std::ostream &s);
 };
-/* vim: noet : */
+/* vim: set noet: */

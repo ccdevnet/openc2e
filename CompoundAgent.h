@@ -113,4 +113,4 @@ public:
 
 	virtual void render(SDLBackend *renderer, int xoffset, int yoffset);
 };
-/* vim: noet : */
+/* vim: set noet: */

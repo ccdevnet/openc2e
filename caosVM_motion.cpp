@@ -286,4 +286,4 @@ void caosVM::v_FALL() {
 	} else
 		result.setInt(0);
 }
-/* vim: noet : */
+/* vim: set noet: */
