@@ -7,6 +7,26 @@ use YAML;
 
 $SIG{__WARN__} = sub { die $_[0] };
 
+my %fnmap = ( # default category mappings
+	'caosVM_agent.cpp' => 'Agents',
+	'caosVM_camera.cpp' => 'Cameras',
+	'caosVM_core.cpp' => 'Core functions',
+	'caosVM_creatures.cpp' => 'Creatures',
+	'caosVM_compound.cpp' => 'Compound agents',
+	'caosVM_debug.cpp' => 'Debugging',
+	'caosVM_flow.cpp' => 'Flow control',
+	'caosVM_input.cpp' => 'Input',
+	'caosVM_map.cpp' => 'Map',
+	'caosVM_motion.cpp' => 'Motion',
+	'caosVM_ports.cpp' => 'Ports',
+	'caosVM_resources.cpp' => 'Resources',
+	'caosVM_scripts.cpp' => 'Scripts',
+	'caosVM_sounds.cpp' => 'Sound',
+	'caosVM_time.cpp' => 'Time',
+	'caosVM_variables.cpp' => 'Variables',
+	'caosVM_vehicles.cpp' => 'Vehicles',
+);
+
 my %data;
 my %ns;
 
@@ -81,6 +101,7 @@ while (<>) {
 
 	my %pragma;
 	my $status;
+	my $cat;
 	while (@lines && ($lines[0] =~ s{^\%([a-zA-Z]+)\s+}{} || $lines[0] =~ m{^\s*$})) {
 		my $l = shift @lines;
 		chomp $l;
@@ -100,10 +121,20 @@ while (<>) {
 			}
 			$status = $l;
 			chomp $status;
+		} elsif ($1 eq 'category') {
+			if ($cat) { 
+				die "set category twice";
+			}
+			$cat = $l;
 		} else {
 			die "Unrecognized directive: $1";
 		}
 	}
+
+	if (!$cat) {
+		$cat = lc $fnmap{$file} || 'unknown';
+	}
+
 
 	if ($pragma{implementation}) {
 		$impl = $pragma{implementation};
@@ -111,6 +142,7 @@ while (<>) {
 
 	my $desc = join("\n", @lines);
 	$desc .= "\n";
+	
 	
 	$prev = $data{$key} = {
 		type => $ctype,
@@ -121,6 +153,7 @@ while (<>) {
 		filename => $file,
 		implementation => $impl,
 		status => $status,
+		category => $cat,
 	};
 	if ($cns && $cns ne '') {
 		$data{$key}{namespace} = lc $cns;
