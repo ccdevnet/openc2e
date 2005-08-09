@@ -159,4 +159,4 @@ void caosVM::runTimeslice(int units) {
 	}
 }
 
-/* vim: noet : */
+/* vim: set noet: */

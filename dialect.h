@@ -229,4 +229,4 @@ void registerDelegates();
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

@@ -153,4 +153,4 @@ void caosScript::installScripts() {
 	}
 }
 
-/* vim: noet : */
+/* vim: set noet: */

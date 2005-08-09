@@ -52,4 +52,4 @@ void caosVM::c_CLIK() {
 	targ->clik = 0;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

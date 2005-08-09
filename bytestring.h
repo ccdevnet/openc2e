@@ -58,4 +58,4 @@ class bytestring {
 
 #endif
 
-/* vim: noet : */
+/* vim: set noet: */

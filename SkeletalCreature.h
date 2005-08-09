@@ -42,4 +42,4 @@ public:
 	void setFacialExpression(unsigned int f) { assert (f < 6); facialexpression = f; }
 };
 
-/* vim: noet : */
+/* vim: set noet: */

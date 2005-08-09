@@ -8,4 +8,4 @@ public:
 	friend std::istream &operator >> (std::istream &, attFile &);
 };
 
-/* vim: noet : */
+/* vim: set noet: */

@@ -23,4 +23,4 @@ void write32(std::ostream &s, uint32 v) {
 	s.write((char *)&t, 4);
 }
 
-/* vim: noet : */
+/* vim: set noet: */

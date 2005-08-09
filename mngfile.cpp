@@ -90,4 +90,4 @@ MNGFile::~MNGFile() {
 	fclose(f);
 }	
 
-/* vim: noet : */
+/* vim: set noet: */

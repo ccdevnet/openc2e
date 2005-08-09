@@ -149,4 +149,4 @@ void CompoundPart::tick() {
 	}
 }
 
-/* vim: noet : */
+/* vim: set noet: */

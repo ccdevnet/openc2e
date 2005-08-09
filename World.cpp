@@ -98,4 +98,4 @@ void World::freeUNID(int unid) {
 Agent *World::lookupUNID(int unid) {
 	return unidmap[unid];
 }
-/* vim: noet : */
+/* vim: set noet: */

@@ -214,4 +214,4 @@ void registerDelegates() {
 	exp_dialect = new ExprDialect();
 	registerAutoDelegates();
 }
-/* vim: noet : */
+/* vim: set noet: */

@@ -80,4 +80,4 @@ blkImage::~blkImage() {
 	delete[] buffers;
 	delete[] offsets;
 }
-/* vim: noet : */
+/* vim: set noet: */

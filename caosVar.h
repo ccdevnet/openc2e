@@ -155,4 +155,4 @@ class caosVar {
 #endif
 
 #endif
-/* vim: noet : */
+/* vim: set noet: */

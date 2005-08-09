@@ -261,4 +261,4 @@ unsigned char *tagPrayBlock::rawWrite(unsigned int &l) const {
 
 	return buf;
 }
-/* vim: noet : */
+/* vim: set noet: */

@@ -330,6 +330,7 @@ public:
 	void c_STOP();
 
 	void c_RGAM();
+	void v_MOWS();
 
 	// compound
 	void c_PART();
@@ -476,4 +477,4 @@ static inline void VM_STACK_CHECK(const caosVM *vm) {
 #define STUB throw caosException("stub in " __FILE__)
 
 #endif
-/* vim: noet : */
+/* vim: set noet: */

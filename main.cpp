@@ -385,4 +385,4 @@ extern "C" int main(int argc, char *argv[]) {
 	return 0;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

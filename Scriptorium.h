@@ -24,4 +24,4 @@ public:
 	void delScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short event);
 	script *getScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short event);
 };
-/* vim: noet : */
+/* vim: set noet: */

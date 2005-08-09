@@ -581,4 +581,4 @@ istream &operator >> (istream &s, oldDendriteInfo &i) {
 	return s;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

@@ -218,4 +218,4 @@ bool agentzorder::operator ()(const Agent *s1, const Agent *s2) const {
 	return s1->zorder < s2->zorder;
 }
 
-/* vim: noet : */
+/* vim: set noet: */

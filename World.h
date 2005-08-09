@@ -69,4 +69,4 @@ public:
 };
 
 extern World world;
-/* vim: noet : */
+/* vim: set noet: */

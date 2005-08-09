@@ -118,4 +118,4 @@ bool doCacheDir(path &dir) {
 	dircache.insert(dir.string());
 	return true;
 }
-/* vim: noet : */
+/* vim: set noet: */
