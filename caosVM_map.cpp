@@ -419,3 +419,4 @@ void caosVM::c_ALTR() {
 
 	// TODO
 }
+/* vim: noet : */

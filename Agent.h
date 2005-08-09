@@ -35,7 +35,7 @@ class Agent {
 	friend class caosVM;
 	friend class AgentRef;
 	friend class World;
-    friend class opOVxx;
+	friend class opOVxx;
 
 protected:
 	caosVar var[100]; // OVxx
@@ -93,3 +93,4 @@ public:
 };
 
 #endif
+/* vim: noet : */

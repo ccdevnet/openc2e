@@ -29,7 +29,7 @@ using std::cerr;
  */
 void caosVM::c_INST() {
 	VM_VERIFY_SIZE(0)
-    inst = true;
+	inst = true;
 	// TODO: do we need a state similar to locked? i commented it out because it doesn't seem right - fuzzie
 	//locked = true;
 }
@@ -67,16 +67,16 @@ void caosVM::c_UNLK() {
 }
 
 class blockUntilTime : public blockCond {
-    protected:
-        unsigned int end;
-    public:
-        bool operator()() {
-            if (world.tickcount < end)
-                return true;
-            return false;
-        }
+	protected:
+		unsigned int end;
+	public:
+		bool operator()() {
+			if (world.tickcount < end)
+				return true;
+			return false;
+		}
 
-        blockUntilTime(int delta) : end(world.tickcount + delta) {}
+		blockUntilTime(int delta) : end(world.tickcount + delta) {}
 };
 
 /**
@@ -89,7 +89,7 @@ void caosVM::c_WAIT() {
 	VM_PARAM_INTEGER(ticks)
 
 	caos_assert(ticks > 0); // todo: is this right?
-    startBlocking(new blockUntilTime(ticks));
+	startBlocking(new blockUntilTime(ticks));
 }
 
 /**
@@ -97,7 +97,7 @@ void caosVM::c_WAIT() {
 */
 void caosVM::c_STOP() {
 	VM_VERIFY_SIZE(0)
-    stop();
+	stop();
 }
 
 /**
@@ -113,3 +113,4 @@ void caosVM::c_SCRX() {
 	VM_PARAM_INTEGER(family) assert(family >= 0); assert(family <= 255);
 	world.scriptorium.delScript(family, genus, species, event);
 }
+/* vim: noet : */

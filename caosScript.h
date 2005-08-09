@@ -31,58 +31,59 @@ class Agent;
 class caosOp;
 
 struct script { //: public Collectable {
-    std::string filename;
+	std::string filename;
 	std::vector<class caosOp *> allOps;
-    std::map<std::string, class caosOp *> gsub;
-    caosOp *entry, *last;
+	std::map<std::string, class caosOp *> gsub;
+	caosOp *entry, *last;
 
-    // add op as the next opcode
-    void thread(caosOp *op);
-    void addOp(caosOp *op);
-    script(const std::string &fn);
-    ~script();
+	// add op as the next opcode
+	void thread(caosOp *op);
+	void addOp(caosOp *op);
+	script(const std::string &fn);
+	~script();
 //	std::string dump();
 //	std::string dumpLine(unsigned int);
 
-    void release(){}
-    void retain(){}
+	void release(){}
+	void retain(){}
 
 };
 
 struct residentScript {
-    int fmly, gnus, spcs, scrp;
-    script *s;
+	int fmly, gnus, spcs, scrp;
+	script *s;
 
-    ~residentScript() {
-        s->release();
-    }
+	~residentScript() {
+		s->release();
+	}
 
-    residentScript(int f, int g, int s_, int scrp_, script *scr)
-        : fmly(f), gnus(g), spcs(s_), scrp(scrp_), s(scr) {
-            s->retain();
-    }
+	residentScript(int f, int g, int s_, int scrp_, script *scr)
+		: fmly(f), gnus(g), spcs(s_), scrp(scrp_), s(scr) {
+			s->retain();
+	}
 
-    residentScript(const residentScript &rs) {
-        fmly = rs.fmly; gnus = rs.gnus; spcs = rs.spcs; scrp = rs.scrp;
-        s = rs.s;
-        s->retain();
-    }
+	residentScript(const residentScript &rs) {
+		fmly = rs.fmly; gnus = rs.gnus; spcs = rs.spcs; scrp = rs.scrp;
+		s = rs.s;
+		s->retain();
+	}
 };
 
 class caosScript { //: Collectable {
 public:
-    std::string filename;
+	std::string filename;
 	script *installer, *removal;
 	std::vector<residentScript> scripts;
-    script *current;
+	script *current;
 
 	caosScript(const std::string &fn);
-    void parse(std::istream &in);
-    ~caosScript();
-    void installScripts();
+	void parse(std::istream &in);
+	~caosScript();
+	void installScripts();
 
-    void release() {}
-    void retain() {}
+	void release() {}
+	void retain() {}
 };
 
 #endif
+/* vim: noet : */

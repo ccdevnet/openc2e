@@ -36,3 +36,4 @@ public:
 #define caos_assert(x) if (!(x)) { throw tracedAssertFailure(#x, __FILE__, __LINE__); }
 
 #endif
+/* vim: noet : */

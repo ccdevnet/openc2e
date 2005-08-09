@@ -390,7 +390,7 @@ void caosVM::v_SQRT() {
 void caosVM::v_P1() {
 	VM_VERIFY_SIZE(0)
 
-    vm->valueStack.push_back(&_p_[0]);
+	vm->valueStack.push_back(&_p_[0]);
 }
 
 /**
@@ -400,7 +400,7 @@ void caosVM::v_P1() {
 void caosVM::v_P2() {
 	VM_VERIFY_SIZE(0)
 		
-    vm->valueStack.push_back(&_p_[1]);
+	vm->valueStack.push_back(&_p_[1]);
 }
 
 /**
@@ -415,7 +415,7 @@ void caosVM::v_AVAR() {
 	assert(index < 100);
 	assert(agent);
 	result = agent->var[index];
-    returnVariable(agent->var[index]);
+	returnVariable(agent->var[index]);
 }
 
 /**
@@ -439,3 +439,4 @@ void caosVM::v_VTOS() {
 	result.setString(buffer);
 }
 
+/* vim: noet : */

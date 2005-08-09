@@ -56,7 +56,7 @@ public:
 
 	void tick();
 
-    virtual ~Camera() {}
+	virtual ~Camera() {}
 };
 
 class MainCamera : public Camera {
@@ -72,3 +72,4 @@ public:
 
 #endif
 
+/* vim: noet : */

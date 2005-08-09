@@ -130,3 +130,4 @@ void caosVM::c_FCUS() {
 		// TODO
 	}
 }
+/* vim: noet : */

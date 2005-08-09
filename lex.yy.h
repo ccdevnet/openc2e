@@ -19,10 +19,10 @@
 #endif
 
 /* %if-c++-only */
-    /* The c++ scanner is a mess. The FlexLexer.h header file relies on the
-     * following macro.
-     */
-    #define yyFlexLexer yyFlexLexer
+	/* The c++ scanner is a mess. The FlexLexer.h header file relies on the
+	 * following macro.
+	 */
+	#define yyFlexLexer yyFlexLexer
 /* %endif */
 
 /* %if-c-only */
@@ -206,9 +206,9 @@ struct yy_buffer_state
 	 */
 	int yy_at_bol;
 
-    int yy_bs_lineno; /**< The line count. */
-    int yy_bs_column; /**< The column count. */
-    
+	int yy_bs_lineno; /**< The line count. */
+	int yy_bs_column; /**< The column count. */
+	
 	/* Whether to try to fill the input buffer when we reach the
 	 * end of it.
 	 */
@@ -361,3 +361,4 @@ static int yy_flex_strlen (yyconst char * );
 #line 362 "lex.yy.h"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */
+/* vim: noet : */
