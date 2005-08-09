@@ -38,7 +38,12 @@
 }
 
 .administrivia {
-    font-size: x-small;
+    font-size: smaller;
+    margin: 0;
+    padding: 0;
+}
+
+.administrivia ul {
     margin: 0;
     padding: 0;
 }
@@ -49,4 +54,22 @@
 
 .administrivia li li {
     list-style-type: disc;
+}
+
+.status {
+    border-bottom: groove;
+    font-size: smaller;
+}
+
+
+.st_ok {
+    background-color: #88ff88;
+}
+
+.st_todo {
+    background-color: #ff8888;
+}
+
+.st_maybe {
+    background-color: #8888ff;
 }

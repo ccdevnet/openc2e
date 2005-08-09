@@ -10,9 +10,17 @@ $SIG{__WARN__} = sub { die $_[0] };
 my %data;
 my %ns;
 
+my $prev;
+
 while (<>) {
 	my $file = $ARGV;
-	next unless (m{/\*\*});
+	
+	unless (m{/\*\*}) {
+		if (m/STUB|TODO/ && defined $prev && !defined $prev->{status}) {
+			$prev->{status} = 'stub';
+		}
+		next;
+	}
 	$_ = <>;
 	defined $_ or exit;
 	next unless m{
@@ -72,15 +80,28 @@ while (<>) {
 	pop @lines while (@lines && $lines[-1] eq '');
 
 	my %pragma;
-	while (@lines && $lines[0] =~ s{^\%pragma\s+}{}) {
-		unless ($lines[0] =~ m{(\w+)\s*(.*)}) {
-			warn "bad pragma";
-		}
-		shift @lines;
-		$pragma{$1} = $2;
-		chomp $pragma{$1};
-		if ($pragma{$1} eq '') {
-			$pragma{$1} = 1;
+	my $status;
+	while (@lines && ($lines[0] =~ s{^\%([a-zA-Z]+)\s+}{} || $lines[0] =~ m{^\s*$})) {
+		my $l = shift @lines;
+		chomp $l;
+		next unless $1;
+		if ($1 eq 'pragma') {
+			unless ($l =~ m{(\w+)\s*(.*)}) {
+				warn "bad pragma";
+			}
+			$pragma{$1} = $2;
+			chomp $pragma{$1};
+			if ($pragma{$1} eq '') {
+				$pragma{$1} = 1;
+			}
+		} elsif ($1 eq 'status') {
+			if ($status) {
+				die "Set status twice";
+			}
+			$status = $l;
+			chomp $status;
+		} else {
+			die "Unrecognized directive: $1";
 		}
 	}
 
@@ -91,7 +112,7 @@ while (<>) {
 	my $desc = join("\n", @lines);
 	$desc .= "\n";
 	
-	$data{$key} = {
+	$prev = $data{$key} = {
 		type => $ctype,
 		name => $fullname,
 		match => $cname,
@@ -99,6 +120,7 @@ while (<>) {
 		description => @lines ? $desc : undef,
 		filename => $file,
 		implementation => $impl,
+		status => $status,
 	};
 	if ($cns && $cns ne '') {
 		$data{$key}{namespace} = lc $cns;
@@ -106,6 +128,12 @@ while (<>) {
 	}
 	if (%pragma) {
 		$data{$key}{pragma} = \%pragma;
+	}
+}
+
+foreach my $v (values %data) {
+	if (!$v->{status}) {
+		$v->{status} = 'probablyok';
 	}
 }
 
