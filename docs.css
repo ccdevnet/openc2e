@@ -1,3 +1,8 @@
+#index li {
+    /* try to fit it all in one line */
+    display: inline;
+}
+
 .command {
     border-style: groove;
     margin-bottom: 1em;
