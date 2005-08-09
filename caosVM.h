@@ -212,6 +212,7 @@ public:
 	void c_ADDS();
 	void v_VTOS();
 	void v_AVAR();
+	void v_CHAR();
 
 	// flow
 	void c_DOIF();

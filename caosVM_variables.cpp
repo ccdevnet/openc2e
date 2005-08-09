@@ -439,4 +439,17 @@ void caosVM::v_VTOS() {
 	result.setString(buffer);
 }
 
+/**
+ CHAR (integer) str (string) index (integer)
+*/
+void caosVM::v_CHAR() {
+	VM_VERIFY_SIZE(2)
+	VM_PARAM_INTEGER(index)
+	VM_PARAM_STRING(str)
+
+	caos_assert(str.size() >= index);
+	
+	result.setInt(str[index - 1]);
+}
+
 /* vim: set noet: */
