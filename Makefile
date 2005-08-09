@@ -129,4 +129,7 @@ clean:
 	rm -rf .deps
 	rm -f commandinfo.yml lex.yy.cpp lex.yy.h cmddata.cpp
 
+test: openc2e 
+	perl -MTest::Harness -e 'runtests(glob("unittests/*.t"))'
+
 .PHONY: clean all dep docs
