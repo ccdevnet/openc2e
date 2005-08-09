@@ -62,6 +62,26 @@ __END__
 			</div>
 			[% END %]
 			</div>
+			<div class="status">
+				[% IF op.status == 'todo' || op.status == 'stub' %]
+				<div class="st_todo">
+					This command is not yet implemented.
+				</div>
+				[% ELSIF op.status == 'probablyok' %]
+				<div class="st_maybe">
+					This command probably works, but it has not been annotated with its status.
+				</div>
+				[% ELSIF op.status == 'ok' || op.status == 'done' %]
+				<div class="st_ok">
+					This command works properly.
+				</div>
+				[% ELSE %]
+				<div class="st_wtf">
+					This command has an unknown status tag of: [% op.status %]. Please beat whoever set that status with a shovel or some other heavy object.
+				</div>
+				[% END %]
+			</div>	
+
 			<div class="administrivia">
 				<ul>
 					<li>Implemented in: [% op.filename %]</li>
