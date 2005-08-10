@@ -1,3 +1,7 @@
+body {
+    font-family: verdana, arial, helvetica, sans-serif;
+}
+
 #index li {
     /* try to fit it all in one line */
     display: inline;
