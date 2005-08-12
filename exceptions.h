@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <assert.h>
 
 class creaturesException : public std::exception {
 protected:
