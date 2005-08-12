@@ -153,7 +153,7 @@ void caosVM::tick() {
 
 void caosVM::runTimeslice(int units) {
 	timeslice = units;
-	while (currentscript && (timeslice || inst)) {
+	while (currentscript && (timeslice > 0 || inst)) {
 		if (isBlocking()) return;
 		runOp();
 	}
