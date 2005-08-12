@@ -7,12 +7,6 @@
 #include <iostream>
 #include <list>
 
-#error THIS IS BROKEN
-
-void scheduleCollect(class Collectable *obj);
-void doCollect(void);
-extern bool gc__nowcollecting;
-
 // Do _NOT_ exception out of a Collectable constructor.
 class Collectable {
 	private:
@@ -24,19 +18,8 @@ class Collectable {
 		std::list<Collectable *>::iterator sched;
 		bool queued;
 		static bool gc__nowcollecting;
-//    public:
-//    This stuff is horribly broken and I don't know why :(
-		/*
-		 * If we don't capture the true base address of our memory block
-		 * somehow, we crash later, as we're passing delete the start
-		 * of the Collectable segment, which is not the same as the block
-		 * that malloc internally returns. So we allocate it explicitly
-		 * here, shove it into a static member, and move it into a member
-		 * with the constructor. In doCollect we'll move it back into the
-		 * global for delete.
-		 */
-		void *operator new(size_t size);
-		void operator delete(void *ptr);        
+	public:
+		
 		static void doCollect();
 		
 		inline void dbgdump() {
@@ -85,7 +68,7 @@ class Collectable {
 			std::cerr << "post initial release "; dbgdump();
 #endif
 		}
-		~Collectable() {
+		virtual ~Collectable() {
 			assert(last_alloc == baseptr);
 #ifdef GC_DEBUG
 			std::cerr << "GC prefree ptr "; dbgdump();

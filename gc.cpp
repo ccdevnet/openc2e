@@ -1,4 +1,4 @@
-//#include "gc.h"
+#include "gc.h"
 #include <deque>
 #include <climits>
 #include <iostream>
