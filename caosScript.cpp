@@ -96,6 +96,13 @@ class BaseDialect : public Dialect {
 					token scrp = *getToken(TOK_CONST);
 					if (!scrp.constval.hasInt())
 					   throw parseException("classifier values must be ints");
+					token *next = tokenPeek();
+					if (!next)
+						throw parseException("unexpected end of input");
+					if (next->type == TOK_WORD && next->word == "endm") {
+						getToken();
+						return;
+					}
 					Dialect d;
 					ENDM endm;
 					d.delegates = cmd_dialect->delegates;
