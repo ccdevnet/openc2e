@@ -23,6 +23,7 @@
 #include "creaturesImage.h"
 #include "caosVar.h"
 #include "AgentRef.h"
+#include "bytecode.h"
 #include <set>
 #include <list>
 #include <boost/shared_ptr.hpp>
