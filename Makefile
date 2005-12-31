@@ -85,7 +85,7 @@ XCFLAGS=$(CFLAGS) $(COREFLAGS)
 XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
 
 default: openc2e tools/praydumper docs
-all: openc2e tools/mngtest tools/filetests tools/praydumper docs tools/pathtest  tools/memstats
+all: openc2e tools/mngtest tools/filetests tools/praydumper docs tools/pathtest  tools/memstats tools/serialtest
 
 docs: docs.html
 
