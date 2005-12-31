@@ -157,7 +157,7 @@ clean:
 	rm -f *.o openc2e filetests praydumper tools/*.o
 	rm -rf .deps
 	rm -f commandinfo.yml lex.yy.cpp lex.yy.h lex.mng.cpp lex.mng.h mngparser.tab.cpp mngparser.tab.hpp cmddata.cpp
-	rm -f tools/filetests tools/memstats tools/mngtest tools/pathtest tools/praydumper
+	rm -f tools/filetests tools/memstats tools/mngtest tools/pathtest tools/praydumper tools/serialtest
 	rm -f headerdeps.dot headerdeps.png
 
 test: openc2e 
