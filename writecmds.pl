@@ -23,7 +23,6 @@ print <<ENDHEAD2;
 #include <map>
 #include <iostream>
 
-using namespace std;
 ENDHEAD2
 
 foreach my $variant (sort keys %{$data->{variants}}) {
