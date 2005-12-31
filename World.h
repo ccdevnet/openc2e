@@ -87,5 +87,6 @@ public:
 	Agent *lookupUNID(int unid);
 };
 
+extern std::string datapath;
 extern World world;
 /* vim: set noet: */

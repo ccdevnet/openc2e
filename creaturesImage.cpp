@@ -21,6 +21,7 @@
 #include "c16Image.h"
 #include "blkImage.h"
 #include "openc2e.h"
+#include "World.h"
 #include "fileSwapper.h"
 
 #ifndef _WIN32

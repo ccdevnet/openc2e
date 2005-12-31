@@ -31,7 +31,6 @@
 #include "exceptions.h"
 
 typedef std::vector<unsigned int> bytestring;
-extern std::string datapath;
 
 // assertFailure segfaults the app
 class assertFailure : public creaturesException {
