@@ -218,7 +218,7 @@ class caosVar {
 		std::string dump() const;
 };
 
-BOOST_CLASS_EXPORT(caosVar)
+
 BOOST_CLASS_VERSION(caosVar, 0)
 
 // Compatibility hacks

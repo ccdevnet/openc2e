@@ -43,7 +43,7 @@ class caosOp {
 		}
 			
 };
-BOOST_CLASS_EXPORT(caosOp)
+
 
 class caosNoop : public caosOp {
 	public:
@@ -57,7 +57,7 @@ class caosNoop : public caosOp {
 		}
 };
 
-BOOST_CLASS_EXPORT(caosNoop)
+
 
 class caosJMP : public caosOp {
 	protected:
@@ -85,7 +85,7 @@ class caosJMP : public caosOp {
 		}
 };
 
-BOOST_CLASS_EXPORT(caosJMP)
+
 class simpleCaosOp : public caosOp {
 	protected:
 		const cmdinfo *ci;
@@ -127,7 +127,7 @@ class simpleCaosOp : public caosOp {
 		BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 };
-BOOST_CLASS_EXPORT(simpleCaosOp)
+
 
 class caosREPS : public caosOp {
 	private:
@@ -152,7 +152,7 @@ class caosREPS : public caosOp {
 		std::string dump() { return std::string("REPS"); }
 };
 		
-BOOST_CLASS_EXPORT(caosREPS)
+
 
 class caosGSUB : public caosOp {
 	private:
@@ -182,7 +182,7 @@ class caosGSUB : public caosOp {
 		}
 };
 
-BOOST_CLASS_EXPORT(caosGSUB)
+
 
 // Condition classes
 #define CEQ 1
@@ -233,7 +233,7 @@ class caosCond : public caosOp {
 			assert(branch > 0);
 		}
 };
-BOOST_CLASS_EXPORT(caosCond)
+
 
 class caosENUM_POP : public caosOp {
 	private:
@@ -262,7 +262,7 @@ class caosENUM_POP : public caosOp {
 			return std::string(buf);
 		}
 };
-BOOST_CLASS_EXPORT(caosENUM_POP)
+
 
 class caosSTOP : public caosOp {
 	private:
@@ -277,7 +277,7 @@ class caosSTOP : public caosOp {
 			return std::string("STOP");
 		}
 };
-BOOST_CLASS_EXPORT(caosSTOP)
+
 	
 class caosAssert : public caosOp {
 	private:
@@ -294,7 +294,7 @@ class caosAssert : public caosOp {
 			return std::string("ASSERT FAILURE");
 		}
 };
-BOOST_CLASS_EXPORT(caosAssert)
+
 
 class ConstOp : public caosOp {
 	private:
@@ -318,7 +318,7 @@ class ConstOp : public caosOp {
 			return std::string("CONST ") + constVal.dump();
 		}
 };
-BOOST_CLASS_EXPORT(ConstOp)
+
 
 class opVAxx : public caosOp {
 	private:
@@ -341,7 +341,7 @@ class opVAxx : public caosOp {
 			return std::string(buf);
 		}
 };
-BOOST_CLASS_EXPORT(opVAxx)
+
 
 class opOVxx : public caosOp {
 	private:
@@ -363,7 +363,7 @@ class opOVxx : public caosOp {
 			return std::string(buf);
 		}
 };
-BOOST_CLASS_EXPORT(opOVxx)
+
 
 class opMVxx : public caosOp {
 	private:
@@ -385,7 +385,7 @@ class opMVxx : public caosOp {
 			return std::string(buf);
 		}
 };
-BOOST_CLASS_EXPORT(opMVxx)
+
 	
 class opBytestr : public caosOp {
 	private:
@@ -411,7 +411,7 @@ class opBytestr : public caosOp {
 			return oss.str();
 		}
 };
-BOOST_CLASS_EXPORT(opBytestr)
+
 
 #endif
 

@@ -132,7 +132,7 @@ struct script {
 			fixRelocation(r, getNextIndex());
 		}
 };
-BOOST_CLASS_EXPORT(script)
+
 
 
 class caosScript { //: Collectable {
@@ -172,6 +172,6 @@ template<class Archive>
 
 
 };
-BOOST_CLASS_EXPORT(caosScript)
+
 #endif
 /* vim: set noet: */
