@@ -21,6 +21,7 @@
 #include "SDL_gfxPrimitives.h"
 #include "openc2e.h"
 #include "Agent.h"
+#include "World.h"
 
 SDLBackend *g_backend;
 

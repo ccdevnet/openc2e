@@ -8,6 +8,7 @@
 
 #include "SkeletalCreature.h"
 #include "SDLBackend.h"
+#include "World.h"
 
 #include <typeinfo> // TODO: remove when genome system is fixed
 

@@ -19,6 +19,7 @@
 
 
 #include "caosVM.h"
+#include "World.h"
 #include <fstream>
 #include <iostream>
 

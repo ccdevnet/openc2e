@@ -17,6 +17,9 @@
  *
  */
 
+#ifndef BLKIMAGE__H
+#define BLKIMAGE__H 1
+
 #include "creaturesImage.h"
 #include "mmapifstream.h"
 
@@ -36,4 +39,5 @@ public:
 	friend class fileSwapper;
 };
 
+#endif // BLKIMAGE__H
 /* vim: set noet: */

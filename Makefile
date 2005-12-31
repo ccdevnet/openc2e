@@ -61,7 +61,6 @@ OPENC2E = \
 	mmapifstream.o \
 	mngfile.o \
 	mngparser.tab.o \
-	openc2e.o \
 	PathResolver.o \
 	physics.o \
 	PointerAgent.o \
