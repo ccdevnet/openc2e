@@ -1,7 +1,6 @@
 #ifndef SERIALIZATION_H
 #define SERIALIZATION_H 1
 
-
 // This order is important
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
