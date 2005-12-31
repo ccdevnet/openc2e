@@ -11,6 +11,7 @@
 #include "Agent.h"
 #include "bytecode.h"
 #include "caosVM.h"
+#include <map>
 
 std::map<std::string, Variant *> variants;
 
@@ -306,7 +307,7 @@ void DoifDialect::handleToken(class caosScript *s, token *t) {
 	
 void registerDelegates() {
 	registerAutoDelegates();
-	map<std::string, Variant *>::iterator i = variants.begin();
+	std::map<std::string, Variant *>::iterator i = variants.begin();
 	while (i != variants.end()) {
 		Variant *v = i->second;
 		const cmdinfo *p = v->cmds;

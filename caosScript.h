@@ -31,6 +31,7 @@
 //#include "bytecode.h"
 #include "serialization.h"
 #include "dialect.h"
+#include "bytecode.h"
 
 class Agent;
 class caosOp;
