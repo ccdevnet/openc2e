@@ -15,6 +15,10 @@
 #include "caosVar.h"
 #endif
 
+#ifdef DISABLE_SERIALIZATION
+#error No serialization support
+#endif
+
 using namespace std;
 
 class foo {

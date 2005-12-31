@@ -3,6 +3,7 @@
 #include "caosVar.h"
 #include "caosScript.h"
 
+#ifndef DISABLE_SERIALIZATION
 BOOST_CLASS_EXPORT(caosOp)
 BOOST_CLASS_EXPORT(caosNoop)
 BOOST_CLASS_EXPORT(caosJMP)
@@ -21,3 +22,4 @@ BOOST_CLASS_EXPORT(opBytestr)
 BOOST_CLASS_EXPORT(script)
 BOOST_CLASS_EXPORT(caosScript)
 BOOST_CLASS_EXPORT(caosVar)
+#endif
