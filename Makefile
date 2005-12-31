@@ -71,6 +71,7 @@ OPENC2E = \
 	Scriptorium.o \
 	SDLBackend.o \
 	SDL_gfxPrimitives.o \
+	serialization.o \
 	SimpleAgent.o \
 	SkeletalCreature.o \
 	streamutils.o \
