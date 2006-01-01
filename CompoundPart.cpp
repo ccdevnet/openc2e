@@ -1,5 +1,5 @@
 /*
- *  CompoundAgent.cpp
+ *  CompoundPart.cpp
  *  openc2e
  *
  *  Created by Alyssa Milburn on Tue May 25 2004.
@@ -18,16 +18,30 @@
  */
 
 #include "CompoundPart.h"
-#include "openc2e.h"
+#include "World.h"
 #include "c16Image.h"
 #include "SDLBackend.h"
 #include "CompoundAgent.h"
 
+bool partzorder::operator ()(const CompoundPart *s1, const CompoundPart *s2) const {
+	return s1->getZOrder() > s2->getZOrder();
+}
+
 creaturesImage *TextEntryPart::caretsprite = 0;
 
 void CompoundPart::render(SDLBackend *renderer, int xoffset, int yoffset) {
-	if (parent->visible)
+	if (parent->visible) {
 		partRender(renderer, xoffset + parent->x, yoffset + parent->y);
+		if (parent->displaycore && (id == 0)) {
+			// TODO: tsk, this should be drawn along with the other craziness on the line plane, i expect
+			int xoff = xoffset + parent->x + x;
+			int yoff = yoffset + parent->y + y;
+			renderer->renderLine(xoff + (getWidth() / 2), yoff, xoff + getWidth(), yoff + (getHeight() / 2), 0xFF0000CC);
+			renderer->renderLine(xoff + getWidth(), yoff + (getHeight() / 2), xoff + (getWidth() / 2), yoff + getHeight(), 0xFF0000CC);
+			renderer->renderLine(xoff + (getWidth() / 2), yoff + getHeight(), xoff, yoff + (getHeight() / 2), 0xFF0000CC);
+			renderer->renderLine(xoff, yoff + (getHeight() / 2), xoff + (getWidth() / 2), yoff, 0xFF0000CC);
+		}	
+	}
 }
 
 void CompoundPart::partRender(SDLBackend *renderer, int xoffset, int yoffset) {
@@ -50,15 +64,23 @@ CompoundPart::CompoundPart(CompoundAgent *p, unsigned int _id, std::string sprit
 	framedelay = 0;
 	parent = p;
 	addToWorld();
+	zorder_iter = world.zorder.insert(this);
 }
 
 CompoundPart::~CompoundPart() {
 	gallery.delImage(origsprite);
 	if (origsprite != sprite) delete sprite;
+	world.zorder.erase(zorder_iter);
 }
 
 unsigned int CompoundPart::getZOrder() const {
 	return parent->getZOrder() + zorder;
+}
+
+void CompoundPart::updateZOrder() {
+	renderable::updateZOrder();
+	world.zorder.erase(zorder_iter);
+	zorder_iter = world.zorder.insert(this);	
 }
 
 void CompoundPart::tint(unsigned char r, unsigned char g, unsigned char b, unsigned char rotation, unsigned char swap) {
