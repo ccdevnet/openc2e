@@ -48,7 +48,6 @@ Agent::Agent(unsigned char f, unsigned char g, unsigned short s, unsigned int p)
 
 	floatingx = floatingy = 0;
 
-	zorder_iter = world.zorder.insert(this);
 	agents_iter = world.agents.insert(++world.agents.begin(), this);
 
 	cr_can_push = cr_can_pull = cr_can_stop = cr_can_hit = cr_can_eat = cr_can_pickup = false; // TODO: check this
@@ -125,21 +124,7 @@ void Agent::positionAudio(SoundSlot *slot) {
 	slot->adjustPanning(angle, distance);
 }
 
-void Agent::tick() {
-	if (dying) return;
-
-	if (emitca_index != -1 && emitca_amount != 0.0f) {
-		assert(0 <= emitca_index && emitca_index <= 19);
-		Room *r = world.map.roomAt(x, y);
-		if (r) {
-			r->ca[emitca_index] += emitca_amount;
-			if (r->ca[emitca_index] <= 0.0f) r->ca[emitca_index] = 0.0f;
-			else if (r->ca[emitca_index] >= 1.0f) r->ca[emitca_index] = 1.0f;
-		}
-	}
-
-	if (soundslot) positionAudio(soundslot);
-
+void Agent::physicsTick() {
 	falling = false;
 	if (sufferphysics) {
 		float newvely = vely.floatValue + accg;
@@ -352,6 +337,24 @@ void Agent::tick() {
 			y = world.camera.getY() + floatingy;
 		}
 	}
+}
+
+void Agent::tick() {
+	if (dying) return;
+
+	if (emitca_index != -1 && emitca_amount != 0.0f) {
+		assert(0 <= emitca_index && emitca_index <= 19);
+		Room *r = world.map.roomAt(x, y);
+		if (r) {
+			r->ca[emitca_index] += emitca_amount;
+			if (r->ca[emitca_index] <= 0.0f) r->ca[emitca_index] = 0.0f;
+			else if (r->ca[emitca_index] >= 1.0f) r->ca[emitca_index] = 1.0f;
+		}
+	}
+
+	if (soundslot) positionAudio(soundslot);
+
+	physicsTick();
 
 	if (timerrate) {
 		tickssincelasttimer++;
@@ -390,7 +393,6 @@ void Agent::vmTick() {
 
 Agent::~Agent() {
 	world.agents.erase(agents_iter);
-	world.zorder.erase(zorder_iter);
 	if (vm)
 		world.freeVM(vm);
 	zotstack();
@@ -419,9 +421,7 @@ void Agent::zotrefs() {
 
 void Agent::setZOrder(unsigned int z) {
 	if (dying) return;
-	world.zorder.erase(zorder_iter);
 	zorder = z;
-	zorder_iter = world.zorder.insert(this);
 }
 
 int Agent::getUNID() {

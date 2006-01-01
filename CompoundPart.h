@@ -27,10 +27,15 @@
 #include <string>
 #include <vector>
 
+struct partzorder {
+	bool operator()(const class CompoundPart *s1, const class CompoundPart *s2) const;
+};
+
 class CompoundAgent;
 
 class CompoundPart : public renderable {
 protected:
+	std::multiset<CompoundPart *, partzorder>::iterator zorder_iter;
 	creaturesImage *origsprite, *sprite;
 	unsigned int firstimg, pose, frameno, base;
 	CompoundAgent *parent;
@@ -49,14 +54,16 @@ public:
 	virtual void render(class SDLBackend *renderer, int xoffset, int yoffset);
 	virtual void partRender(class SDLBackend *renderer, int xoffset, int yoffset);
 	virtual void tick();
-	unsigned int getWidth() { return sprite->width(firstimg); }
-	unsigned int getHeight() { return sprite->height(firstimg); }
 	unsigned int getPose() { return pose; }
 	unsigned int getBase() { return base; }
 	unsigned int getCurrentSprite() { return firstimg + base + pose; }
 	unsigned int getFrameNo() { return frameno; }
 	unsigned int getFirstImg() { return firstimg; }
+	unsigned int getWidth() { return sprite->width(getCurrentSprite()); }
+	unsigned int getHeight() { return sprite->height(getCurrentSprite()); }
 	unsigned int getZOrder() const;
+	CompoundAgent *getParent() { return parent; }
+	void updateZOrder();
 	void setFrameNo(unsigned int f) { frameno = f; pose = animation[f]; } // todo: assert it's in the range
 	void setPose(unsigned int p) { animation.clear(); pose = p; }
 	void setFramerate(unsigned char f) { framerate = f; framedelay = 0; }
