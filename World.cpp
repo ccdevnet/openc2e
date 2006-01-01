@@ -26,8 +26,6 @@
 
 World world;
 
-std::string datapath;
-
 World::World() {
 	ticktime = 50;
 	tickcount = 0;
