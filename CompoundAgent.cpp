@@ -57,7 +57,6 @@ CompoundPart *CompoundAgent::part(unsigned int id) {
 CompoundAgent::CompoundAgent(unsigned char _family, unsigned char _genus, unsigned short _species, unsigned int plane,
 				std::string spritefile, unsigned int firstimage, unsigned int imagecount) :
 				Agent(_family, _genus, _species, plane) {
-	setAttributes(0);
 	// TODO: we ignore image count acos it sucks
 	CompoundPart *p = new DullPart(this, 0, spritefile, firstimage, 0, 0, 0);
 	addPart(p);
@@ -108,6 +107,7 @@ void CompoundAgent::handleClick(float clickx, float clicky) {
 
 void CompoundAgent::tick() {
 	Agent::tick();
+	if (paused) return;
 
 	for (std::vector<CompoundPart *>::iterator x = parts.begin(); x != parts.end(); x++) {
 		(*x)->tick();
