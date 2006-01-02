@@ -63,6 +63,7 @@ protected:
 	std::multiset<Agent *, agentzorder>::iterator zorder_iter;
 	std::list<Agent *>::iterator agents_iter;
 	std::list<caosVM *> vmstack; // for CALL etc
+	std::vector<AgentRef> floated;
 
 	struct SoundSlot *soundslot;
 	void positionAudio(SoundSlot *);
@@ -103,6 +104,7 @@ public:
 	bool imsk_mouse_wheel : 1;
 	bool imsk_translated_char : 1;
 	
+	bool paused : 1;
 	bool visible : 1;
 	bool displaycore : 1;
 
@@ -120,8 +122,14 @@ public:
 
 	float range;
 
-	float floatingx, floatingy;
 	AgentRef floatingagent;
+
+	void floatSetup();
+	void floatRelease();
+	void addFloated(AgentRef);
+	void delFloated(AgentRef);
+	void floatTo(AgentRef);
+	void floatTo(float x, float y);
 
 	bool queueScript(unsigned short event, AgentRef from = AgentRef(), caosVar p0 = caosVar(), caosVar p1 = caosVar());
 	void moveTo(float, float);

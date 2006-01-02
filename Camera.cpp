@@ -21,11 +21,12 @@
 #include "World.h"
 
 Camera::Camera() {
-	x = 0;
-	y = 0;
+	// TODO: I set these to some high value due to stupidly-floating agents at (0, 0)
+	// however, you'd think the proper engine wouldn't do this .. init order issues?
+	x = 5000;
+	y = 5000;
 	metaroom = 0;
 	panning = false;
-	trackedagent = 0;
 }
 
 MetaRoom * const Camera::getMetaRoom() {
@@ -34,14 +35,12 @@ MetaRoom * const Camera::getMetaRoom() {
 
 void Camera::goToMetaRoom(unsigned int m) {
 	metaroom = m;
-	x = getMetaRoom()->x();
-	y = getMetaRoom()->y();
+	moveTo(getMetaRoom()->x(), getMetaRoom()->y());
 }
 
 void Camera::goToMetaRoom(unsigned int m, int _x, int _y, cameratransition transition) {
 	metaroom = m;
-	x = _x;
-	y = _y;
+	moveTo(_x, _y);
 	// TODO: transition
 	
 	checkBounds();
@@ -55,7 +54,30 @@ void Camera::moveTo(int _x, int _y, panstyle pan) {
 	checkBounds();
 }
 
-void Camera::trackAgent(class Agent *a, int xp, int yp, trackstyle s, cameratransition transition) {
+void MainCamera::moveTo(int _x, int _y, panstyle pan) {
+	int xoffset = _x - x;
+	int yoffset = _y - y;
+	Camera::moveTo(_x, _y, pan);
+
+	for (std::vector<AgentRef>::iterator i = floated.begin(); i != floated.end(); i++) {
+		assert(*i);
+		(*i)->moveTo((*i)->x + xoffset, (*i)->y + yoffset);
+	}
+}
+
+void MainCamera::addFloated(AgentRef a) {
+	assert(a);
+	floated.push_back(a);
+}
+
+void MainCamera::delFloated(AgentRef a) {
+	assert(a);
+	std::vector<AgentRef>::iterator i = std::find(floated.begin(), floated.end(), a);
+	if (i == floated.end()) return;
+	floated.erase(i);
+}
+
+void Camera::trackAgent(AgentRef a, int xp, int yp, trackstyle s, cameratransition transition) {
 	// TODO
 }
 
@@ -64,15 +86,15 @@ void Camera::checkBounds() {
 	if (!m) return;
 	
 	if (x < (int)m->x()) {
-		x = m->x();
+		moveTo(m->x(), y);
 	} else if (x + getWidth() > m->x() + m->width()) {
-		x = m->x() + m->width() - getWidth();
+		moveTo(m->x() + m->width() - getWidth(), y);
 	}
 
 	if (y < (int)m->y()) {
-		y = m->y();
+		moveTo(x, m->y());
 	} else if (y + getHeight() > m->y() + m->height()) {
-		y = m->y() + m->height() - getHeight();
+		moveTo(x, m->y() + m->height() - getHeight());
 	}
 }
 

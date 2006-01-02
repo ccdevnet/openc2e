@@ -354,7 +354,7 @@ extern "C" int main(int argc, char *argv[]) {
 				vm.setOutputStream(o);
 				vm.runEntirely(script->installer);
 				SDLNet_TCP_Send(connection, (void *)o.str().c_str(), o.str().size());
-			} catch (creaturesException &e) {
+			} catch (std::exception &e) {
 				std::string o = std::string("### EXCEPTION: ") + e.what();
 				SDLNet_TCP_Send(connection, (void *)o.c_str(), o.size());
 			}
@@ -518,7 +518,6 @@ extern "C" int main(int argc, char *argv[]) {
 				adjustbyy = world.camera.getMetaRoom()->y() + 
 					world.camera.getMetaRoom()->height() - world.camera.getHeight() - adjusty;
 			
-			world.hand()->moveTo(world.hand()->x + adjustbyx, world.hand()->y + adjustbyy);
 			world.camera.moveTo(adjustx + adjustbyx, adjusty + adjustbyy, jump);
 		}
 		} // ticked
@@ -527,7 +526,7 @@ extern "C" int main(int argc, char *argv[]) {
 	SDLNet_Quit();
 	SDL_Quit();
 
-	} catch (creaturesException &e) {
+	} catch (std::exception &e) {
 		std::cerr << "dying due to exception in main: " << e.what() << "\n";
 		return 1;
 	}
