@@ -296,36 +296,42 @@ SDL_Surface *MirrorSurface(SDL_Surface *surf) {
 
 //*** end mirror code
 
-void SDLSurface::render(creaturesImage *image, unsigned int frame, int x, int y, bool trans, unsigned char transparency, bool mirror, bool is_background) {
+struct imagefmt_params {
+    uint32_t rmask, gmask, bmask, amask, depth;
+};
+
+static imagefmt_params fmt_params[] = {
+    { 0, 0, 0, 0, 8 }, // fmt_8bit
+    { 0x7C00, 0x03E0, 0x001F, 0x0000, 16 }, // fmt_555
+    { 0xF800, 0x07E0, 0x001F, 0x0000, 16 }, // fmt_565
+    { 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF, 32 }, // fmt_32
+    { 0xFF0000, 0x00FF00, 0x0000FF, 0, 24 }, // fmt_24
+    { 0, 0, 0, 0, 0 } // fmt_bad
+};
+
+void SDLSurface::render(image_p image, int x, int y, bool trans, unsigned char transparency, bool mirror, bool is_background) {
 	// don't bother rendering off-screen stuff
 	if (x >= (int)width) return; if (y >= (int)height) return;
-	if ((x + image->width(frame)) <= 0) return;
-	if ((y + image->height(frame)) <= 0) return;
+	if ((x + image->width()) <= 0) return;
+	if ((y + image->height()) <= 0) return;
+
+    assert(image->format() >= 0 && image->format() < fmt_bad);
+    imagefmt_params &format = fmt_params[image->format()];
+
+    int pitch = format.depth / 8 * image->width();
 
 	// create surface
-	SDL_Surface *surf;
-	if (image->bitdepth() == 8) {
-		surf = SDL_CreateRGBSurfaceFrom(image->data(frame),
-						image->width(frame), image->height(frame),
-						8, // depth
-						image->width(frame), // pitch
-						0, 0, 0, 0);
-		SDL_SetPalette(surf, SDL_LOGPAL, palette, 0, 256);
-	} else {
-		assert(image->bitdepth() == 16);
+	SDL_Surface *surf = SDL_CreateRGBSurfaceFrom(
+            const_cast<void *>(image->pixel_data()),
+            image->width(),
+            image->height(),
+            format.depth,
+            pitch,
+            format.rmask, format.gmask, format.bmask, format.amask
+            );
 
-		unsigned int rmask, gmask, bmask;
-		if (image->is565()) {
-			rmask = 0xF800; gmask = 0x07E0; bmask = 0x001F;
-		} else {
-			rmask = 0x7C00; gmask = 0x03E0; bmask = 0x001F;
-		}
-		surf = SDL_CreateRGBSurfaceFrom(image->data(frame),
-						image->width(frame), image->height(frame),
-						16, // depth
-						image->width(frame) * 2, // pitch
-						rmask, gmask, bmask, 0); // RGBA mask
-	}
+	if (format.depth == 8)
+		SDL_SetPalette(surf, SDL_LOGPAL, palette, 0, 256);
 
 	// try mirroring, if necessary
 	try {

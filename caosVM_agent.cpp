@@ -330,7 +330,7 @@ void caosVM::c_POSE() {
 
 	SpritePart *p = getCurrentSpritePart();
 	caos_assert(p);
-	caos_assert(p->getFirstImg() + p->getBase() + pose < p->getSprite()->numframes());
+	caos_assert(p->getFirstImg() + p->getBase() + pose < p->getGallery()->numframes());
 	p->setPose(pose);
 }
 
@@ -925,7 +925,7 @@ void caosVM::c_PUHL() {
 	if (pose == -1) {
 		SpritePart *s = dynamic_cast<SpritePart *>(targ->part(0));
 		if (s) {
-			for (unsigned int i = 0; i < (s->getFirstImg() + s->getSprite()->numframes()); i++) {
+			for (unsigned int i = 0; i < (s->getFirstImg() + s->getGallery()->numframes()); i++) {
 				targ->carried_points[i] = std::pair<int, int>(x, y);
 			}
 		} else {
@@ -1224,7 +1224,7 @@ void caosVM::c_PUPT() {
 	if (pose == -1) {
 		SpritePart *s = dynamic_cast<SpritePart *>(targ->part(0));
 		if (s) {
-			for (unsigned int i = 0; i < (s->getFirstImg() + s->getSprite()->numframes()); i++) {
+			for (unsigned int i = 0; i < (s->getFirstImg() + s->getGallery()->numframes()); i++) {
 				targ->carry_points[i] = std::pair<int, int>(x, y);
 			}
 		} else {
@@ -1381,7 +1381,7 @@ void caosVM::c_GALL() {
 void caosVM::v_GALL() {
 	SpritePart *p = getCurrentSpritePart();
 	if (p)
-		result.setString(p->getSprite()->name);
+		result.setString(p->getGallery()->name);
 	else
 		result.setString("");
 }

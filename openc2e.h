@@ -62,4 +62,8 @@ namespace boost {
     SER_PROTO(friend, o_serialize, c, );
 
 #endif
+
+#define foreach(obj, start, end, variable) \
+	for (typeof (start) variable = (start); variable != (end); variable++)
+
 /* vim: set noet: */

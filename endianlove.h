@@ -67,6 +67,7 @@ typedef unsigned int uint32;
 
 #define swapEndianShort(A) A 
 #define swapEndianLong(A) A
+#define IS_LITTLE_ENDIAN 1
 
 #else
 
@@ -76,6 +77,7 @@ typedef unsigned int uint32;
 				   (((uint32)(A) & 0x00ff0000) >> 8)  | \
 				   (((uint32)(A) & 0x0000ff00) << 8)  | \
 				   (((uint32)(A) & 0x000000ff) << 24))
+#define IS_LITTLE_ENDIAN 0
 
 #endif
 
