@@ -70,7 +70,7 @@ public:
 
 class SpritePart : public CompoundPart {
 protected:
-	creaturesImage *origsprite, *sprite;
+	gallery_p orig_gallery, gallery;
 	unsigned int firstimg, pose, frameno, base, spriteno;
 	SpritePart(Agent *p, unsigned int _id, std::string spritefile, unsigned int fimg, int _x, int _y,
 				 unsigned int _z);
@@ -81,17 +81,18 @@ public:
 	bool draw_mirrored;
 	unsigned char framerate;
 	unsigned int framedelay;
-	creaturesImage *getSprite() { return sprite; }
+	gallery_p getGallery() { return gallery; }
 	virtual void partRender(class Surface *renderer, int xoffset, int yoffset);
 	virtual void tick();
 	virtual void handleClick(float, float);
 	unsigned int getPose() { return pose; }
 	unsigned int getBase() { return base; }
-	unsigned int getCurrentSprite() { return spriteno; }
+	unsigned int getCurrentIndex() { return spriteno; }
+	image_p getCurrentSprite() { return gallery->getSprite(spriteno); }
 	unsigned int getFrameNo() { return frameno; }
 	unsigned int getFirstImg() { return firstimg; }
-	unsigned int getWidth() { return sprite->width(getCurrentSprite()); }
-	unsigned int getHeight() { return sprite->height(getCurrentSprite()); }
+	unsigned int getWidth() { return getCurrentSprite()->width(); }
+	unsigned int getHeight() { return getCurrentSprite()->height(); }
 	void setFrameNo(unsigned int f);
 	void setPose(unsigned int p);
 	void setFramerate(unsigned char f) { framerate = f; framedelay = 0; }
@@ -131,7 +132,7 @@ struct linedata {
 };
 
 struct texttintinfo {
-	creaturesImage *sprite;
+	gallery_p gallery;
 	unsigned int offset;
 };
 
@@ -147,7 +148,7 @@ protected:
 	unsigned int currpage;
 	std::string text;
 	
-	creaturesImage *textsprite;
+	gallery_p textgallery;
 	
 	int leftmargin, topmargin, rightmargin, bottommargin;
 	int linespacing, charspacing;
@@ -186,7 +187,7 @@ public:
 
 class TextEntryPart : public TextPart {
 private:
-	static creaturesImage *caretsprite;
+	static gallery_p caretgallery;
 	unsigned int caretpose;
 	bool focused;
 	unsigned int caretpos;

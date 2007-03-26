@@ -15,9 +15,7 @@ OPENC2E_CORE = \
 	AgentHelpers.o \
 	AgentRef.o \
 	attFile.o \
-	blkImage.o \
 	bytecode.o \
-	c16Image.o \
 	CallButton.o \
 	Camera.o \
 	caosScript.o \
@@ -58,7 +56,6 @@ OPENC2E_CORE = \
 	dialect.o \
 	Engine.o \
 	exceptions.o \
-	fileSwapper.o \
 	genomeFile.o \
 	historyManager.o \
 	lex.c2.o \
@@ -84,10 +81,10 @@ OPENC2E_CORE = \
 	SFCFile.o \
 	SimpleAgent.o \
 	SkeletalCreature.o \
-	sprImage.o \
 	streamutils.o \
 	Vehicle.o \
-	World.o
+	World.o \
+	image/s16Image.o
 
 SERIALIZATION = caosVM_ser_real.o
 SERSTUB = caosVM_ser_stub.o

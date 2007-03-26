@@ -88,7 +88,7 @@ SkeletalCreature::SkeletalCreature(unsigned char _family, Creature *c) : Creatur
 	eyesclosed = false;
 
 	for (int i = 0; i < 14; i++) {
-		images[i] = 0;
+		images[i] = gallery_p();
 	}
 	
 	skeletonInit();
@@ -117,9 +117,7 @@ void SkeletalCreature::skeletonInit() {
 			if (i == 6 || i == 13) continue;
 
 		// try this stage and the stages below it to find data which worksforus
-		if (images[i])
-			world.gallery.delImage(images[i]);
-		images[i] = 0;
+		images[i] = gallery_p();
 		char x = cee_bodyparts[i].letter;
 		int stage_to_try = creature->getStage();
 		creatureAppearance *partapp = 0;
@@ -145,7 +143,7 @@ void SkeletalCreature::skeletonInit() {
 	
 		if (engine.version == 1) partapp->species = 0; // TODO: don't stomp over the gene? :P
 		while (stage_to_try > -1 && images[i] == 0) {
-			images[i] = world.gallery.getImage(x + dataString(stage_to_try, true, partapp->species, partapp->variant));
+			images[i] = world.gallery.getGallery(x + dataString(stage_to_try, true, partapp->species, partapp->variant));
 			if (images[i] == 0) stage_to_try--;
 		}
 		if (images[i] == 0)
@@ -186,7 +184,7 @@ void SkeletalCreature::render(Surface *renderer, int xoffset, int yoffset) {
 
 		assert(images[i]);
 
-		renderer->render(images[i], ourpose, partx[i] + adjustx + xoffset, party[i] + adjusty + yoffset, false, 0);
+		renderer->render(images[i]->getSprite(ourpose), partx[i] + adjustx + xoffset, party[i] + adjusty + yoffset, false, 0);
 
 		// if (displaycore) {
 			// TODO: we draw a lot of points twice here :)

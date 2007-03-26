@@ -18,12 +18,9 @@
  */
 
 #include "creaturesImage.h"
-#include "c16Image.h"
-#include "sprImage.h"
-#include "blkImage.h"
 #include "openc2e.h"
 #include "World.h"
-#include "fileSwapper.h"
+#include "image/s16Image.h"
 
 #ifndef _WIN32
 #include "PathResolver.h"
@@ -79,7 +76,7 @@ path cacheDirectory() {
 	return p;
 }
 
-bool tryOpen(mmapifstream *in, creaturesImage *&img, std::string fname, filetype ft) {
+bool tryOpen(mmapifstream *in, gallery_p &img, std::string fname, filetype ft) {
 	path cachefile, realfile;
 	std::string cachename;
 	if (fname.size() < 5) return false; // not enough chars for an extension and filename..
@@ -106,10 +103,6 @@ bool tryOpen(mmapifstream *in, creaturesImage *&img, std::string fname, filetype
 		cachename.append(".s16");
 	}
 
-#ifdef __C2E_BIGENDIAN
-	if (ft != spr)
-		cachename = cachename + ".big";
-#endif
 	cachefile = path(cachename, native);
 
 	if (resolveFile(cachefile)) {
@@ -123,37 +116,21 @@ bool tryOpen(mmapifstream *in, creaturesImage *&img, std::string fname, filetype
 
 	in->clear();
 	in->mmapopen(realfile.native_file_string());
-#ifdef __C2E_BIGENDIAN
-	if (in->is_open() && (ft != spr)) {
-		fileSwapper f;
-		switch (ft) {
-			case blk:
-				f.convertblk(realfile.native_file_string(), cachefile.native_file_string());
-				break;
-			case s16:
-				f.converts16(realfile.native_file_string(), cachefile.native_file_string());
-				break;
-			case c16:
-				//cachefile = change_extension(cachefile, "");
-				//cachefile = change_extension(cachefile, ".s16.big");
-				f.convertc16(realfile.native_file_string(), cachefile.native_file_string());
-				ft = s16;
-				break;
-			default:
-				return true; // TODO: exception?
-		}
-		in->close(); // TODO: close the mmap too! how?
-		if (!exists(cachefile)) return false; // TODO: exception?
-		in->mmapopen(cachefile.native_file_string());
-	}
-#endif
 done:
 	if (in->is_open()) {
 		switch (ft) {
-			case blk: img = new blkImage(in); break;
-			case c16: img = new c16Image(in); break; // this should never happen, actually, once we're done
-			case s16: img = new s16Image(in); break;
-			case spr: img = new sprImage(in); break;
+//			case blk: img = new blkImage(in); break;
+//			case c16: img = new c16Image(in); break; // this should never happen, actually, once we're done
+//			case s16: img = new s16Image(in); break;
+//			case spr: img = new sprImage(in); break;
+			case c16:
+				img = c16_codec->load(in); break;
+			case s16:
+				img = s16_codec->load(in); break;
+			case blk:
+				img = blk_codec->load(in); break;
+			default:
+				assert(false);
 		}
 		img->name = basename;
 	}
@@ -164,20 +141,18 @@ done:
  * Retrieve an image for rendering use. To retrieve a sprite, pass the name without
  * extension. To retrieve a background, pass the full filename (ie, with .blk).
  */
-creaturesImage *imageGallery::getImage(std::string name) {
-	if (name.empty()) return 0; // empty sprites definitely don't exist
+gallery_p imageGallery::getGallery(std::string name) {
+	if (name.empty()) return gallery_p(); // empty sprites definitely don't exist
 
 	// step one: see if the image is already in the gallery
-	std::map<std::string, creaturesImage *>::iterator i = gallery.find(name);
-	if (i != gallery.end()) {
-		creaturesImage *img = i->second;
-		img->addRef();
-		return img;
+	std::map<std::string, gallery_p>::iterator i = galleries.find(name);
+	if (i != galleries.end()) {
+		return i->second;
 	}
 
 	// step two: try opening it in .c16 form first, then try .s16 form
 	mmapifstream *in = new mmapifstream();
-	creaturesImage *img;
+	gallery_p img;
 
 	if (!tryOpen(in, img, name + ".s16", s16)) {
 		if (!tryOpen(in, img, name + ".c16", c16)) {
@@ -185,25 +160,25 @@ creaturesImage *imageGallery::getImage(std::string name) {
 				bool lasttry = tryOpen(in, img, name, blk);
 				if (!lasttry) {
 					std::cerr << "imageGallery couldn't find the sprite '" << name << "'" << std::endl;
-					return 0;
+					return gallery_p();
 				}
-				gallery[name] = img;
+				galleries[name] = img;
 			} else {
-				gallery[name] = img;
+				galleries[name] = img;
 			}
 		} else {
-			gallery[name] = img;
+			galleries[name] = img;
 		}
 	} else {
-		gallery[name] = img;
+		galleries[name] = img;
 	}
 	
 	in->close(); // doesn't close the mmap, which we still need :)
 
-	gallery[name]->addRef();
-	return gallery[name];
+	return img;
 }
 
+#if 0
 void imageGallery::delImage(creaturesImage *in) {
 	in->delRef();
 	if (in->refCount() == 0) {
@@ -214,5 +189,6 @@ void imageGallery::delImage(creaturesImage *in) {
 		std::cerr << "imageGallery warning: delImage got a newly unreferenced image but it isn't in the gallery\n";
 	}
 }
+#endif
 
 /* vim: set noet: */

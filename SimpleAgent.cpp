@@ -21,7 +21,6 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "c16Image.h"
 #include "openc2e.h"
 
 SimpleAgent::SimpleAgent(unsigned char family, unsigned char genus, unsigned short species, unsigned int plane,

@@ -22,7 +22,6 @@
 #include "Camera.h"
 #include "World.h"
 #include "Engine.h"
-#include "c16Image.h"
 #include "Backend.h"
 #include "Agent.h"
 
@@ -39,7 +38,7 @@ bool partzorder::operator ()(const CompoundPart *s1, const CompoundPart *s2) con
 	return s1->getParent()->getZOrder() > s2->getParent()->getZOrder();
 }
 
-creaturesImage *TextEntryPart::caretsprite = 0;
+gallery_p TextEntryPart::caretgallery;
 
 void CompoundPart::render(Surface *renderer, int xoffset, int yoffset) {
 	if (parent->visible) {
@@ -61,13 +60,12 @@ bool CompoundPart::showOnRemoteCameras() {
 }
 
 void SpritePart::partRender(Surface *renderer, int xoffset, int yoffset) {
-	assert(getCurrentSprite() < getSprite()->numframes());
-	renderer->render(getSprite(), getCurrentSprite(), xoffset + x, yoffset + y, has_alpha, alpha, draw_mirrored);
+	renderer->render(getCurrentSprite(), xoffset + x, yoffset + y, has_alpha, alpha, draw_mirrored);
 }
 
 void SpritePart::setFrameNo(unsigned int f) {
 	assert(f < animation.size());
-	assert(firstimg + base + animation[f] < getSprite()->numframes());
+	assert(firstimg + base + animation[f] < getGallery()->numframes());
 	
 	frameno = f;
 	pose = animation[f];
@@ -75,7 +73,7 @@ void SpritePart::setFrameNo(unsigned int f) {
 }
 
 void SpritePart::setPose(unsigned int p) {
-	assert(firstimg + base + p < getSprite()->numframes());
+	assert(firstimg + base + p < getGallery()->numframes());
 
 	animation.clear();
 	pose = p;
@@ -87,7 +85,7 @@ void SpritePart::setBase(unsigned int b) {
 }
 
 bool SpritePart::transparentAt(unsigned int x, unsigned int y) {
-	return getSprite()->transparentAt(getCurrentSprite(), x, y);
+	return getCurrentSprite()->transparentAt(x, y);
 }
 
 void SpritePart::handleClick(float clickx, float clicky) {
@@ -108,10 +106,10 @@ CompoundPart::~CompoundPart() {
 
 SpritePart::SpritePart(Agent *p, unsigned int _id, std::string spritefile, unsigned int fimg,
 						int _x, int _y, unsigned int _z) : CompoundPart(p, _id, _x, _y, _z) {
-	origsprite = sprite = world.gallery.getImage(spritefile);
+	orig_gallery = gallery = world.gallery.getGallery(spritefile);
 	firstimg = fimg;
-	caos_assert(sprite);
-	caos_assert(sprite->numframes() > firstimg);
+	caos_assert(gallery);
+	caos_assert(gallery->numframes() > firstimg);
 	
 	pose = 0;
 	base = 0;
@@ -123,23 +121,18 @@ SpritePart::SpritePart(Agent *p, unsigned int _id, std::string spritefile, unsig
 }
 
 SpritePart::~SpritePart() {
-	world.gallery.delImage(origsprite);
-	if (origsprite != sprite) delete sprite;
 }
 
 void SpritePart::changeSprite(std::string spritefile, unsigned int fimg) {
-	creaturesImage *spr = world.gallery.getImage(spritefile);
-	caos_assert(spr);
-	caos_assert(spr->numframes() > fimg);
+	gallery_p g = world.gallery.getGallery(spritefile);
+	caos_assert(g);
+	caos_assert(g->numframes() > fimg);
 	// TODO: should we preserve base/pose here, instead?
 	pose = 0;
 	base = 0;
 	firstimg = fimg;
 	spriteno = fimg;
-	world.gallery.delImage(origsprite);
-	// TODO: should we preserve tint?
-	if (origsprite != sprite) delete sprite;
-	origsprite = sprite = spr;
+	orig_gallery = gallery = g;
 }
 
 unsigned int CompoundPart::getZOrder() const {
@@ -157,12 +150,13 @@ void CompoundPart::addZOrder() {
 }
 
 void SpritePart::tint(unsigned char r, unsigned char g, unsigned char b, unsigned char rotation, unsigned char swap) {
-	assert(dynamic_cast<duppableImage *>(origsprite));
+/*	assert(dynamic_cast<duppableImage *>(origsprite));
 	if (origsprite != sprite) delete sprite;
 	s16Image *newsprite = new s16Image();
 	sprite = newsprite;
 	((duppableImage *)origsprite)->duplicateTo(newsprite);
-	newsprite->tint(r, g, b, rotation, swap);
+	newsprite->tint(r, g, b, rotation, swap);*/
+	std::cerr << "* TODO: fix tint" << std::endl; // XXX
 }
 
 DullPart::DullPart(Agent *p, unsigned int _id, std::string spritefile, unsigned int fimg, int _x, int _y,
@@ -185,9 +179,9 @@ void ButtonPart::handleClick(float x, float y) {
 
 TextPart::TextPart(Agent *p, unsigned int _id, std::string spritefile, unsigned int fimg, int _x, int _y, unsigned int _z, std::string fontsprite)
 	                : SpritePart(p, _id, spritefile, fimg, _x, _y, _z) {
-	textsprite = world.gallery.getImage(fontsprite);
-	caos_assert(textsprite);
-	caos_assert(textsprite->numframes() == 224);
+	textgallery = world.gallery.getGallery(fontsprite);
+	caos_assert(textgallery);
+	caos_assert(textgallery->numframes() == 224);
 	leftmargin = 8; topmargin = 8; rightmargin = 8; bottommargin = 8;
 	linespacing = 0; charspacing = 0;
 	horz_align = left; vert_align = top;
@@ -196,10 +190,6 @@ TextPart::TextPart(Agent *p, unsigned int _id, std::string spritefile, unsigned 
 }
 
 TextPart::~TextPart() {
-	for (std::vector<texttintinfo>::iterator i = tints.begin(); i != tints.end(); i++)
-		if (i->sprite != textsprite)
-			delete i->sprite;	
-	world.gallery.delImage(textsprite);
 }
 
 void TextPart::addTint(std::string tintinfo) {
@@ -230,22 +220,22 @@ void TextPart::addTint(std::string tintinfo) {
 	texttintinfo t;
 	t.offset = text.size();
 
+#if 0
 	if (!(r == g == b == rot == swap == 128)) {
-		assert(dynamic_cast<duppableImage *>(textsprite));
+		assert(dynamic_cast<duppableImage *>(textgallery));
 		s16Image *tintedsprite = new s16Image();
-		((duppableImage *)textsprite)->duplicateTo(tintedsprite);
+		((duppableImage *)textgallery)->duplicateTo(tintedsprite);
 		tintedsprite->tint(r, g, b, rot, swap);
 		t.sprite = tintedsprite;
-	} else t.sprite = textsprite;
+	} else t.sprite = textgallery;
+#endif
+	t.gallery = textgallery; // XXX
 
 	tints.push_back(t);
 }
 
 void TextPart::setText(std::string t) {
 	text.clear();
-	for (std::vector<texttintinfo>::iterator i = tints.begin(); i != tints.end(); i++)
-		if (i->sprite != textsprite)
-			delete i->sprite;
 	tints.clear();
 
 	// parse and remove the <tint> tagging
@@ -349,7 +339,7 @@ unsigned int TextPart::calculateWordWidth(std::string word) {
 		if (word[i] < 32) continue; // TODO: replace with space or similar?
 		int spriteid = word[i] - 32;	
 
-		x += textsprite->width(spriteid);
+		x += textgallery->getSprite(spriteid)->width();
 		if (i != 0) x += charspacing;
 	}
 	return x;
@@ -392,12 +382,12 @@ void TextPart::recalculateData() {
 
 		// next, work out whether it fits
 		unsigned int wordlen = calculateWordWidth(word);
-		unsigned int spacelen = textsprite->width(0) + charspacing;
+		unsigned int spacelen = textgallery->width(0) + charspacing;
 		unsigned int possiblelen = wordlen;
 		if (currentdata.text.size() > 0)
 			possiblelen = wordlen + spacelen;
 		// TODO: set usedheight as appropriate/needed
-		usedheight = textsprite->height(0);
+		usedheight = textgallery->height(0);
 		if (currentdata.width + possiblelen <= textwidth) {
 			// the rest of the word fits on the current line, so that's okay.
 			// add a space if we're not the first word on this line
@@ -458,7 +448,7 @@ void TextPart::partRender(Surface *renderer, int xoffset, int yoffset, TextEntry
 		currenty = (textheight - pageheights[currpage]) / 2;
 	unsigned int startline = pages[currpage];
 	unsigned int endline = (currpage + 1 < pages.size() ? pages[currpage + 1] : lines.size());
-	creaturesImage *sprite = textsprite; unsigned int currtint = 0;
+	gallery_p sprite = textgallery; unsigned int currtint = 0;
 	for (unsigned int i = startline; i < endline; i++) {	
 		unsigned int currentx = 0, somex = xoff;
 		if (horz_align == right)
@@ -468,20 +458,20 @@ void TextPart::partRender(Surface *renderer, int xoffset, int yoffset, TextEntry
 
 		for (unsigned int x = 0; x < lines[i].text.size(); x++) {
 			if (currtint < tints.size() && tints[currtint].offset == lines[i].offset + x) {
-				sprite = tints[currtint].sprite;
+				sprite = tints[currtint].gallery;
 				currtint++;
 			}
 		
 			if (lines[i].text[x] < 32) continue; // TODO: replace with space or similar?
 			int spriteid = lines[i].text[x] - 32;
-			renderer->render(sprite, spriteid, somex + currentx, yoff + currenty, has_alpha, alpha);
+			renderer->render(sprite->getSprite(spriteid), somex + currentx, yoff + currenty, has_alpha, alpha);
 			if ((caretdata) && (caretdata->caretpos == lines[i].offset + x))
 				caretdata->renderCaret(renderer, somex + currentx, yoff + currenty);
-			currentx += textsprite->width(spriteid) + charspacing;
+			currentx += textgallery->width(spriteid) + charspacing;
 		}
 		if ((caretdata) && (caretdata->caretpos == lines[i].offset + lines[i].text.size()))
 			caretdata->renderCaret(renderer, somex + currentx, yoff + currenty);		
-		currenty += textsprite->height(0) + linespacing + 1;
+		currenty += textgallery->height(0) + linespacing + 1;
 	}
 }
 
@@ -493,7 +483,7 @@ FixedTextPart::FixedTextPart(Agent *p, unsigned int _id, std::string spritefile,
 TextEntryPart::TextEntryPart(Agent *p, unsigned int _id, std::string spritefile, unsigned int fimg, int _x, int _y,
 		                                  unsigned int _z, unsigned int msgid, std::string fontsprite) : TextPart(p, _id, spritefile, fimg, _x, _y, _z, fontsprite) {
 	// TODO: hm, this never gets freed..
-	if (!caretsprite) { caretsprite = world.gallery.getImage("cursor"); caos_assert(caretsprite); }
+	if (!caretgallery) { caretgallery = world.gallery.getGallery("cursor"); caos_assert(caretgallery); }
 
 	caretpose = 0;
 	caretpos = 0;
@@ -507,7 +497,7 @@ void TextEntryPart::partRender(Surface *renderer, int xoffset, int yoffset) {
 
 void TextEntryPart::renderCaret(Surface *renderer, int xoffset, int yoffset) {
 	// TODO: fudge xoffset/yoffset as required
-	renderer->render(caretsprite, caretpose, xoffset, yoffset, has_alpha, alpha);
+	renderer->render(caretgallery->getSprite(caretpose), xoffset, yoffset, has_alpha, alpha);
 }
 
 void TextEntryPart::tick() {
@@ -515,7 +505,7 @@ void TextEntryPart::tick() {
 
 	if (focused) {
 		caretpose++;
-		if (caretpose == caretsprite->numframes())
+		if (caretpose == caretgallery->numframes())
 			caretpose = 0;
 	}
 }

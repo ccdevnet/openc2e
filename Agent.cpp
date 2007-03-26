@@ -765,7 +765,7 @@ void Agent::adjustCarried() {
 		yoffset -= i->second.second;
 	} else if (s) {
 		// c2e seems to default to (width / 2, 0)? don't know .. TODO look into this more
-		xoffset -= s->getSprite()->width(s->getCurrentSprite()) / 2;
+		xoffset -= s->getWidth() / 2;
 	}
 
 	carrying->moveTo(x + xoffset, y + yoffset, true);

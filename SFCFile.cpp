@@ -748,7 +748,7 @@ void SFCFile::copyToWorld() {
 
 void MapData::copyToWorld() {
 	// find the background sprite
-	creaturesImage *spr = world.gallery.getImage(background->filename);
+	gallery_p spr = world.gallery.getGallery(background->filename);
 	sfccheck(spr);
 
 	// check for Terra Nornia's corrupt background sprite
@@ -756,9 +756,13 @@ void MapData::copyToWorld() {
 		// apply stupid hack
 		// TODO: can't we have a better check, eg checking if offsets are identical?
 		std::cout << "Applying hack for probably-corrupt Terra Nornia background." << std::endl;
+		std::cout << "... except I don't actually know how this works. Bug bd_ to ask fuzzie about this. Aborting for now :(" << std::endl;
+		abort();
+#if 0
 		sprImage *buro = dynamic_cast<sprImage *>(spr);
 		sfccheck(buro);
 		buro->fixBufferOffsets();
+#endif
 	}
 
 	// create the global metaroom
