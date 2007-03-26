@@ -22,12 +22,14 @@ void S16Sprite::regenerate() {
     if (!is_c16) {
         uint16_t *data_p;
         data_p = (uint16_t *)(is->map + *(uint32_t *)(is->map + header_offset));
+        if (is_bg)
+            data_p += 2; // 4 bytes offset
 
         // XXX: unsigned long long isn't needed on 32-bit, what's a portable
         // int of the right size?
         bool aligned = ((unsigned long long)(data_p) & 1 == 0);
 
-        if (data_p + m_width * m_height >= (uint16_t *)(is->map + is->filesize))
+        if (data_p + m_width * m_height > (uint16_t *)(is->map + is->filesize))
             throw imageFormatException("buffer underrun");
         if (IS_LITTLE_ENDIAN && aligned) {
             m_pixel_data = data_p;
