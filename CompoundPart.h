@@ -136,7 +136,7 @@ struct texttintinfo {
 	unsigned int offset;
 };
 
-enum horizontalalign { left, center, right };
+enum horizontalalign { leftalign, centeralign, rightalign };
 enum verticalalign { top, middle, bottom };
 
 class TextPart : public SpritePart {
