@@ -17,6 +17,9 @@
  *
  */
 
+#ifndef __CREATURE_H
+#define __CREATURE_H
+
 #include "Agent.h"
 #include "genome.h"
 #include <boost/shared_ptr.hpp>
@@ -42,7 +45,7 @@ protected:
 	unsigned int age; // in ticks
 	lifestage stage;
 
-	AgentRef attention, focus;
+	AgentRef attention;
 
 	// linguistic stuff
 
@@ -73,6 +76,8 @@ public:
 	bool isZombie() { return zombie; }
 	unsigned int getAge() { return age; }
 	shared_ptr<genomeFile> getGenome() { return genome; }
+
+	virtual unsigned int getGait() = 0;
 	
 	void born();
 	void die();
@@ -81,20 +86,20 @@ public:
 // c1
 
 struct c1Reaction {
-	bioReaction *data;
-	void init(bioReaction *);
+	bioReactionGene *data;
+	void init(bioReactionGene *);
 };
 
 struct c1Receptor {
-	bioReceptor *data;
+	bioReceptorGene *data;
 	unsigned char *locus;
-	void init(bioReceptor *, class c1Creature *);
+	void init(bioReceptorGene *, class c1Creature *);
 };
 
 struct c1Emitter {
-	bioEmitter *data;
+	bioEmitterGene *data;
 	unsigned char *locus;
-	void init(bioEmitter *, class c1Creature *);
+	void init(bioEmitterGene *, class c1Creature *);
 };
 
 class c1Creature : public Creature {
@@ -115,7 +120,7 @@ protected:
 	unsigned char drives[16];
 
 	unsigned int biochemticks;
-	bioHalfLives *halflives;
+	bioHalfLivesGene *halflives;
 
 	void addGene(gene *);
 	void tickBiochemistry();
@@ -137,33 +142,35 @@ public:
 	unsigned char getDrive(unsigned int id) { assert(id < 16); return drives[id]; }
 	
 	unsigned char *getLocusPointer(bool receptor, unsigned char o, unsigned char t, unsigned char l);
+
+	unsigned int getGait();
 };
 
 // c2e
 
 struct c2eReaction {
-	bioReaction *data;
+	bioReactionGene *data;
 	float rate;
 	unsigned int receptors;
-	void init(bioReaction *);
+	void init(bioReactionGene *);
 };
 
 struct c2eReceptor {
-	bioReceptor *data;
+	bioReceptorGene *data;
 	bool processed;
 	float lastvalue;
 	float *locus;
 	unsigned int *receptors;
 	float nominal, threshold, gain;
-	void init(bioReceptor *, class c2eOrgan *, shared_ptr<c2eReaction>);
+	void init(bioReceptorGene *, class c2eOrgan *, shared_ptr<c2eReaction>);
 };
 
 struct c2eEmitter {
-	bioEmitter *data;
+	bioEmitterGene *data;
 	unsigned char sampletick;
 	float *locus;
 	float threshold, gain;
-	void init(bioEmitter *, class c2eOrgan *);
+	void init(bioEmitterGene *, class c2eOrgan *);
 };
 
 class c2eOrgan {
@@ -230,7 +237,9 @@ protected:
 	float senses[14], involaction[8], gaitloci[16];
 	float drives[20];
 
-	bioHalfLives *halflives;
+	bioHalfLivesGene *halflives;
+
+	class c2eBrain *brain;
 
 	void tickBiochemistry();
 	void addGene(gene *);
@@ -247,8 +256,14 @@ public:
 
 	unsigned int noOrgans() { return organs.size(); }
 	shared_ptr<c2eOrgan> getOrgan(unsigned int i) { assert(i < organs.size()); return organs[i]; }
+	
+	class c2eBrain *getBrain() { return brain; }
 
 	float *getLocusPointer(bool receptor, unsigned char o, unsigned char t, unsigned char l);
+	
+	unsigned int getGait();
 };
+
+#endif
 
 /* vim: set noet: */

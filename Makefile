@@ -16,6 +16,7 @@ OPENC2E_CORE = \
 	AgentRef.o \
 	attFile.o \
 	bytecode.o \
+	c2eBrain.o \
 	CallButton.o \
 	Camera.o \
 	caosScript.o \
@@ -77,7 +78,6 @@ OPENC2E_CORE = \
 	Room.o \
 	Scriptorium.o \
 	SDLBackend.o \
-	SDL_gfxPrimitives.o \
 	SFCFile.o \
 	SimpleAgent.o \
 	SkeletalCreature.o \
@@ -93,7 +93,7 @@ OPENC2E_S = $(OPENC2E_CORE) $(SERIALIZATION) main.o
 
 DEBUGFLAGS=-ggdb3 -O0
 CFLAGS += -W -Wall -Wno-conversion -Wno-unused -pthread -D_REENTRANT -DYYERROR_VERBOSE
-XLDFLAGS=$(LDFLAGS) -lboost_program_options -lboost_serialization -lboost_filesystem $(SDL_LFLAGS) -lz -lm -lSDL_net -lSDL_mixer -lpthread
+XLDFLAGS=$(LDFLAGS) -lboost_program_options -lboost_serialization -lboost_filesystem $(SDL_LFLAGS) -lz -lm -lSDL_net -lSDL_mixer -lSDL_gfx -lpthread
 COREFLAGS=$(DEBUGFLAGS) $(SDL_CFLAGS) -I.
 XCFLAGS=$(CFLAGS) $(COREFLAGS)
 XCPPFLAGS=$(COREFLAGS) $(CPPFLAGS) $(CFLAGS)
@@ -150,6 +150,9 @@ include $(shell find .deps -name '*.d' -type f 2>/dev/null || true)
 Catalogue.o: catalogue.lex.h catalogue.tab.hpp
 lex.mng.o: mngparser.tab.hpp
 
+Creature_standalone.o: Creature.cpp Creature.o
+	$(CC) $(XCFLAGS) -D_CREATURE_STANDALONE -o $@ -c $<
+
 openc2e: $(OPENC2E)
 	$(CXX) -o $@ $^ $(XLDFLAGS) $(XCXXFLAGS)
 
@@ -176,6 +179,11 @@ tools/memstats: tools/memstats.o $(OPENC2E_CORE) $(SERSTUB)
 
 tools/serialtest: tools/serialtest.o $(OPENC2E_CORE) $(SERIALIZATION)
 	$(CXX) -o $@ $^ $(XLDFLAGS) $(XCXXFLAGS)
+
+tools/braininavat/braininavat: Creature_standalone.o c2eBrain.o streamutils.o genomeFile.o
+	cd tools/braininavat && \
+	qmake && \
+	make
 
 clean:
 	rm -f *.o openc2e openc2e_s filetests praydumper tools/*.o config.mk
