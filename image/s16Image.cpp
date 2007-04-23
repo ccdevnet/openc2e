@@ -1,5 +1,6 @@
 #include "s16Image.h"
 #include "endianlove.h"
+#include "alignment.h"
 #include <fstream>
 #include <cstdio>
 
@@ -25,9 +26,7 @@ void S16Sprite::regenerate() {
         if (is_bg)
             data_p += 2; // 4 bytes offset
 
-        // XXX: unsigned long long isn't needed on 32-bit, what's a portable
-        // int of the right size?
-        bool aligned = ((unsigned long long)(data_p) & 1 == 0);
+        bool aligned = aligned(data_p);
 
         if (data_p + m_width * m_height > (uint16_t *)(is->map + is->filesize))
             throw imageFormatException("buffer underrun");
