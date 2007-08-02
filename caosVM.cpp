@@ -62,6 +62,7 @@ void caosVM::startBlocking(blockCond *whileWhat) {
 }
 
 inline void caosVM::safeJMP(int dest) {
+//	std::cerr << "jmp from " << cip << " to " << dest << "(old nip = " << nip << ") in script of length " << currentscript->scriptLength() << std::endl;
 	if (dest < 0)
 		throw creaturesException(std::string("Unrelocated jump at ") + "???" /* cip */); /* XXX */
 	if (dest >= currentscript->scriptLength())
@@ -115,9 +116,13 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 	else \
 		result = CEQ; \
 } while (0)
-				if (v1.getType() == INTEGER && v2.getType() == INTEGER)
+				if (v1.getType() == INTEGER && v2.getType() == INTEGER) {
 					COMPARE(int, getInt);
-				else if (v1.hasNumber() && v2.hasNumber())
+					if (v2.getInt() == (v1.getInt() & v2.getInt()))
+						result |= CBT;
+					if (0           == (v1.getInt() & v2.getInt()))
+						result |= CBF;
+				} else if (v1.hasNumber() && v2.hasNumber())
 					COMPARE(float, getFloat);
 				else if (v1.hasString() && v2.hasString())
 					COMPARE(std::string, getString);
@@ -127,7 +132,10 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 					result = CEQ;
 				else
 					result = 0; // XXX?
-				this->result.setInt(condaccum && !!(result & condition));
+				if (condition & CAND)
+					this->result.setInt(condaccum && !!(result & condition & CMASK));
+				else
+					this->result.setInt(condaccum || !!(result & condition & CMASK));
 				break;
 #undef COMPARE
 			}

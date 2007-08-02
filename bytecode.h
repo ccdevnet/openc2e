@@ -54,8 +54,8 @@ enum opcode_t {
 	 */
 	CAOS_CMD,
 	/* Pop two values A and B off the stack, as well as an integer flag C.
-	 * Compare A and B with the given comparison mask, then push back C (if true)
-	 * or 0 (if false)
+	 * Compare A and B with the given comparison mask, then push back C AND/OR
+	 * the result, in accordance with the flag.
 	 * Argument: A comparison flag
 	 * Cost: 0
 	 */
@@ -150,6 +150,8 @@ std::string dumpOp(caosOp op);
 #define CGT 4
 #define CBT 8
 #define CBF 16
+#define CAND 32
+#define COR  0
 #define CMASK (CEQ | CLT | CGT | CBT | CBF)
 #define CLE (CEQ | CLT)
 #define CGE (CEQ | CGT)
