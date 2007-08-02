@@ -363,8 +363,11 @@ void caosScript::parseloop(int state, void *info) {
 			return;
 		} else {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
-			if (ci->argc)
+			if (ci->argc) {
+				if (!ci->argtypes)
+					std::cerr << "Missing argtypes for command " << t->word << "; probably unimplemented." << std::endl;
 				readExpr(ci->argtypes);
+			}
 			emitOp(CAOS_CMD, d->cmd_index(ci));
 		}
 	}
