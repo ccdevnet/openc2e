@@ -28,10 +28,12 @@
 #include "caosVar.h"
 #include <cassert>
 #include "openc2e.h"
+#include "bytecode.h"
+#include "caosVar.h"
+#include "dialect.h"
+
 
 class Agent;
-class caosOp;
-class Variant;
 
 struct script {
 	protected:
@@ -41,29 +43,44 @@ struct script {
 
 		// position 0 is reserved in the below vector
 		std::vector<int> relocations;
-		// pos-0 needs to be initted to a caosNoop
-		std::vector<class caosOp *> allOps;
-
 		script() {}
 	public:
+		// pos-0 needs to be initted to a caosNoop <-- still needed?
+		std::vector<caosOp> ops;
+		std::vector<caosVar> consts;
+
+	public:
 		int fmly, gnus, spcs, scrp;
-		const Variant *variant;
-		const Variant *getVariant() const { return variant; };
+		const class Dialect *dialect;
+		const Dialect *getDialect() const { return dialect; };
 		
 		std::string filename;
 
-		caosOp *getOp(int idx) const {
+		caosOp getOp(int idx) const {
 			assert (idx >= 0);
-			return (unsigned int)idx >= allOps.size() ? NULL : allOps[idx];
+			return (unsigned int)idx >= ops.size() ? caosOp(CAOS_DIE, -1) : ops[idx];
+		}
+
+		int scriptLength() const {
+			return ops.size();
+		}
+
+		caosVar getConstant(int idx) const {
+			if (idx < 0 || idx >= consts.size()) {
+				caosVar v;
+				v.reset();
+				return v;
+			}
+			return consts[idx];
 		}
 		
 		std::map<std::string, int> gsub;
-		int getNextIndex() { return allOps.size(); }
+		int getNextIndex() { return ops.size(); }
 		// add op as the next opcode
 		void thread(caosOp *op);
-		script(const Variant *v, const std::string &fn,
+		script(const Dialect *v, const std::string &fn,
 				int fmly_, int gnus_, int spcs_, int scrp_);
-		script(const Variant *v, const std::string &fn);
+		script(const Dialect *v, const std::string &fn);
 		~script();
 		std::string dump();
 	//	std::string dumpLine(unsigned int);
@@ -106,18 +123,22 @@ struct script {
 
 class caosScript { //: Collectable {
 public:
-	const Variant *v;
+	const Dialect *d;
 	std::string filename;
 	shared_ptr<script> installer, removal;
 	std::vector<shared_ptr<script> > scripts;
 	shared_ptr<script> current;
 
-	caosScript(const std::string &variant, const std::string &fn);
-	caosScript() { v = NULL; }
+	caosScript(const std::string &dialect, const std::string &fn);
+	caosScript() { d = NULL; }
 	void parse(std::istream &in);
 	~caosScript();
 	void installScripts();
 	void installInstallScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short eventid);
+protected:
+	void readExpr(const enum ci_type *argp);
+	const cmdinfo *readCommand(class token *t, const std::string &prefix);
+	void parseloop(int state, void *info);
 };
 
 #endif

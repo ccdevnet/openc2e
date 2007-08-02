@@ -20,15 +20,131 @@
 #ifndef BYTECODE_H
 #define BYTECODE_H 1
 
-#include "caosVM.h"
-#include "lexutil.h"
-#include "cmddata.h"
-#include "caosScript.h"
-#include "Agent.h"
-#include <cstdio>
+#include <stdlib.h> // for NULL
+#include <assert.h>
+#include <string>
 
-#include <sstream>
-#include <boost/format.hpp>
+enum opcode_t {
+	/* IMPORTANT! The order of these elements must not change, or save
+	 * compatibility will be broken.
+	 *
+	 * Note that relocated and non-relocated bytecode elements are treated
+	 * seperately; you may add additional ones before CAOS_RELOCATABLE_BEGIN
+	 * and before CAOS_INVALID.
+	 */
+	/* Do nothing.
+	 * Argument: (ignored)
+	 * Cost: 0
+	 */
+	CAOS_NOP = 0,
+	/* Abort the script.
+	 * Argument: An index into the constants table, with a description of the
+	 *           error.
+	 * Cost: 0
+	 */
+	CAOS_DIE,
+	/* End the script gracefully.
+	 * Argument: ignored
+	 * Cost: 0
+	 */
+	CAOS_STOP,
+	/* Invoke a caos command.
+	 * Argument: An index into the commands table.
+	 * Cost: variable
+	 */
+	CAOS_CMD,
+	/* Pop two values A and B off the stack, as well as an integer flag C.
+	 * Compare A and B with the given comparison mask, then push back C (if true)
+	 * or 0 (if false)
+	 * Argument: A comparison flag
+	 * Cost: 0
+	 */
+	CAOS_COND,
+	/* Push a constant into the stack.
+	 * Argument: An index into the constants table
+	 * Cost: 0
+	 */
+	CAOS_CONST,
+	/* Push a constant integer in the range of a 24-bit int onto the stack.
+	 * (ie, -2^24 <= x <= 2^24 - 1)
+	 * Argument: An integer
+	 * Cost: 0
+	 */
+	CAOS_CONSTINT,
+	/* Push a reference to a VAxx register onto the stack.
+	 * Argument: The index of the register to access
+	 * Cost: 0
+	 */
+	CAOS_VAXX,
+	/* Push a reference to a OVxx register onto the stack.
+	 * Argument: The index of the register to access
+	 * Cost: 0
+	 */
+	CAOS_OVXX,
+	/* Push a reference to a MVxx register onto the stack.
+	 * Argument: The index of the register to access
+	 * Cost: 0
+	 */
+	CAOS_MVXX,
+	/* Pseudo-instruction; marks the beginning of relocated ops. */
+	CAOS_NONRELOC_END,
+	CAOS_RELOCATABLE_BEGIN = 0x80,
+	/* Pop an integer off the stack. Jump to the given location if it's nonzero.
+	 * Argument: A bytecode location (relocated).
+	 * Cost: 0
+	 */
+	CAOS_CJMP,
+	/* Jump to another location in the script.
+	 * Argument: A bytecode location (relocated).
+	 * Cost: 0
+	 */
+	CAOS_JMP,
+	/* Pop a value off the stack. If it's nonzero, decrement, push back, 
+	 * and jump to the location in the argument.
+	 * Argument: A bytecode location (relocated).
+	 * Cost: 0
+	 */
+	CAOS_DECJNZ,
+	/* Push the instruction pointer and value stack into the call stack,
+	 * then jump to the given location.
+	 * Argument: A bytecode location (relocated).
+	 * Cost: 0
+	 */
+	CAOS_GSUB,
+	/* Pop a value off the stack. If non-null, set targ to it, and go to the
+	 * given address. Otherwise, set targ to ownr, and continue.
+	 * Argument: A bytecode location (relocated).
+	 * Cost: 0
+	 */
+	CAOS_ENUMPOP,
+
+	CAOS_INVALID
+}; 
+
+static inline bool op_is_valid(opcode_t opcode) {
+	return (opcode >= 0 && opcode < CAOS_NONRELOC_END)
+		|| (opcode >  CAOS_RELOCATABLE_BEGIN && opcode < CAOS_INVALID);
+}
+
+static inline bool op_is_relocatable(opcode_t opcode) {
+	return (opcode >  CAOS_RELOCATABLE_BEGIN && opcode < CAOS_INVALID);
+}
+
+struct caosOp {
+	enum opcode_t opcode : 8;
+	int argument : 24;
+
+	caosOp(enum opcode_t oc, int arg) {
+		assert(op_is_valid(oc));
+		assert(arg >= -(1 << 24) && arg < (1 << 24));
+		opcode = oc;
+		argument = arg;
+	}
+};
+
+std::string dumpOp(caosOp op);
+
+#if 0
 
 using boost::str; // boost::format convertor
 
@@ -462,4 +578,5 @@ class opMVxx : public caosOp {
 
 #endif
 
+#endif
 /* vim: set noet: */

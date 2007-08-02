@@ -166,29 +166,14 @@ void caosVM::c_DBG_TRACE() {
 
 /**
  MANN (command) cmd (string)
- %status ok
+ %status stub
  
  Looks up documentation on the given command and spits it on the current output socket.
 */
 void caosVM::c_MANN() {
 	VM_PARAM_STRING(cmd)
-	transform(cmd.begin(), cmd.end(), cmd.begin(), (int(*)(int))toupper);
-
-	const cmdinfo *cmds = NULL;
-	if (currentscript) {
-		const Variant *v = currentscript->getVariant();
-		if (v)
-			cmds = v->cmds;
-	}
-	if (!cmds)
-		cmds = variants["c3"]->cmds;
-	// we're not too worried about the performance of this...
-	for (int i = 0; cmds[i].name; i++) {
-		if (strcmp(cmds[i].fullname, cmd.c_str()))
-			continue;
-		*outputstream << cmds[i].docs;
-		return;
-	}
+	// TODO VM
+	result.setString("bug bd about this function.");
 }
 
 /**
@@ -220,6 +205,9 @@ void caosVM::c_DBG_DISA() {
 
  Blows up unless the given condition is true.
 */
+void caosVM::c_DBG_ASRT() {
+	throw caosException("DBG: ASRT condition failed");
+}
 
 /**
  DBG: IDNT (string) agent (agent)

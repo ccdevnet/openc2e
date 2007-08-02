@@ -28,3 +28,7 @@ const char *cnams[] = {
     "NE",
     NULL
 };
+
+std::string dumpOp(caosOp op) {
+    return std::string("TODO VM");
+}

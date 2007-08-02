@@ -23,20 +23,11 @@
 #include "bytecode.h"
 #include <iostream>
 
+#include <boost/format.hpp>
+
 using std::cout;
 using std::cerr;
 using std::endl;
-
-class caosAbort : public caosOp {
-	public:
-		void execute(caosVM *vm) {
-			cerr << "Bad! Some opcode forgot to set its successor" << endl;
-			caos_assert(false);
-		}
-		virtual std::string dump() {
-			return std::string("INTERNAL ERROR (you should never see this)");
-		}
-} abortop;
 
 caosVM::caosVM(const AgentRef &o)
 	: vm(this)
@@ -70,29 +61,96 @@ void caosVM::startBlocking(blockCond *whileWhat) {
 	blocking = whileWhat;
 }
 
+inline void caosVM::runOpCore(script *s, caosOp op) {
+	switch (op.opcode) {
+		case CAOS_NOP: break;
+		case CAOS_DIE:
+			{
+				int idx = op.argument;
+				std::string err = "aborted";
+				caosVar constVal = s->getConstant(idx);
+				if (constVal.hasString())
+					err = constVal.getString();
+				throw creaturesException(err);
+			}
+		case CAOS_STOP:
+			{
+				stop();
+				break;
+			}
+		case CAOS_CMD:
+			{
+				const cmdinfo *ci = s->dialect->getcmd(op.argument);
+				timeslice -= ci->evalcost;
+#ifndef VCPP_BROKENNESS
+				(this->*(ci->handler))();
+#else
+				dispatchCAOS(this, ci->handler_idx);
+#endif
+				break;
+			}
+		case CAOS_COND:
+			assert(0 && "TODO");
+		case CAOS_CONST:
+			{
+				valueStack.push_back(vmStackItem(s->getConstant(op.argument)));
+				break;
+			}
+		case CAOS_CONSTINT:
+			{
+				valueStack.push_back(vmStackItem(caosVar(op.argument)));
+				break;
+			}
+		case CAOS_VAXX:
+		case CAOS_OVXX:
+		case CAOS_MVXX:
+			assert(0 && "TODO");
+		case CAOS_CJMP:
+			{
+				VM_PARAM_VALUE(v);
+				if (v.getInt() == 0)
+					break;
+				/* fall through */
+			}
+		case CAOS_JMP:
+			{
+				/* FIXME: move into safe_jmp() or something */
+				int dest = op.argument;
+				if (dest < 0)
+					throw creaturesException(std::string("Unrelocated jump at ") + "???" /* cip */); /* XXX */
+				if (dest >= s->scriptLength())
+					throw creaturesException(std::string("Jump out of bounds at ") + "???" /* cip */);
+				nip = dest;
+				break;
+			}
+		case CAOS_DECJNZ:
+		case CAOS_GSUB:
+		case CAOS_ENUMPOP:
+			assert(0 && "TODO");
+		default:
+			throw creaturesException(std::string("Invalid opcode"));
+	}
+}
+
 inline void caosVM::runOp() {
 	cip = nip;
 	nip++;
 	shared_ptr<script> scr = currentscript;
-	caosOp *op = currentscript->getOp(cip);
-	if (!op) {
-		stop();
-		return;
-	}
+	caosOp op = currentscript->getOp(cip);
 	result.reset(); // xxx this belongs in opcode maybe
 	try {
 		if (trace) {
 			std::cerr
 				<< boost::str(boost::format("optrace: INST=%d TS=%d %p @%08d ") % (int)inst % (int)timeslice % (void *)this % cip)
-				<< op->dump() << std::endl;
+				<< "TODO: dump OP" << std::endl;
 		}
-		op->execute(this);
+		runOpCore(scr.get(), op);
 	} catch (creaturesException &e) {
 		//std::cerr << "script stopped due to exception " << e.what() << endl;
 		stop();
 		throw;
 	} catch (caosException &e) {
-		e.trace(scr->filename.c_str(), op->getlineno(), scr, op);
+		//e.trace(scr->filename.c_str(), 42 /* TODO VM lineno */, scr, op);
 		//std::cerr << "script stopped due to exception " << e.what() << endl;
 		stop();
 		throw;
@@ -179,4 +237,7 @@ void caosVM::tick() {
 	}
 }
 
+void caosVM::dummy_cmd() {
+	// no-op
+}
 /* vim: set noet: */
