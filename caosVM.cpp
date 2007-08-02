@@ -61,6 +61,14 @@ void caosVM::startBlocking(blockCond *whileWhat) {
 	blocking = whileWhat;
 }
 
+inline void caosVM::safeJMP(int dest) {
+	if (dest < 0)
+		throw creaturesException(std::string("Unrelocated jump at ") + "???" /* cip */); /* XXX */
+	if (dest >= currentscript->scriptLength())
+		throw creaturesException(std::string("Jump out of bounds at ") + "???" /* cip */);
+	nip = dest;
+}
+
 inline void caosVM::runOpCore(script *s, caosOp op) {
 	switch (op.opcode) {
 		case CAOS_NOP: break;
@@ -90,7 +98,39 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 				break;
 			}
 		case CAOS_COND:
-			assert(0 && "TODO");
+			{
+				VM_PARAM_VALUE(v2);
+				VM_PARAM_VALUE(v1);
+				VM_PARAM_INTEGER(condaccum);
+				int condition = op.argument;
+				int result;
+#define COMPARE(type, get) do {\
+	type v1a, v2a; \
+	v1a = v1.get(); \
+	v2a = v2.get(); \
+	if (v1a > v2a) \
+		result = CGT; \
+	else if (v1a < v2a) \
+		result = CLT; \
+	else \
+		result = CEQ; \
+} while (0)
+				if (v1.getType() == INTEGER && v2.getType() == INTEGER)
+					COMPARE(int, getInt);
+				else if (v1.hasNumber() && v2.hasNumber())
+					COMPARE(float, getFloat);
+				else if (v1.hasString() && v2.hasString())
+					COMPARE(std::string, getString);
+				else if (v1.hasAgent() && v2.hasAgent())
+					COMPARE(AgentRef, getAgentRef().get);
+				else if (v1.isEmpty() && v2.isEmpty())
+					result = CEQ;
+				else
+					result = 0; // XXX?
+				this->result.setInt(condaccum && !!(result & condition));
+				break;
+#undef COMPARE
+			}
 		case CAOS_CONST:
 			{
 				valueStack.push_back(vmStackItem(s->getConstant(op.argument)));
@@ -102,31 +142,62 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 				break;
 			}
 		case CAOS_VAXX:
+			{
+				valueStack.push_back(vmStackItem(&var[op.argument]));
+				break;
+			}
 		case CAOS_OVXX:
+			{
+				valid_agent(targ);
+				valueStack.push_back(vmStackItem(&targ->var[op.argument]));
+				break;
+			}
 		case CAOS_MVXX:
-			assert(0 && "TODO");
+			{
+				valid_agent(owner);
+				valueStack.push_back(vmStackItem(&owner->var[op.argument]));
+				break;
+			}
 		case CAOS_CJMP:
 			{
 				VM_PARAM_VALUE(v);
-				if (v.getInt() == 0)
-					break;
-				/* fall through */
+				if (v.getInt() != 0)
+					safeJMP(op.argument);
+				break;
 			}
 		case CAOS_JMP:
 			{
-				/* FIXME: move into safe_jmp() or something */
-				int dest = op.argument;
-				if (dest < 0)
-					throw creaturesException(std::string("Unrelocated jump at ") + "???" /* cip */); /* XXX */
-				if (dest >= s->scriptLength())
-					throw creaturesException(std::string("Jump out of bounds at ") + "???" /* cip */);
-				nip = dest;
+				safeJMP(op.argument);
 				break;
 			}
 		case CAOS_DECJNZ:
+			{
+				VM_PARAM_INTEGER(counter);
+				counter--;
+				if (counter) {
+					safeJMP(op.argument);
+					result.setInt(op.argument);
+				}
+				break;
+			}
 		case CAOS_GSUB:
+			{
+				callStack.push_back(callStackItem());
+				callStack.back().nip = nip;
+				callStack.back().valueStack.swap(valueStack);
+				safeJMP(op.argument);
+				break;				
+			}
 		case CAOS_ENUMPOP:
-			assert(0 && "TODO");
+			{
+				VM_PARAM_VALUE(v);
+				if (v.isEmpty())
+					break;
+				if (!v.hasAgent())
+					throw caosException("Stack item type mismatch");
+				targ = v.getAgentRef();
+				safeJMP(op.argument);
+			}
 		default:
 			throw creaturesException(std::string("Invalid opcode"));
 	}
@@ -142,7 +213,7 @@ inline void caosVM::runOp() {
 		if (trace) {
 			std::cerr
 				<< boost::str(boost::format("optrace: INST=%d TS=%d %p @%08d ") % (int)inst % (int)timeslice % (void *)this % cip)
-				<< "TODO: dump OP" << std::endl;
+				<< dumpOp(op) << std::endl;
 		}
 		runOpCore(scr.get(), op);
 	} catch (creaturesException &e) {

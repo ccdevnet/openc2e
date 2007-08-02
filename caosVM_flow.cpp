@@ -177,7 +177,8 @@ void caosVM::c_RETN() {
 	if (callStack.empty())
 		throw creaturesException("RETN with an empty callstack");
 	nip = callStack.back().nip;
-	callStack.back().valueStack->swap(valueStack);
+	callStack.back().valueStack.swap(valueStack);
+	callStack.back().valueStack.clear(); // just in case
 	callStack.pop_back();
 }
 

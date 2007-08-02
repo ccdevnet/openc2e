@@ -144,6 +144,19 @@ struct caosOp {
 
 std::string dumpOp(caosOp op);
 
+// Condition classes
+#define CEQ 1
+#define CLT 2
+#define CGT 4
+#define CBT 8
+#define CBF 16
+#define CMASK (CEQ | CLT | CGT | CBT | CBF)
+#define CLE (CEQ | CLT)
+#define CGE (CEQ | CGT)
+#define CNE (CLT | CGT)
+
+extern const char *cnams[];
+
 #if 0
 
 using boost::str; // boost::format convertor
@@ -306,19 +319,6 @@ class caosGSUB : public caosOp {
 			return str(boost::format("GSUB %08d") % targ);
 		}
 };
-
-// Condition classes
-#define CEQ 1
-#define CLT 2
-#define CGT 4
-#define CBT 8
-#define CBF 16
-#define CMASK (CEQ | CLT | CGT | CBT | CBF)
-#define CLE (CEQ | CLT)
-#define CGE (CEQ | CGT)
-#define CNE (CLT | CGT)
-
-extern const char *cnams[];
 
 class caosCond : public caosOp {
 	protected:

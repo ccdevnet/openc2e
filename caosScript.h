@@ -136,6 +136,7 @@ public:
 	void installScripts();
 	void installInstallScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short eventid);
 protected:
+	void emitOp(opcode_t op, int argument);
 	void readExpr(const enum ci_type *argp);
 	const cmdinfo *readCommand(class token *t, const std::string &prefix);
 	void parseloop(int state, void *info);

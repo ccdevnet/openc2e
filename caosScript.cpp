@@ -166,9 +166,14 @@ const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 	return ci;
 }
 
+void caosScript::emitOp(opcode_t op, int argument) {
+	current->ops.push_back(caosOp(op, argument));
+}
+
 void caosScript::readExpr(const enum ci_type *argp) {
 	// TODO: bytestring
 	// TODO: typecheck
+	if (!argp) throw caosException("Internal error: null argp");
 	while (*argp != CI_END) {
 		token *t = getToken(ANYTOKEN);
 		switch (t->type) {
@@ -178,12 +183,12 @@ void caosScript::readExpr(const enum ci_type *argp) {
 					if (t->constval.getType() == INTEGER) {
 						int val = t->constval.getInt();
 						if (val >= -(1 << 24) && val < (1 << 24)) {
-							current->ops.push_back(caosOp(CAOS_CONSTINT, val));
+							emitOp(CAOS_CONSTINT, val);
 							break;
 						}
 					}
 					current->consts.push_back(t->constval);
-					current->ops.push_back(caosOp(CAOS_CONST, current->consts.size() - 1));
+					emitOp(CAOS_CONST, current->consts.size() - 1);
 	expout:
 					break;
 				}
@@ -196,10 +201,40 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						else
 							t->word = "face string";
 					}
+					if (t->word.size() == 4
+						&&	((t->word[1] == 'v' && (t->word[0] == 'o' || t->word[0] == 'm'))
+							  || (t->word[0] == 'v' && t->word[1] == 'a'))
+						&&  isdigit(t->word[2]) && isdigit(t->word[3])) {
+						int vidx = atoi(t->word.c_str() + 2);
+						opcode_t op;
+						switch(t->word[0]) {
+							case 'v':
+								op = CAOS_VAXX;
+								break;
+							case 'o':
+								op = CAOS_OVXX;
+								break;
+							case 'm':
+								op = CAOS_MVXX;
+								break;
+							default:
+								assert(0 && "UNREACHABLE");
+						}
+						emitOp(op, vidx);
+						break;
+					}
+					if (t->word.size() == 4 && strncmp(t->word.c_str(), "obv", 3) && isdigit(t->word[3])) {
+						emitOp(CAOS_OVXX, atoi(t->word.c_str() + 3));
+						break;
+					}
+					if (t->word.size() == 4 && strncmp(t->word.c_str(), "var", 3) && isdigit(t->word[3])) {
+						emitOp(CAOS_VAXX, atoi(t->word.c_str() + 3));
+						break;
+					}
 					const cmdinfo *ci = readCommand(t, std::string("expr "));
 					if (ci->argc)
 						readExpr(ci->argtypes);
-					current->ops.push_back(caosOp(CAOS_CMD, d->cmd_index(ci)));
+					emitOp(CAOS_CMD, d->cmd_index(ci));
 					break;
 				}
 			default: throw caosException("Unexpected token");
@@ -240,7 +275,7 @@ void caosScript::parseloop(int state, void *info) {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc)
 				readExpr(ci->argtypes);
-			current->ops.push_back(caosOp(CAOS_CMD, d->cmd_index(ci)));
+			emitOp(CAOS_CMD, d->cmd_index(ci));
 		}
 	}
 }
