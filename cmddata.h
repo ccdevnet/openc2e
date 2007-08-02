@@ -39,7 +39,7 @@ struct cmdinfo {
 #ifndef VCPP_BROKENNESS
 	void (caosVM::*handler)();
 #else
-	int handler_idx
+	int handler_idx;
 #endif
 	const char *lookup_key;
 	const char *key;
