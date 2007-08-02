@@ -42,6 +42,7 @@ print qq{// DO NOT EDIT\n};
 print qq{// Generated at }, strftime("%c", localtime(time)), qq{\n};
 print qq{\n\n};
 print qq{#include <string>\n};
+print qq{#include <stdio.h>\n};
 print qq{#include "cmddata.h"\n};
 print qq{#include "caosVM.h"\n};
 print qq{#include "openc2e.h"\n};
@@ -90,7 +91,11 @@ sub printdispatch {
 	for my $impl (keys %disp_tbl) {
 		print "\t\tcase $disp_tbl{$impl}: vm->$impl(); break;\n";
 	}
-	print qq{\t\tdefault: throw caosException(std::string("Unknown dispatchCAOS index: ") + idx);\n};
+	print qq{\t\tdefault:\n\t\t\{\n};
+	print qq{\t\t\tchar buf[256];\n};
+	print qq{\t\t\tsprintf(buf, "%d", idx);\n};
+	print qq{\t\t\tthrow caosException(std::string("Unknown dispatchCAOS index: ") + buf);\n};
+	print qq{\t\t\}\n};
 	print "\t}\n";
 	print "}\n";
 	print "#endif\n";
