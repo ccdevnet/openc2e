@@ -35,6 +35,9 @@
  Part of a DOIF/ELIF/ELSE/ENDI block. Jumps to the next part of the block if condition is false, 
  otherwise continues executing the script.
 */
+void caosVM::c_DOIF() {
+	// handled elsewhere
+}
 
 /**
  ELIF (command) condition (condition)
@@ -45,6 +48,9 @@
  Part of a DOIF/ELIF/ELSE/ENDI block. If none of the previous DOIF/ELIF conditions have been true, and condition evaluates to true, then the code in the ELIF block is executed.
  If found outside a DOIF block, it is equivalent to a DOIF. If you take advantage of this behavior, fuzzie is of the opinion that you should be shot.
 */
+void caosVM::c_ELIF() {
+	// handled elsewhere
+}
 
 
 /**
@@ -56,6 +62,9 @@
  
  Part of a DOIF/ELIF/ELSE/ENDI block. If ELSE is present, it is jumped to when none of the previous DOIF/ELIF conditions are true.
 */
+void caosVM::c_ELSE() {
+	// handled elsewhere
+}
 
 /**
  ENDI (command)
@@ -78,6 +87,9 @@ void caosVM::c_ENDI() {
 
  The start of a REPS...REPE loop. The body of the loop will be executed (reps) times.
 */
+void caosVM::c_REPS() {
+	// handled elsewhere
+}
 
 /**
  REPE (command)
@@ -87,6 +99,9 @@ void caosVM::c_ENDI() {
 
  The end of a REPS...REPE loop.
 */
+void caosVM::c_REPE() {
+	// handled elsewhere
+}
 
 /**
  LOOP (command)
@@ -96,6 +111,9 @@ void caosVM::c_ENDI() {
  
  The start of a LOOP...EVER or LOOP...UNTL loop.
 */
+void caosVM::c_LOOP() {
+	// handled elsewhere
+}
 
 /**
  EVER (command)
@@ -105,6 +123,9 @@ void caosVM::c_ENDI() {
  
  Jumps back to the matching LOOP, no matter what.
 */
+void caosVM::c_EVER() {
+	// handled elsewhere
+}
 
 /**
  UNTL (command) condition (condition)
@@ -114,6 +135,9 @@ void caosVM::c_ENDI() {
  
  Jumps back to the matching LOOP unless the condition evaluates to true.
 */
+void caosVM::c_UNTL() {
+	// handled elsewhere
+}
 
 /**
  GSUB (command) label (label)
@@ -124,6 +148,9 @@ void caosVM::c_ENDI() {
  
  Jumps to a subroutine defined by SUBR with label (label).
 */
+void caosVM::c_GSUB() {
+	// handled elsewhere
+}
 
 /**
  SUBR (command) label (label)
@@ -134,6 +161,9 @@ void caosVM::c_ENDI() {
  Defines the start of a subroute to be called with GSUB, with label (label).
  If the command is encountered during execution, it acts like a STOP.
 */
+void caosVM::c_SUBR() {
+	// handled elsewhere
+}
 
 /**
  RETN (command)
@@ -159,6 +189,9 @@ void caosVM::c_RETN() {
 
  The end of an ENUM...NEXT loop.
 */
+void caosVM::c_NEXT() {
+	// handled elsewhere
+}
 
 /**
  ENUM (command) family (integer) genus (integer) species (integer)

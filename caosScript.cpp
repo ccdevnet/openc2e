@@ -17,6 +17,8 @@
  *
  */
 
+#include "bytecode.h"
+#include "cmddata.h"
 #include "exceptions.h"
 #include "caosVM.h"
 #include "openc2e.h"
@@ -34,24 +36,11 @@ using std::string;
 
 class unexpectedEOIexception { };
 
-void script::thread(caosOp *op) {
-	assert (!op->owned && !linked);
-	op->owned = true;
-	op->index = allOps.size();
-	allOps.push_back(op);
-}
-
 script::~script() {
-	std::vector<class caosOp *>::iterator i = allOps.begin();
-	while (i != allOps.end())
-		delete *i++;
-	allOps.clear();
-	relocations.clear();
-	gsub.clear();
 }
 
 void script::link() {
-	thread(new caosSTOP());
+	ops.push_back(caosOp(CAOS_STOP, 0));
 	assert(!linked);
 //	std::cout << "Pre-link:" << std::endl << dump();
 	// check relocations
@@ -62,28 +51,32 @@ void script::link() {
 			p = relocations[-p];
 		relocations[i] = p;
 	}
-	for (unsigned int i = 0; i < allOps.size(); i++) {
-		allOps[i]->relocate(relocations);
+	for (unsigned int i = 0; i < ops.size(); i++) {
+		if (op_is_relocatable(ops[i].opcode) && ops[i].argument < 0)
+			ops[i].argument = relocations[ops[i].argument];
 	}
 	linked = true;
+	relocations.clear();
 //	std::cout << "Post-link:" << std::endl << dump();
 }
 
-script::script(const Variant *v, const std::string &fn)
+script::script(const Dialect *v, const std::string &fn)
 	: fmly(-1), gnus(-1), spcs(-1), scrp(-1),
-	  variant(v), filename(fn)
+	  dialect(v), filename(fn)
 {
-	allOps.push_back(new caosNoop());
+	// is this needed?
+	ops.push_back(caosOp(CAOS_NOP, 0));
 	relocations.push_back(0);
 	linked = false;
 }
 	
-script::script(const Variant *v, const std::string &fn,
+script::script(const Dialect *v, const std::string &fn,
 		int fmly_, int gnus_, int spcs_, int scrp_)
 	: fmly(fmly_), gnus(gnus_), spcs(spcs_), scrp(scrp_),
-	  variant(v), filename(fn)
+	  dialect(v), filename(fn)
 {
-	allOps.push_back(new caosNoop());
+	// is this needed?
+	ops.push_back(caosOp(CAOS_NOP, 0));
 	relocations.push_back(0);
 	linked = false;
 }
@@ -96,114 +89,20 @@ std::string script::dump() {
 			<< std::endl;
 	}
 	oss << "Code:" << std::endl;
-	for (unsigned int i = 0; i < allOps.size(); i++) {
+	for (unsigned int i = 0; i < ops.size(); i++) {
 		oss << boost::format("%08d: ") % i;
-		oss << allOps[i]->dump();
+		oss << dumpOp(ops[i]);
 		oss << std::endl;
 	}
 	return oss.str();
 }
 
-#if 0
-// for gdb
-static int dump_out(shared_ptr<script> s) {
-	std::cerr << s->dump() << std::endl;
-}
-#endif
-	
-
-class ENDM : public parseDelegate {
-	public:
-		void operator() (class caosScript *s, Dialect *curD) {
-			curD->stop = true;
-		}
-};
-
-class BaseDialect : public Dialect {
-	public:
-		BaseDialect(caosScript *s) {
-			delegates = s->v->cmd_dialect->delegates;
-		}
-
-		virtual void handleToken(class caosScript *s, token *t) {
-			if (t->type == TOK_WORD) {
-				if (t->word == "rscr") {
-					if (s->removal)
-						throw parseException("multiple rscr not allowed");
-					s->current = s->removal = shared_ptr<script>(new script(s->v, s->filename));
-					return;
-				}
-				if (t->word == "scrp") {
-					if (s->removal)
-						throw parseException("scrp after rscr");
-					token fmly = *getToken(TOK_CONST);
-					if (!fmly.constval.hasInt())
-					   throw parseException("classifier values must be ints");
-					token gnus = *getToken(TOK_CONST);
-					if (!gnus.constval.hasInt())
-					   throw parseException("classifier values must be ints");
-					token spcs = *getToken(TOK_CONST);
-					if (!spcs.constval.hasInt())
-					   throw parseException("classifier values must be ints");
-					token scrp = *getToken(TOK_CONST);
-					if (!scrp.constval.hasInt())
-					   throw parseException("classifier values must be ints");
-					token *next = tokenPeek();
-					if (!next)
-						throw parseException("unexpected end of input");
-					if (next->type == TOK_WORD && next->word == "endm") {
-						getToken();
-						return;
-					}
-					Dialect d;
-					ENDM endm;
-					d.delegates = s->v->cmd_dialect->delegates;
-					d.delegates["endm"] = &endm;
-					shared_ptr<script> scr = shared_ptr<script>(
-									new script(s->v, s->filename,
-										fmly.constval.getInt(),
-										gnus.constval.getInt(),
-										spcs.constval.getInt(),
-										scrp.constval.getInt()));
-					s->current = scr;
-					d.doParse(s);
-					s->current = s->installer;
-					assert(s->current);
-					s->scripts.push_back(scr);
-					if (!d.stop)
-					   throw parseException("expected endm");
-					return;
-				}
-				Dialect::handleToken(s, t);
-			} else { // t->type != TOK_WORD
-				throw parseException("unexpected non-word token");
-			}
-		}
-};
-
-caosScript::caosScript(const std::string &variant, const std::string &fn) {
-	v = variants[variant];
-	if (!v)
-		throw caosException(std::string("Unknown variant ") + variant);
-	current = installer = shared_ptr<script> (new script(v, fn));
+caosScript::caosScript(const std::string &dialect, const std::string &fn) {
+	d = dialects[dialect].get();
+	if (!d)
+		throw caosException(std::string("Unknown dialect ") + dialect);
+	current = installer = shared_ptr<script> (new script(d, fn));
 	filename = fn;
-}
-
-void caosScript::parse(std::istream &in) {
-	// restart the token parser
-	yyrestart(&in, ((v->name == "c1") || (v->name == "c2")));
-
-	BaseDialect d(this);
-	d.doParse(this);
-
-	installer->link();
-	if (removal)
-		removal->link();
-	std::vector<shared_ptr<script> >::iterator i = scripts.begin();
-	while (i != scripts.end()) {
-		(*i)->link();
-		i++;
-	}
 }
 
 caosScript::~caosScript() {
@@ -220,7 +119,7 @@ void caosScript::installScripts() {
 }
 
 void caosScript::installInstallScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short eventid) {
-	assert((v->name == "c1") || (v->name == "c2"));
+	assert((d->name == "c1") || (d->name == "c2"));
 
 	installer->fmly = family;
 	installer->gnus = genus;
@@ -229,5 +128,122 @@ void caosScript::installInstallScript(unsigned char family, unsigned char genus,
 	
 	world.scriptorium.addScript(installer->fmly, installer->gnus, installer->spcs, installer->scrp, installer);
 }
+
+// parser states
+enum {
+	ST_INSTALLER,
+	ST_BODY,
+	ST_REMOVAL,
+	ST_IF,
+	ST_ENUM,
+	ST_LOOP,
+	ST_INVALID
+};
+
+void caosScript::parse(std::istream &in) {
+	// restart the token parser
+	yyrestart(&in, ((d->name == "c1") || (d->name == "c2")));
+
+	parseloop(ST_INSTALLER, NULL);
+
+	installer->link();
+	if (removal)
+		removal->link();
+	std::vector<shared_ptr<script> >::iterator i = scripts.begin();
+	while (i != scripts.end()) {
+		(*i)->link();
+		i++;
+	}
+}
+
+const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
+	std::string fullname = prefix + t->word;
+	const cmdinfo *ci = d->find_command(fullname.c_str());
+	if (!ci)
+		throw caosException(std::string("Can't find command ") + fullname);
+	if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND)
+		return readCommand(getToken(TOK_WORD), fullname + " ");
+	return ci;
+}
+
+void caosScript::readExpr(const enum ci_type *argp) {
+	// TODO: bytestring
+	// TODO: typecheck
+	while (*argp != CI_END) {
+		token *t = getToken(ANYTOKEN);
+		switch (t->type) {
+			case EOI: throw caosException("Unexpected end of input");
+			case TOK_CONST:
+				{
+					if (t->constval.getType() == INTEGER) {
+						int val = t->constval.getInt();
+						if (val >= -(1 << 24) && val < (1 << 24)) {
+							current->ops.push_back(caosOp(CAOS_CONSTINT, val));
+							break;
+						}
+					}
+					current->consts.push_back(t->constval);
+					current->ops.push_back(caosOp(CAOS_CONST, current->consts.size() - 1));
+	expout:
+					break;
+				}
+			case TOK_WORD:
+				{
+					if (t->word == "face") {
+						// horrible hack :(
+						if (*argp == CI_NUMERIC)
+							t->word = "face int";
+						else
+							t->word = "face string";
+					}
+					const cmdinfo *ci = readCommand(t, std::string("expr "));
+					if (ci->argc)
+						readExpr(ci->argtypes);
+					current->ops.push_back(caosOp(CAOS_CMD, d->cmd_index(ci)));
+					break;
+				}
+			default: throw caosException("Unexpected token");
+		}
+		argp++;
+	}
+}
+
+void caosScript::parseloop(int state, void *info) {
+	token *t;
+	while ((t = getToken(ANYTOKEN))) {
+		if (t->type == EOI) {
+			switch (state) {
+				case ST_INSTALLER:
+				case ST_BODY:
+				case ST_REMOVAL:
+					return;
+				default:
+					throw caosException("Unexpected end of input");
+			}
+		}
+		if (t->type != TOK_WORD) {
+			throw caosException("Unexpected non-word token");
+		}
+		if (t->word == "scrp") {
+			if (state == ST_INSTALLER)
+				state = ST_BODY;
+			if (state != ST_BODY)
+				throw caosException("Unexpected SCRP");
+			throw caosException("TODO");
+		} else if (t->word == "rscr") {
+			if (state == ST_INSTALLER || state == ST_BODY)
+				state = ST_REMOVAL;
+			else
+				throw caosException("Unexpected RSCR");
+			current = removal = shared_ptr<script>(new script(d, "TODO"));
+		} else {
+			const cmdinfo *ci = readCommand(t, std::string("cmd "));
+			if (ci->argc)
+				readExpr(ci->argtypes);
+			current->ops.push_back(caosOp(CAOS_CMD, d->cmd_index(ci)));
+		}
+	}
+}
+			
 
 /* vim: set noet: */

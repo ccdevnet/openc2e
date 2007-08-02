@@ -31,7 +31,7 @@ const char *caosException::cacheDesc() const throw() {
             oss << ":" << line;
         if (op) {
             try {
-                std::string od = op->dump();
+                std::string od = dumpOp(*op);
                 oss << " (op " << od << ")";
             } catch (std::exception &e) {
                 oss << " (op dump failed with e.what() " << e.what() << ")";

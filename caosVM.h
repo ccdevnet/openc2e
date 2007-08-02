@@ -203,6 +203,8 @@ public:
 	class Creature *getTargCreature();
 	class SpritePart *getCurrentSpritePart();
 
+	void dummy_cmd();
+
 	// map
 	void v_ADDM();
 	void c_ADDB();
@@ -330,6 +332,7 @@ public:
 	void c_REAF();
 	void v_VAxx();
 	void v_OVxx();
+	void v_MVxx();
 	void c_MODV();
 	void c_SUBV();
 	void c_NEGV();
@@ -385,6 +388,7 @@ public:
 	void c_RNDV();
 
 	// flow
+	void c_DOIF();
 	void c_ENDI();
 	void c_REPS();
 	void c_REPE();
@@ -406,6 +410,7 @@ public:
 	void v_CAOS();
 	
 	// debug
+	void c_DBG_ASRT();
 	void c_DBG_OUTS();
 	void c_DBG_OUTV();
 	void c_DBUG();
@@ -649,8 +654,8 @@ public:
 	void c_APPR();
 	void c_UNCS();
 	void v_UNCS();
-	void v_FACE();
-	void s_FACE();
+	void v_FACE_STRING();
+	void v_FACE_INT();
 	void c_LIKE();
 	void v_LIMB();
 	void c_ORDR_SHOU();
@@ -947,6 +952,7 @@ public:
 	void c_SERS_SCRP();
 	void c_SERL_SCRP();
 
+	void runOpCore(script *s, caosOp op);
 	void runOp();
 	void runEntirely(shared_ptr<script> s);
 
