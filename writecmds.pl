@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use YAML;
-use IO::String;
 use POSIX qw(strftime);
 
 my %tdisp = (
@@ -116,9 +115,8 @@ sub writelookup {
 
 sub printarr {
 	my ($cmds, $variant, $arrname) = @_;
-	my $strbuf = '';
-	my $buf = IO::String->new($strbuf);
-	print $buf "static const struct cmdinfo $arrname\[\] = {\n";
+	my $buf = '';
+	$buf .= "static const struct cmdinfo $arrname\[\] = {\n";
 	my $idx = 0;
 	for my $cmd (@$cmds) {
 		my $argp = 'NULL';
@@ -140,40 +138,40 @@ sub printarr {
 			}
 		}
 
-		print $buf "\t{ // $idx $cmd->{key}\n";
+		$buf .= "\t{ // $idx $cmd->{key}\n";
 		$idx++;
 		
-		print $buf "#ifndef VCPP_BROKENNESS\n";
+		$buf .= "#ifndef VCPP_BROKENNESS\n";
 		unless (defined($cmd->{implementation})) {
 			$cmd->{implementation} = 'caosVM::dummy_cmd';
 		}
-		print $buf "\t\t&$cmd->{implementation}, // handler\n";
-		print $buf "#else\n";
+		$buf .= "\t\t&$cmd->{implementation}, // handler\n";
+		$buf .= "#else\n";
 		unless (defined($disp_tbl{$cmd->{implementation}})) {
 			$disp_tbl{$cmd->{implementation}} = $disp_id++;
 		}
-		printf $buf "\t\t%d, // handler_idx\n", $disp_tbl{$cmd->{implementation}};
-		print $buf "#endif\n";
+		$buf .= sprintf "\t\t%d, // handler_idx\n", $disp_tbl{$cmd->{implementation}};
+		$buf .= "#endif\n";
 
-		print $buf qq{\t\t"$cmd->{lookup_key}", // lookup_key\n};
-		print $buf qq{\t\t"$cmd->{key}", // key\n};
-		print $buf qq{\t\t"}, lc $cmd->{match}, qq{", // name\n};
-		print $buf qq{\t\t"$cmd->{name}", // fullname\n};
-		print $buf qq{\t\t"}, cescape($cmd->{description}), qq{", // docs\n};
-		print $buf "\t\t", scalar(@{$cmd->{arguments}}), ", // argc\n";
-		print $buf "\t\t", ($cmd->{type} eq 'command' ? 0 : 1), ", // retc\n";
-		print $buf "\t\t$argp, // argtypes\n";
+		$buf .= qq{\t\t"$cmd->{lookup_key}", // lookup_key\n};
+		$buf .= qq{\t\t"$cmd->{key}", // key\n};
+		$buf .= qq{\t\t"}. lc $cmd->{match}. qq{", // name\n};
+		$buf .= qq{\t\t"$cmd->{name}", // fullname\n};
+		$buf .= qq{\t\t"}. cescape($cmd->{description}). qq{", // docs\n};
+		$buf .= "\t\t". scalar(@{$cmd->{arguments}}). ", // argc\n";
+		$buf .= "\t\t". ($cmd->{type} eq 'command' ? 0 : 1). ", // retc\n";
+		$buf .= "\t\t$argp, // argtypes\n";
 		
 		my $cost = $cmd->{evalcost}{$variant};
 		$cost = $cmd->{evalcost}{default} unless defined $cost;
-		print $buf "\t\t$cost // evalcost\n";
-		print $buf "\t},\n";
+		$buf .= "\t\t$cost // evalcost\n";
+		$buf .= "\t},\n";
 
 	}
-	print $buf "\t{ NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, 0 }\n";
+	$buf .= "\t{ NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, NULL, 0 }\n";
 
-	print $buf "};\n";
-	print $strbuf;
+	$buf .= "};\n";
+	print $buf;
 }
 sub sortname {
 	my $cmds = shift;
