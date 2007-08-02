@@ -135,7 +135,7 @@ class vmStackItem {
 };
 
 struct callStackItem {
-	boost::shared_ptr<std::vector<vmStackItem> > valueStack;
+	std::vector<vmStackItem> valueStack;
 	int nip;
 };
 
@@ -952,6 +952,7 @@ public:
 	void c_SERS_SCRP();
 	void c_SERL_SCRP();
 
+	void safeJMP(int nip);
 	void runOpCore(script *s, caosOp op);
 	void runOp();
 	void runEntirely(shared_ptr<script> s);
