@@ -54,7 +54,7 @@ struct cmdinfo {
 
 void registerAutoDelegates();
 #ifdef VCPP_BROKENNESS
-void dispatchCAOS(class caosVM *vm, const cmdinfo *ci)
+void dispatchCAOS(class caosVM *vm, const cmdinfo *ci);
 #endif
 
 #endif
