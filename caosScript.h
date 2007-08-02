@@ -66,7 +66,7 @@ struct script {
 		}
 
 		caosVar getConstant(int idx) const {
-			if (idx < 0 || idx >= consts.size()) {
+			if (idx < 0 || (size_t)idx >= consts.size()) {
 				caosVar v;
 				v.reset();
 				return v;
@@ -136,6 +136,8 @@ public:
 	void installScripts();
 	void installInstallScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short eventid);
 protected:
+	static int readCond();
+	void parseCondition();
 	void emitOp(opcode_t op, int argument);
 	void readExpr(const enum ci_type *argp);
 	const cmdinfo *readCommand(class token *t, const std::string &prefix);

@@ -53,11 +53,11 @@ void script::link() {
 	}
 	for (unsigned int i = 0; i < ops.size(); i++) {
 		if (op_is_relocatable(ops[i].opcode) && ops[i].argument < 0)
-			ops[i].argument = relocations[ops[i].argument];
+			ops[i].argument = relocations[-ops[i].argument];
 	}
 	linked = true;
-	relocations.clear();
 //	std::cout << "Post-link:" << std::endl << dump();
+	relocations.clear();
 }
 
 script::script(const Dialect *v, const std::string &fn)
@@ -134,10 +134,15 @@ enum {
 	ST_INSTALLER,
 	ST_BODY,
 	ST_REMOVAL,
-	ST_IF,
+	ST_DOIF,
 	ST_ENUM,
 	ST_LOOP,
 	ST_INVALID
+};
+
+struct doifinfo {
+	int failreloc;
+	int donereloc;
 };
 
 void caosScript::parse(std::istream &in) {
@@ -243,6 +248,47 @@ void caosScript::readExpr(const enum ci_type *argp) {
 	}
 }
 
+int caosScript::readCond() {
+	token *t = getToken(TOK_WORD);
+#define TWORD(lc, uc) else if (t->word == #lc) return C ## uc;
+	if (0) {} // get things started
+	TWORD(eq, EQ)
+	TWORD(gt, GT)
+	TWORD(ge, GE)
+	TWORD(lt, LT)
+	TWORD(le, LE)
+	TWORD(ne, NE)
+	TWORD(bt, BT)
+	TWORD(bf, BF)
+	else throw caosException(std::string("Unexpected non-condition word: ") + t->word);
+#undef TWORD
+}
+
+void caosScript::parseCondition() {
+	const static ci_type onearg[] = { CI_ANYVALUE, CI_END };
+	emitOp(CAOS_CONSTINT, 1);
+
+	bool nextIsAnd = true;
+	while (1) {
+		readExpr(onearg);
+		int cond = readCond();
+		readExpr(onearg);
+		emitOp(CAOS_COND, cond | (nextIsAnd ? CAND : COR));
+
+		token *peek = tokenPeek();
+		if (!peek) break;
+		if (peek->type != TOK_WORD) break;
+		if (peek->word == "and") {
+			getToken();
+			nextIsAnd = true;
+		} else if (peek->word == "or") {
+			getToken();
+			nextIsAnd = false;
+		} else break;
+	}
+}
+	
+
 void caosScript::parseloop(int state, void *info) {
 	token *t;
 	while ((t = getToken(ANYTOKEN))) {
@@ -271,6 +317,50 @@ void caosScript::parseloop(int state, void *info) {
 			else
 				throw caosException("Unexpected RSCR");
 			current = removal = shared_ptr<script>(new script(d, "TODO"));
+		} else if (t->word == "endm") {
+			if (state == ST_BODY) {
+				// TODO
+			} else {
+				// I hate you.
+				continue;
+			}
+			// No we will not emit c_ENDM() thankyouverymuch
+		} else if (t->word == "doif" || t->word == "elif") {
+			if (t->word == "elif" && state == ST_DOIF) {
+				struct doifinfo *di = (struct doifinfo *)info;
+				if (di->failreloc) {
+					emitOp(CAOS_JMP, di->donereloc);
+					current->fixRelocation(di->failreloc);
+					di->failreloc = 0;
+				}
+			}
+			struct doifinfo info;
+			info.failreloc = current->newRelocation();
+			info.donereloc = current->newRelocation();
+			int okreloc = current->newRelocation();
+
+			parseCondition();
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd doif")));
+			emitOp(CAOS_CJMP, okreloc);
+			emitOp(CAOS_JMP, info.failreloc);
+			current->fixRelocation(okreloc);
+			parseloop(ST_DOIF, (void *)&info);
+			if (info.failreloc)				
+				current->fixRelocation(info.failreloc);
+			current->fixRelocation(info.donereloc);
+		} else if (t->word == "else") {
+			if (state != ST_DOIF)
+				throw caosException("Unexpected ELSE");
+			struct doifinfo *di = (struct doifinfo *)info;
+			if (!di->failreloc)
+				throw caosException("Duplicate ELSE");
+			emitOp(CAOS_JMP, di->donereloc);
+			current->fixRelocation(di->failreloc);
+			di->failreloc = 0;
+		} else if (t->word == "endi") {
+			if (state != ST_DOIF)
+				throw caosException("Unexpected ENDI");
+			return;
 		} else {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc)
