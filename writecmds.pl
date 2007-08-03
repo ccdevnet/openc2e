@@ -58,6 +58,7 @@ foreach my $variant_name (sort keys %{$data->{variants}}) {
 	writelookup(\@cmds);
 	checkdup(\@cmds, "$variant_name commands");
 	sortname(\@cmds);
+	miscprep($variant_name, \@cmds);
 
 	printarr(\@cmds, $variant_name, "${variant_name}_cmds");
 
@@ -74,6 +75,20 @@ print "}\n";
 
 
 exit 0;
+
+sub miscprep {
+	my ($variant, $cmds) = @_;
+	
+	for my $cmd (@$cmds) {
+		$cmd->{evalcost}{$variant} = $cmd->{evalcost}{default} unless defined $cmd->{evalcost}{$variant};
+		if ($cmd->{type} ne 'command' && $cmd->{evalcost}{$variant} != 0) {
+			print STDERR "$cmd->{lookup_key} has non-zero evalcost in an expression cost.";
+			print STDERR "This is a race condition which can potentially lead to crashes.";
+			print STDERR "If you really need this, please contact bd_. Aborting for now.";
+			exit 1;
+		}
+	}
+}
 
 sub printinit {
 	my ($variant, $cmdarr, $exparr) = @_;
@@ -163,7 +178,6 @@ sub printarr {
 		$buf .= "\t\t$argp, // argtypes\n";
 		
 		my $cost = $cmd->{evalcost}{$variant};
-		$cost = $cmd->{evalcost}{default} unless defined $cost;
 		$buf .= "\t\t$cost // evalcost\n";
 		$buf .= "\t},\n";
 

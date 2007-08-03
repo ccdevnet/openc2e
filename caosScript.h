@@ -60,7 +60,7 @@ struct script {
 
 		caosOp getOp(int idx) const {
 			assert (idx >= 0);
-			return (unsigned int)idx >= ops.size() ? caosOp(CAOS_DIE, -1) : ops[idx];
+			return (size_t)idx >= ops.size() ? caosOp(CAOS_DIE, -1) : ops[idx];
 		}
 
 		int scriptLength() const {
@@ -114,9 +114,10 @@ struct script {
 			// check for a loop
 			int i = p;
 			while (i < 0) {
+				i = -i;
 				if (i == r)
 					throw creaturesException("relocation loop found");
-				i = relocations[-i];
+				i = relocations[i];
 			}
 			
 			relocations[r] = p;
