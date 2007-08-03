@@ -311,10 +311,9 @@ void caosScript::parseloop(int state, void *info) {
 			throw caosException("Unexpected non-word token");
 		}
 		if (t->word == "scrp") {
-			if (state == ST_INSTALLER)
-				state = ST_BODY;
-			if (state != ST_BODY)
+			if (state != ST_INSTALLER)
 				throw caosException("Unexpected SCRP");
+			state = ST_BODY;
 			// TODO: better validation
 			int fmly = getToken(TOK_CONST)->constval.getInt();
 			int gnus = getToken(TOK_CONST)->constval.getInt();
