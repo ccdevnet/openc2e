@@ -83,6 +83,7 @@ struct token {
 };
 
 token *getToken(toktype expected = ANYTOKEN);
+void putBackToken(token *);
 token *tokenPeek();
 
 extern token lasttok; // internal use only

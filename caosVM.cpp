@@ -149,6 +149,11 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 				valueStack.push_back(vmStackItem(caosVar(op.argument)));
 				break;
 			}
+		case CAOS_BYTESTR:
+			{
+				valueStack.push_back(vmStackItem(s->getBytestr(op.argument)));
+				break;
+			}
 		case CAOS_VAXX:
 			{
 				valueStack.push_back(vmStackItem(&var[op.argument]));
@@ -205,9 +210,10 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 					throw caosException("Stack item type mismatch");
 				targ = v.getAgentRef();
 				safeJMP(op.argument);
+				break;
 			}
 		default:
-			throw creaturesException(std::string("Invalid opcode"));
+			throw creaturesException(boost::str(boost::format("Illegal opcode %d") % (int)op.opcode));
 	}
 }
 

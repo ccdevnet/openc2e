@@ -195,7 +195,12 @@ void caosScript::readExpr(const enum ci_type *argp) {
 					}
 					current->consts.push_back(t->constval);
 					emitOp(CAOS_CONST, current->consts.size() - 1);
-	expout:
+					break;
+				}
+			case TOK_BYTESTR:
+				{
+					current->bytestrs.push_back(t->bytestr);
+					emitOp(CAOS_BYTESTR, current->bytestrs.size() - 1);
 					break;
 				}
 			case TOK_WORD:
@@ -310,21 +315,54 @@ void caosScript::parseloop(int state, void *info) {
 				state = ST_BODY;
 			if (state != ST_BODY)
 				throw caosException("Unexpected SCRP");
-			throw caosException("TODO");
+			// TODO: better validation
+			int fmly = getToken(TOK_CONST)->constval.getInt();
+			int gnus = getToken(TOK_CONST)->constval.getInt();
+			int spcs = getToken(TOK_CONST)->constval.getInt();
+			int scrp = getToken(TOK_CONST)->constval.getInt();
+			scripts.push_back(shared_ptr<script>(new script(d, filename, fmly, gnus, spcs, scrp)));
+			current = scripts.back();
 		} else if (t->word == "rscr") {
 			if (state == ST_INSTALLER || state == ST_BODY)
 				state = ST_REMOVAL;
 			else
 				throw caosException("Unexpected RSCR");
-			current = removal = shared_ptr<script>(new script(d, "TODO"));
+			current = removal = shared_ptr<script>(new script(d, filename));
 		} else if (t->word == "endm") {
 			if (state == ST_BODY) {
-				// TODO
+				state = ST_INSTALLER;
+				current = installer;
 			} else {
-				// I hate you.
-				continue;
+				// I hate you. Die in a fire.
+				emitOp(CAOS_DIE, -1);
+				putBackToken(t);
+				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
+		} else if (t->word == "enum"
+				|| t->word == "esee"
+				|| t->word == "etch"
+				|| t->word == "epas"
+				|| t->word == "econ") {
+			int nextreloc = current->newRelocation();
+			// XXX: copypasta
+			const cmdinfo *ci = readCommand(t, std::string("cmd "));
+			if (ci->argc) {
+				if (!ci->argtypes)
+					std::cerr << "Missing argtypes for command " << t->word << "; probably unimplemented." << std::endl;
+				readExpr(ci->argtypes);
+			}
+			emitOp(CAOS_CMD, d->cmd_index(ci));
+			emitOp(CAOS_JMP, nextreloc);
+			int startp    = current->getNextIndex();
+			parseloop(ST_ENUM, NULL);
+			current->fixRelocation(nextreloc);
+			emitOp(CAOS_ENUMPOP, startp);
+		} else if (t->word == "next") {
+			if (state != ST_ENUM)
+				throw caosException("Unexpected NEXT");
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
+			return;
 		} else if (t->word == "subr") {
 			// Yes, this will work in a doif or whatever. This is UB, it may
 			// be made to not compile later.

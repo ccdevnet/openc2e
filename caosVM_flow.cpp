@@ -190,7 +190,7 @@ void caosVM::c_RETN() {
  The end of an ENUM...NEXT loop.
 */
 void caosVM::c_NEXT() {
-	// handled elsewhere
+	// Handled elsewhere.
 }
 
 /**
