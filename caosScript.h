@@ -49,6 +49,7 @@ struct script {
 		// pos-0 needs to be initted to a caosNoop <-- still needed?
 		std::vector<caosOp> ops;
 		std::vector<caosVar> consts;
+		std::vector<bytestring_t> bytestrs;
 
 	public:
 		int fmly, gnus, spcs, scrp;
@@ -70,9 +71,15 @@ struct script {
 			if (idx < 0 || (size_t)idx >= consts.size()) {
 				caosVar v;
 				v.reset();
-				return v;
+				return v; // XXX throw
 			}
 			return consts[idx];
+		}
+
+		bytestring_t getBytestr(int idx) const {
+			if (idx < 0 || (size_t)idx >= bytestrs.size())
+				return bytestring_t(); // XXX throw
+			return bytestrs[idx];
 		}
 		
 		std::map<std::string, int> gsub;

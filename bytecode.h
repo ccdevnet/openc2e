@@ -60,7 +60,7 @@ enum opcode_t {
 	 * Cost: 0
 	 */
 	CAOS_COND,
-	/* Push a constant into the stack.
+	/* Push a constant onto the stack.
 	 * Argument: An index into the constants table
 	 * Cost: 0
 	 */
@@ -71,6 +71,11 @@ enum opcode_t {
 	 * Cost: 0
 	 */
 	CAOS_CONSTINT,
+	/* Push a bytestring onto the stack.
+	 * Argument: An index into the bytestrings table.
+	 * Cost: 0
+	 */
+	CAOS_BYTESTR,
 	/* Push a reference to a VAxx register onto the stack.
 	 * Argument: The index of the register to access
 	 * Cost: 0

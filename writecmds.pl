@@ -131,10 +131,10 @@ sub printarr {
 				$args .= "$type, ";
 			}
 			if (defined $args) {
-				print "static const enum ci_type ${arrname}_t_$cmd->{key}\[\] = { ";
+				$argp = "${arrname}_t_$cmd->{type}_$cmd->{key}";
+				print "static const enum ci_type $argp\[\] = { ";
 				print $args;
 				print "CI_END };\n";
-				$argp = "${arrname}_t_$cmd->{key}";
 			}
 		}
 
@@ -182,30 +182,33 @@ sub inject_ns {
 	my $cmds = shift;
 	my %ns;
 	for my $cmd (@$cmds) {
-		$ns{$cmd->{namespace}}++ if defined $cmd->{namespace};
+		my $type = ($cmd->{type} eq 'command') ? 'command' : 'expression';
+		$ns{$cmd->{namespace}}{$type}++ if defined $cmd->{namespace};
 	}
 	for my $ns (keys %ns) {
-		next if $ns eq 'face'; # hack
-		my $key = 'k_' . uc $ns;
-		$key =~ s/[^a-zA-Z0-9_]//g;
-		push @$cmds, {
-			arguments => [ {
-				name => "cmd",
-				type => "subcommand",
-			} ],
-			category => "internal",
-			description => "",
-			evalcost => { default => 0 },
-			filename => "",
-			implementation => undef,
-			match => uc $ns,
-			name => lc $ns,
-			pragma => {},
-			status => 'internal',
-			key => $key,
-			type => 'command',
-			syntaxstring => (uc $ns) . " (command/expr) subcommand (subcommand)\n",
-		};
+		for my $type (keys %{$ns{$ns}}) {
+			next if $ns eq 'face'; # hack
+			my $key = 'k_' . uc $ns;
+			$key =~ s/[^a-zA-Z0-9_]//g;
+			push @$cmds, {
+				arguments => [ {
+					name => "cmd",
+					type => "subcommand",
+				} ],
+				category => "internal",
+				description => "",
+				evalcost => { default => 0 },
+				filename => "",
+				implementation => undef,
+				match => uc $ns,
+				name => lc $ns,
+				pragma => {},
+				status => 'internal',
+				key => $key,
+				type => $type,
+				syntaxstring => (uc $ns) . " (command/expr) subcommand (subcommand)\n",
+			};
+		}
 	}
 }
 

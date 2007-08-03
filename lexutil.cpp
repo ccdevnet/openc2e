@@ -67,6 +67,11 @@ token *getToken(toktype expected) {
 	return ret;
 }
 
+void putBackToken(token *t) {
+	assert(!peektok);
+	peektok = t;
+}
+
 token *tokenPeek() {
 	if (peektok)
 		return peektok;

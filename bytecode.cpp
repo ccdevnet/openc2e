@@ -50,6 +50,8 @@ std::string dumpOp(caosOp op) {
             return str(format("CONST %d") % arg);
         case CAOS_CONSTINT:
             return str(format("CONSTINT %d") % arg);
+        case CAOS_BYTESTR:
+            return str(format("BYTESTR %d") % arg);
         case CAOS_VAXX:
             return str(format("VA%02d") % arg);
         case CAOS_OVXX:
