@@ -236,7 +236,7 @@ sub checkdup {
 		}
 		if ($mark{$cmd->{lookup_key}}++) {
 			print STDERR "Duplicate command in $desc: $cmd->{lookup_key}\n";
-			exit 1;
+			#exit 1;
 		}
 	}
 }
