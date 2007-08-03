@@ -47,6 +47,25 @@ class badParamException : public caosException {
 
 class vmStackItem {
 	protected:
+		struct visit_dump : public boost::static_visitor<std::string> {
+			std::string operator()(const caosVar &i) const {
+				return i.dump();
+			}
+
+			std::string operator()(caosVar *i) const {
+				return std::string("ptr ") + i->dump();
+			}
+
+			std::string operator()(const bytestring_t &bs) const {
+				std::ostringstream oss;
+				oss << "[ ";
+				for (bytestring_t::const_iterator i = bs.begin(); i != bs.end(); i++) {
+					oss << (int)*i << " ";
+				}
+				oss << "]";
+				return oss.str();
+			}
+		};
 
 		struct visit_lval : public boost::static_visitor<const caosVar &> {
 			
@@ -124,14 +143,21 @@ class vmStackItem {
 			}
 		}
 
-		bytestring_t getByteStr() {
+		bytestring_t getByteStr() const {
 			try {
 				return boost::apply_visitor(visit_bs(), value);
 			} catch (boost::bad_visit &e) {
 				throw badParamException();
 			}
 		}
-		
+
+		std::string dump() const {
+			try {
+				return boost::apply_visitor(visit_dump(), value);
+			} catch (boost::bad_visit &e) {
+				return std::string("ERR::bad_visit");
+			}
+		}
 };
 
 struct callStackItem {

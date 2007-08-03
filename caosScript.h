@@ -43,6 +43,7 @@ struct script {
 
 		// position 0 is reserved in the below vector
 		std::vector<int> relocations;
+		std::map<std::string, int> labels;
 		script() {}
 	public:
 		// pos-0 needs to be initted to a caosNoop <-- still needed?
@@ -118,6 +119,19 @@ struct script {
 			fixRelocation(r, getNextIndex());
 		}
 
+		int getLabel(const std::string &label) {
+			if (labels.find(label) == labels.end())
+				labels[label] = newRelocation();
+			return labels[label];
+		}
+
+		void affixLabel(const std::string &label) {
+			int reloc = getLabel(label);
+			if (reloc > 0)
+				throw caosException(std::string("Label ") + label + " redefined");
+			fixRelocation(reloc);
+			labels[label] = getNextIndex();
+		}
 		
 };
 

@@ -76,7 +76,6 @@ void caosVM::c_ELSE() {
 */
 void caosVM::c_ENDI() {
 	// TODO: cost in c2e?
-	throw caosException("Unmatched ENDI! wtf maet.");
 }
 
 /**
