@@ -179,6 +179,13 @@ void caosScript::readExpr(const enum ci_type *argp) {
 	// TODO: typecheck
 	if (!argp) throw caosException("Internal error: null argp");
 	while (*argp != CI_END) {
+		if (*argp == CI_BAREWORD) {
+			token *t = getToken(TOK_WORD);
+			current->consts.push_back(t->word);
+			emitOp(CAOS_CONST, current->consts.size() - 1);
+			argp++;
+			continue;
+		}
 		token *t = getToken(ANYTOKEN);
 		switch (t->type) {
 			case EOI: throw caosException("Unexpected end of input");
