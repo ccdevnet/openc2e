@@ -165,8 +165,15 @@ const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 	const cmdinfo *ci = d->find_command(fullname.c_str());
 	if (!ci)
 		throw caosException(std::string("Can't find command ") + fullname);
-	if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND)
-		return readCommand(getToken(TOK_WORD), fullname + " ");
+	if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND) {
+		const cmdinfo* ret = NULL;
+		try {
+			ret = readCommand(getToken(TOK_WORD), fullname + " ");
+		} catch (caosException &e) {
+			return ci;
+		}
+		return ret;
+	}
 	return ci;
 }
 
@@ -471,8 +478,9 @@ void caosScript::parseloop(int state, void *info) {
 			di->failreloc = 0;
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd else")));
 		} else if (t->word == "endi") {
-			if (state != ST_DOIF)
-				throw caosException("Unexpected ENDI");
+			if (state != ST_DOIF) {
+				emitOp(CAOS_DIE, -1);
+			}
 			return;
 		} else {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
