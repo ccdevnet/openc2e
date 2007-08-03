@@ -390,6 +390,7 @@ void caosScript::parseloop(int state, void *info) {
 		} else if (t->word == "ever") {
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
+			return;
 		} else if (t->word == "reps") {
 			const static ci_type types[] = { CI_NUMERIC, CI_END };
 			readExpr(types);
