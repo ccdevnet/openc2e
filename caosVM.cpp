@@ -184,7 +184,7 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 				counter--;
 				if (counter) {
 					safeJMP(op.argument);
-					result.setInt(op.argument);
+					result.setInt(counter);
 				}
 				break;
 			}
@@ -220,7 +220,7 @@ inline void caosVM::runOp() {
 	try {
 		if (trace) {
 			std::cerr
-				<< boost::str(boost::format("optrace: INST=%d TS=%d %p @%08d ") % (int)inst % (int)timeslice % (void *)this % cip)
+				<< boost::str(boost::format("optrace: INST=%d TS=%d %p @%08d top=%s ") % (int)inst % (int)timeslice % (void *)this % cip % (valueStack.empty() ? std::string("(empty)") : valueStack.back().dump()))
 				<< dumpOp(op) << std::endl;
 		}
 		runOpCore(scr.get(), op);

@@ -137,6 +137,7 @@ enum {
 	ST_DOIF,
 	ST_ENUM,
 	ST_LOOP,
+	ST_REPS,
 	ST_INVALID
 };
 
@@ -288,7 +289,6 @@ void caosScript::parseCondition() {
 	}
 }
 	
-
 void caosScript::parseloop(int state, void *info) {
 	token *t;
 	while ((t = getToken(ANYTOKEN))) {
@@ -325,7 +325,47 @@ void caosScript::parseloop(int state, void *info) {
 				continue;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
+		} else if (t->word == "subr") {
+			// Yes, this will work in a doif or whatever. This is UB, it may
+			// be made to not compile later.
+			t = getToken(TOK_WORD);
+			std::string label = t->word;
+			emitOp(CAOS_STOP, 0);
+			current->affixLabel(label);
+		} else if (t->word == "gsub") {
+			t = getToken(TOK_WORD);
+			std::string label = t->word;
+			emitOp(CAOS_GSUB, current->getLabel(label));
+		} else if (t->word == "loop") {
+			int loop = current->getNextIndex();
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
+			parseloop(ST_LOOP, (void *)&loop);			
+		} else if (t->word == "untl") {
+			// TODO: zerocost logic inversion - do in c_UNTL()?
+			int loop = *(int *)info;
+			int out  = current->newRelocation();
+			parseCondition();
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd untl")));
+			emitOp(CAOS_CJMP, out);
+			emitOp(CAOS_JMP, loop);
+			current->fixRelocation(out);
+			return;
+		} else if (t->word == "ever") {
+			int loop = *(int *)info;
+			emitOp(CAOS_JMP, loop);
+		} else if (t->word == "reps") {
+			const static ci_type types[] = { CI_NUMERIC, CI_END };
+			readExpr(types);
+			int loop = current->getNextIndex();
+			parseloop(ST_REPS, (void *)&loop);
+		} else if (t->word == "repe") {
+			if (state != ST_REPS)
+				throw caosException("Unexpected repe");
+			emitOp(CAOS_DECJNZ, *(int *)info);
+			return;
 		} else if (t->word == "doif" || t->word == "elif") {
+			std::string key("cmd ");
+			key += t->word;
 			if (t->word == "elif" && state == ST_DOIF) {
 				struct doifinfo *di = (struct doifinfo *)info;
 				if (di->failreloc) {
@@ -340,7 +380,7 @@ void caosScript::parseloop(int state, void *info) {
 			int okreloc = current->newRelocation();
 
 			parseCondition();
-			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd doif")));
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command(key.c_str())));
 			emitOp(CAOS_CJMP, okreloc);
 			emitOp(CAOS_JMP, info.failreloc);
 			current->fixRelocation(okreloc);
@@ -348,6 +388,7 @@ void caosScript::parseloop(int state, void *info) {
 			if (info.failreloc)				
 				current->fixRelocation(info.failreloc);
 			current->fixRelocation(info.donereloc);
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd endi")));
 		} else if (t->word == "else") {
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ELSE");
@@ -357,6 +398,7 @@ void caosScript::parseloop(int state, void *info) {
 			emitOp(CAOS_JMP, di->donereloc);
 			current->fixRelocation(di->failreloc);
 			di->failreloc = 0;
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd else")));
 		} else if (t->word == "endi") {
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ENDI");
