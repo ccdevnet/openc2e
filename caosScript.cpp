@@ -164,17 +164,21 @@ const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 	std::string fullname = prefix + t->word;
 	const cmdinfo *ci = d->find_command(fullname.c_str());
 	if (!ci)
-		throw caosException(std::string("Can't find command ") + fullname);
-	if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND) {
-		const cmdinfo* ret = NULL;
-		try {
-			ret = readCommand(getToken(TOK_WORD), fullname + " ");
-		} catch (caosException &e) {
-			return ci;
-		}
-		return ret;
+		throw parseException(std::string("Can't find command ") + fullname);
+	// See if there'{s a subcommand namespace
+	token *t2 = NULL;
+	try {
+		t2 = getToken(TOK_WORD);
+		if (!t2 || t2->type != TOK_WORD)
+			throw creaturesException("dummy");
+		return readCommand(t, fullname + " ");
+	} catch (parseException &e) {
+		if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND)
+			throw;
+		if (t2)
+			putBackToken(t2);
+		return ci;
 	}
-	return ci;
 }
 
 void caosScript::emitOp(opcode_t op, int argument) {
@@ -348,19 +352,27 @@ void caosScript::parseloop(int state, void *info) {
 			current = scripts.back();
 		} else if (t->word == "rscr") {
 			// TODO: Are multiple RSCRs valid?
-			if (state == ST_INSTALLER || state == ST_BODY)
+			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_REMOVAL;
 			else
 				throw caosException("Unexpected RSCR");
-			current = removal = shared_ptr<script>(new script(d, filename));
+			if (!removal)
+				removal = shared_ptr<script>(new script(d, filename));
+			current = removal;
+		} else if (t->word == "iscr") {
+			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
+				state = ST_INSTALLER;
+			else
+				throw caosException("Unexpected RSCR");
+			current = installer;
 		} else if (t->word == "endm") {
 			if (state == ST_BODY) {
 				state = ST_INSTALLER;
 				current = installer;
 			} else {
 				// I hate you. Die in a fire.
-				//emitOp(CAOS_DIE, -1);
-				//putBackToken(t);
+				emitOp(CAOS_STOP, 0);
+				putBackToken(t);
 				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
@@ -454,6 +466,11 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(di.donereloc);
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd endi")));
 		} else if (t->word == "elif") {
+			if (state != ST_DOIF) {
+				// XXX this is horrible
+				t->word = "doif";
+				continue;
+			}
 			struct doifinfo *di = (struct doifinfo *)info;
 			int okreloc = current->newRelocation();
 
@@ -480,6 +497,7 @@ void caosScript::parseloop(int state, void *info) {
 		} else if (t->word == "endi") {
 			if (state != ST_DOIF) {
 				emitOp(CAOS_DIE, -1);
+				continue;
 			}
 			return;
 		} else {
