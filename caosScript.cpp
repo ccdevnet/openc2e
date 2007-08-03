@@ -378,6 +378,8 @@ void caosScript::parseloop(int state, void *info) {
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
 			parseloop(ST_LOOP, (void *)&loop);			
 		} else if (t->word == "untl") {
+			if (state != ST_LOOP)
+				throw caosException("Unexpected UNTL");
 			// TODO: zerocost logic inversion - do in c_UNTL()?
 			int loop = *(int *)info;
 			int out  = current->newRelocation();
@@ -388,6 +390,8 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(out);
 			return;
 		} else if (t->word == "ever") {
+			if (state != ST_LOOP)
+				throw caosException("Unexpected EVER");
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
