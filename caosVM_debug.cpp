@@ -41,8 +41,9 @@ using std::cout;
  Outputs a string to the debug log.
 */
 void caosVM::c_DBG_OUTS() {
-	c_OUTS();
-	cout << "\n";
+	VM_PARAM_STRING(val)
+	
+	cout << val << std::endl;
 }
 
 /**
@@ -152,6 +153,17 @@ void caosVM::c_DBG_MALLOC() {
 }
 	
 /**
+ DBG: DUMP (command)
+ %status ok
+ %pragma variants c1 c2 c3 ca cv
+
+ Dumps the current script's bytecode to stderr.
+*/
+void caosVM::c_DBG_DUMP() {
+	std::cerr << vm->currentscript->dump();
+}	
+
+/**
  DBG: TRACE (command) enable (integer)
  %status ok
  %pragma variants c1 c2 c3 ca cv
@@ -159,7 +171,6 @@ void caosVM::c_DBG_MALLOC() {
  Enables/disables opcode tracing to cerr.
 */
 void caosVM::c_DBG_TRACE() {
-	VM_VERIFY_SIZE(0)
 	VM_PARAM_INTEGER(en)
 
 	vm->trace = en;

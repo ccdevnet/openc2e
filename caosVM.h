@@ -441,6 +441,7 @@ public:
 	void c_DBG_OUTV();
 	void c_DBUG();
 	void c_DBG_MALLOC();
+	void c_DBG_DUMP();
 	void c_DBG_TRACE();
 	void c_MANN();
 	void c_DBG_DISA();
