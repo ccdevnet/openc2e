@@ -107,8 +107,7 @@ struct script {
 		int newRelocation() {
 			assert (!linked);
 			int idx = relocations.size();
-			relocations.push_back(0); 0);
-
+			relocations.push_back(0);
 			return -idx;
 		}
 
