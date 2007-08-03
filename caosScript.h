@@ -42,13 +42,21 @@ struct script {
 		bool linked;
 
 		// position 0 is reserved in the below vector
+		// relocations[-relocid] is the target address for relocation relocid
+		// will be 0 if unresolved
 		std::vector<int> relocations;
+		// map of name -> (address|relocation)
 		std::map<std::string, int> labels;
 		script() {}
 	public:
-		// pos-0 needs to be initted to a caosNoop <-- still needed?
+		// ops[0] is initted to a nop, because undefined values are meh.
 		std::vector<caosOp> ops;
+		// table of all non-trivial constants in the script
+		// small immediates integers are done with CAOS_CONSTINT
+		// mostly for strings and floats
 		std::vector<caosVar> consts;
+		// because caosVar doesn't store bytestrings, we store them in a separate
+		// table
 		std::vector<bytestring_t> bytestrs;
 
 	public:
@@ -102,7 +110,6 @@ struct script {
 			return -idx;
 		}
 
-		// fix relocation r to point to the next op to be emitted
 		// XXX: maybe make relocations lightweight classes, so we
 		// can identify leaks.
 
@@ -122,17 +129,20 @@ struct script {
 			
 			relocations[r] = p;
 		}
-			
+
+		// fix relocation r to point to the next op to be emitted
 		void fixRelocation(int r) {
 			fixRelocation(r, getNextIndex());
 		}
 
+		// find the address of the given label, could be a relocation
 		int getLabel(const std::string &label) {
 			if (labels.find(label) == labels.end())
 				labels[label] = newRelocation();
 			return labels[label];
 		}
 
+		// fix a label to the end of the current op string
 		void affixLabel(const std::string &label) {
 			int reloc = getLabel(label);
 			if (reloc > 0)

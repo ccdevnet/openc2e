@@ -39,6 +39,7 @@ class unexpectedEOIexception { };
 script::~script() {
 }
 
+// resolve relocations into fixed addresses
 void script::link() {
 	ops.push_back(caosOp(CAOS_STOP, 0));
 	assert(!linked);
@@ -62,10 +63,11 @@ void script::link() {
 
 script::script(const Dialect *v, const std::string &fn)
 	: fmly(-1), gnus(-1), spcs(-1), scrp(-1),
-	  dialect(v), filename(fn)
+		dialect(v), filename(fn)
 {
-	// is this needed?
+	// just so index 0 isn't an undefined piece of memory:
 	ops.push_back(caosOp(CAOS_NOP, 0));
+	// relocation index 0 isn't used, because relocids are < 0
 	relocations.push_back(0);
 	linked = false;
 }
@@ -73,9 +75,8 @@ script::script(const Dialect *v, const std::string &fn)
 script::script(const Dialect *v, const std::string &fn,
 		int fmly_, int gnus_, int spcs_, int scrp_)
 	: fmly(fmly_), gnus(gnus_), spcs(spcs_), scrp(scrp_),
-	  dialect(v), filename(fn)
+		dialect(v), filename(fn)
 {
-	// is this needed?
 	ops.push_back(caosOp(CAOS_NOP, 0));
 	relocations.push_back(0);
 	linked = false;
@@ -156,10 +157,8 @@ void caosScript::parse(std::istream &in) {
 	if (removal)
 		removal->link();
 	std::vector<shared_ptr<script> >::iterator i = scripts.begin();
-	while (i != scripts.end()) {
-		(*i)->link();
-		i++;
-	}
+	while (i != scripts.end())
+		(*i++)->link();
 }
 
 const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
@@ -188,11 +187,13 @@ void caosScript::readExpr(const enum ci_type *argp) {
 				{
 					if (t->constval.getType() == INTEGER) {
 						int val = t->constval.getInt();
+						// small values can be immediates
 						if (val >= -(1 << 24) && val < (1 << 24)) {
 							emitOp(CAOS_CONSTINT, val);
 							break;
 						}
 					}
+					// big values must be put in the constant table
 					current->consts.push_back(t->constval);
 					emitOp(CAOS_CONST, current->consts.size() - 1);
 					break;
@@ -212,9 +213,10 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						else
 							t->word = "face string";
 					}
+					// vaxx, mvxx, ovxx
 					if (t->word.size() == 4
 						&&	((t->word[1] == 'v' && (t->word[0] == 'o' || t->word[0] == 'm'))
-							  || (t->word[0] == 'v' && t->word[1] == 'a'))
+								|| (t->word[0] == 'v' && t->word[1] == 'a'))
 						&&  isdigit(t->word[2]) && isdigit(t->word[3])) {
 						int vidx = atoi(t->word.c_str() + 2);
 						opcode_t op;
@@ -234,10 +236,12 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						emitOp(op, vidx);
 						break;
 					}
+					// obvx
 					if (t->word.size() == 4 && strncmp(t->word.c_str(), "obv", 3) && isdigit(t->word[3])) {
 						emitOp(CAOS_OVXX, atoi(t->word.c_str() + 3));
 						break;
 					}
+					// varx
 					if (t->word.size() == 4 && strncmp(t->word.c_str(), "var", 3) && isdigit(t->word[3])) {
 						emitOp(CAOS_VAXX, atoi(t->word.c_str() + 3));
 						break;
@@ -256,18 +260,26 @@ void caosScript::readExpr(const enum ci_type *argp) {
 
 int caosScript::readCond() {
 	token *t = getToken(TOK_WORD);
-#define TWORD(lc, uc) else if (t->word == #lc) return C ## uc;
-	if (0) {} // get things started
-	TWORD(eq, EQ)
-	TWORD(gt, GT)
-	TWORD(ge, GE)
-	TWORD(lt, LT)
-	TWORD(le, LE)
-	TWORD(ne, NE)
-	TWORD(bt, BT)
-	TWORD(bf, BF)
-	else throw caosException(std::string("Unexpected non-condition word: ") + t->word);
-#undef TWORD
+	typedef struct { char *n; int cnd; } cond_entry;
+	const static cond_entry conds[] = {
+		{ "eq", CEQ },
+		{ "gt", CGT },
+		{ "ge", CGE },
+		{ "lt", CLT },
+		{ "le", CLE },
+		{ "ne", CNE },
+		{ "bt", CBT },
+		{ "bf", CBF },
+		{ NULL, 0 }
+	};
+
+	const cond_entry *c = conds;
+	while (c->n != NULL) {
+		if (t->word == c->n)
+			return c->cnd;
+		c++;
+	}
+	throw caosException(std::string("Unexpected non-condition word: ") + t->word);
 }
 
 void caosScript::parseCondition() {
@@ -310,6 +322,8 @@ void caosScript::parseloop(int state, void *info) {
 		if (t->type != TOK_WORD) {
 			throw caosException("Unexpected non-word token");
 		}
+
+		/* SCRP */
 		if (t->word == "scrp") {
 			if (state != ST_INSTALLER)
 				throw caosException("Unexpected SCRP");
@@ -322,6 +336,7 @@ void caosScript::parseloop(int state, void *info) {
 			scripts.push_back(shared_ptr<script>(new script(d, filename, fmly, gnus, spcs, scrp)));
 			current = scripts.back();
 		} else if (t->word == "rscr") {
+			// TODO: Are multiple RSCRs valid?
 			if (state == ST_INSTALLER || state == ST_BODY)
 				state = ST_REMOVAL;
 			else
@@ -338,6 +353,9 @@ void caosScript::parseloop(int state, void *info) {
 				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
+
+
+		/* ENUM */
 		} else if (t->word == "enum"
 				|| t->word == "esee"
 				|| t->word == "etch"
@@ -353,15 +371,19 @@ void caosScript::parseloop(int state, void *info) {
 			}
 			emitOp(CAOS_CMD, d->cmd_index(ci));
 			emitOp(CAOS_JMP, nextreloc);
-			int startp    = current->getNextIndex();
+			int startp = current->getNextIndex();
 			parseloop(ST_ENUM, NULL);
 			current->fixRelocation(nextreloc);
 			emitOp(CAOS_ENUMPOP, startp);
 		} else if (t->word == "next") {
-			if (state != ST_ENUM)
+			if (state != ST_ENUM) {
 				throw caosException("Unexpected NEXT");
+			}
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
 			return;
+
+
+		/* SUBR */
 		} else if (t->word == "subr") {
 			// Yes, this will work in a doif or whatever. This is UB, it may
 			// be made to not compile later.
@@ -373,6 +395,9 @@ void caosScript::parseloop(int state, void *info) {
 			t = getToken(TOK_WORD);
 			std::string label = t->word;
 			emitOp(CAOS_GSUB, current->getLabel(label));
+
+
+		/* LOOP */
 		} else if (t->word == "loop") {
 			int loop = current->getNextIndex();
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
@@ -395,6 +420,9 @@ void caosScript::parseloop(int state, void *info) {
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
+
+
+		/* REPS */
 		} else if (t->word == "reps") {
 			const static ci_type types[] = { CI_NUMERIC, CI_END };
 			readExpr(types);
@@ -405,6 +433,9 @@ void caosScript::parseloop(int state, void *info) {
 				throw caosException("Unexpected repe");
 			emitOp(CAOS_DECJNZ, *(int *)info);
 			return;
+
+
+		/* DOIF */
 		} else if (t->word == "doif" || t->word == "elif") {
 			std::string key("cmd ");
 			key += t->word;
@@ -442,9 +473,12 @@ void caosScript::parseloop(int state, void *info) {
 			di->failreloc = 0;
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd else")));
 		} else if (t->word == "endi") {
+			// endi is implicit
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ENDI");
 			return;
+
+
 		} else {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc) {
