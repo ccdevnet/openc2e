@@ -31,6 +31,7 @@
 #include "bytecode.h"
 #include "caosVar.h"
 #include "dialect.h"
+#include "token.h"
 
 
 class Agent;
@@ -166,12 +167,21 @@ public:
 	void installScripts();
 	void installInstallScript(unsigned char family, unsigned char genus, unsigned short species, unsigned short eventid);
 protected:
-	static int readCond();
+	int readCond();
 	void parseCondition();
 	void emitOp(opcode_t op, int argument);
 	void readExpr(const enum ci_type *argp);
 	const cmdinfo *readCommand(class token *t, const std::string &prefix);
 	void parseloop(int state, void *info);
+
+	shared_ptr<std::vector<token> > tokens;
+	int curindex; // index to the next token to be read
+   	int errindex; // index to the token to report parse errors on
+	int traceindex; // index to the token to report runtime errors on
+	// deprecated support functions
+	token *tokenPeek();
+	void putBackToken(token *);
+	token *getToken(toktype expected = ANYTOKEN);
 };
 
 #endif

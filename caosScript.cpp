@@ -26,11 +26,15 @@
 #include "token.h"
 #include "dialect.h"
 #include "lex.yy.h"
+#undef yyFlexLexer // flex/C++ is horrrrible I should use the C interface instead probably
+#include "lex.c2.h"
+#include "lexutil.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <cstring>
 #include <boost/format.hpp>
+#include <boost/scoped_ptr.hpp>
 
 using std::string;
 
@@ -146,9 +150,54 @@ struct doifinfo {
 	int donereloc;
 };
 
+
+token *caosScript::tokenPeek() {
+	if (curindex >= tokens->size())
+		return NULL;
+	return &(*tokens)[curindex];
+}
+
+token *caosScript::getToken(toktype expected) {
+	token *t = tokenPeek();
+	token dummy;
+	token &r = (t ? *t : dummy);
+
+	if (expected != ANYTOKEN && r.type() != expected)
+		r.unexpected();
+	curindex++;
+	errindex = curindex;
+	return t;
+}
+
+void caosScript::putBackToken(token *) {
+	curindex--;
+}
+
 void caosScript::parse(std::istream &in) {
-	// restart the token parser
-	yyrestart(&in, ((d->name == "c1") || (d->name == "c2")));
+	assert(!tokens);
+	// run the token parser
+	{
+		extern int lex_lineno;
+		extern bool using_c2;
+		using_c2 = (d->name == "c1" || d->name == "c2");
+		lexreset();
+		boost::scoped_ptr<FlexLexer> l(
+				using_c2 	? (FlexLexer *)new c2FlexLexer()
+							: (FlexLexer *)new c2eFlexLexer()
+		);
+		l->yyrestart(&in);
+
+		tokens = shared_ptr<std::vector<token> >(new std::vector<token>());
+		while (l->yylex()) {
+			tokens->push_back(lasttok);
+			tokens->back().lineno = lex_lineno;
+			tokens->back().index  = tokens->size() - 1;
+		}
+		tokens->push_back(token()); // tokens default to being EOI tokens
+		tokens->back().lineno = lex_lineno;
+		tokens->back().index  = tokens->size() - 1;
+	}
+	curindex = errindex = traceindex = 0;
 
 	parseloop(ST_INSTALLER, NULL);
 
@@ -161,7 +210,7 @@ void caosScript::parse(std::istream &in) {
 }
 
 const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
-	std::string fullname = prefix + t->word;
+	std::string fullname = prefix + t->word();
 	const cmdinfo *ci = d->find_command(fullname.c_str());
 	if (!ci)
 		throw parseException(std::string("Can't find command ") + fullname);
@@ -169,9 +218,9 @@ const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 	token *t2 = NULL;
 	try {
 		t2 = getToken(TOK_WORD);
-		if (!t2 || t2->type != TOK_WORD)
-			throw creaturesException("dummy");
-		return readCommand(t, fullname + " ");
+		if (!t2 || t2->type() != TOK_WORD)
+			throw parseException("dummy");
+		return readCommand(t2, fullname + " ");
 	} catch (parseException &e) {
 		if (ci->argtypes && ci->argtypes[0] == CI_SUBCOMMAND)
 			throw;
@@ -192,18 +241,18 @@ void caosScript::readExpr(const enum ci_type *argp) {
 	while (*argp != CI_END) {
 		if (*argp == CI_BAREWORD) {
 			token *t = getToken(TOK_WORD);
-			current->consts.push_back(t->word);
+			current->consts.push_back(t->word());
 			emitOp(CAOS_CONST, current->consts.size() - 1);
 			argp++;
 			continue;
 		}
 		token *t = getToken(ANYTOKEN);
-		switch (t->type) {
+		switch (t->type()) {
 			case EOI: throw caosException("Unexpected end of input");
 			case TOK_CONST:
 				{
-					if (t->constval.getType() == INTEGER) {
-						int val = t->constval.getInt();
+					if (t->constval().getType() == INTEGER) {
+						int val = t->constval().getInt();
 						// small values can be immediates
 						if (val >= -(1 << 24) && val < (1 << 24)) {
 							emitOp(CAOS_CONSTINT, val);
@@ -211,33 +260,35 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						}
 					}
 					// big values must be put in the constant table
-					current->consts.push_back(t->constval);
+					current->consts.push_back(t->constval());
 					emitOp(CAOS_CONST, current->consts.size() - 1);
 					break;
 				}
 			case TOK_BYTESTR:
 				{
-					current->bytestrs.push_back(t->bytestr);
+					current->bytestrs.push_back(t->bytestr());
 					emitOp(CAOS_BYTESTR, current->bytestrs.size() - 1);
 					break;
 				}
 			case TOK_WORD:
 				{
-					if (t->word == "face") {
+					if (t->word() == "face") {
 						// horrible hack :(
+						// this might confuse people, hmm. XXX: do this without frobbing the
+						// token buffer
 						if (*argp == CI_NUMERIC)
-							t->word = "face int";
+							t->payload = std::string("face int");
 						else
-							t->word = "face string";
+							t->payload = std::string("face string");
 					}
 					// vaxx, mvxx, ovxx
-					if (t->word.size() == 4
-						&&	((t->word[1] == 'v' && (t->word[0] == 'o' || t->word[0] == 'm'))
-								|| (t->word[0] == 'v' && t->word[1] == 'a'))
-						&&  isdigit(t->word[2]) && isdigit(t->word[3])) {
-						int vidx = atoi(t->word.c_str() + 2);
+					if (t->word().size() == 4
+						&&	((t->word()[1] == 'v' && (t->word()[0] == 'o' || t->word()[0] == 'm'))
+								|| (t->word()[0] == 'v' && t->word()[1] == 'a'))
+						&&  isdigit(t->word()[2]) && isdigit(t->word()[3])) {
+						int vidx = atoi(t->word().c_str() + 2);
 						opcode_t op;
-						switch(t->word[0]) {
+						switch(t->word()[0]) {
 							case 'v':
 								op = CAOS_VAXX;
 								break;
@@ -254,13 +305,13 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						break;
 					}
 					// obvx
-					if (t->word.size() == 4 && strncmp(t->word.c_str(), "obv", 3) && isdigit(t->word[3])) {
-						emitOp(CAOS_OVXX, atoi(t->word.c_str() + 3));
+					if (t->word().size() == 4 && strncmp(t->word().c_str(), "obv", 3) && isdigit(t->word()[3])) {
+						emitOp(CAOS_OVXX, atoi(t->word().c_str() + 3));
 						break;
 					}
 					// varx
-					if (t->word.size() == 4 && strncmp(t->word.c_str(), "var", 3) && isdigit(t->word[3])) {
-						emitOp(CAOS_VAXX, atoi(t->word.c_str() + 3));
+					if (t->word().size() == 4 && strncmp(t->word().c_str(), "var", 3) && isdigit(t->word()[3])) {
+						emitOp(CAOS_VAXX, atoi(t->word().c_str() + 3));
 						break;
 					}
 					const cmdinfo *ci = readCommand(t, std::string("expr "));
@@ -292,11 +343,11 @@ int caosScript::readCond() {
 
 	const cond_entry *c = conds;
 	while (c->n != NULL) {
-		if (t->word == c->n)
+		if (t->word() == c->n)
 			return c->cnd;
 		c++;
 	}
-	throw caosException(std::string("Unexpected non-condition word: ") + t->word);
+	throw caosException(std::string("Unexpected non-condition word: ") + t->word());
 }
 
 void caosScript::parseCondition() {
@@ -312,11 +363,11 @@ void caosScript::parseCondition() {
 
 		token *peek = tokenPeek();
 		if (!peek) break;
-		if (peek->type != TOK_WORD) break;
-		if (peek->word == "and") {
+		if (peek->type() != TOK_WORD) break;
+		if (peek->word() == "and") {
 			getToken();
 			nextIsAnd = true;
-		} else if (peek->word == "or") {
+		} else if (peek->word() == "or") {
 			getToken();
 			nextIsAnd = false;
 		} else break;
@@ -326,7 +377,7 @@ void caosScript::parseCondition() {
 void caosScript::parseloop(int state, void *info) {
 	token *t;
 	while ((t = getToken(ANYTOKEN))) {
-		if (t->type == EOI) {
+		if (t->type() == EOI) {
 			switch (state) {
 				case ST_INSTALLER:
 				case ST_BODY:
@@ -336,21 +387,21 @@ void caosScript::parseloop(int state, void *info) {
 					throw caosException("Unexpected end of input");
 			}
 		}
-		if (t->type != TOK_WORD) {
+		if (t->type() != TOK_WORD) {
 			throw caosException("Unexpected non-word token");
 		}
-		if (t->word == "scrp") {
+		if (t->word() == "scrp") {
 			if (state != ST_INSTALLER)
 				throw caosException("Unexpected SCRP");
 			state = ST_BODY;
 			// TODO: better validation
-			int fmly = getToken(TOK_CONST)->constval.getInt();
-			int gnus = getToken(TOK_CONST)->constval.getInt();
-			int spcs = getToken(TOK_CONST)->constval.getInt();
-			int scrp = getToken(TOK_CONST)->constval.getInt();
+			int fmly = getToken(TOK_CONST)->constval().getInt();
+			int gnus = getToken(TOK_CONST)->constval().getInt();
+			int spcs = getToken(TOK_CONST)->constval().getInt();
+			int scrp = getToken(TOK_CONST)->constval().getInt();
 			scripts.push_back(shared_ptr<script>(new script(d, filename, fmly, gnus, spcs, scrp)));
 			current = scripts.back();
-		} else if (t->word == "rscr") {
+		} else if (t->word() == "rscr") {
 			// TODO: Are multiple RSCRs valid?
 			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_REMOVAL;
@@ -359,13 +410,13 @@ void caosScript::parseloop(int state, void *info) {
 			if (!removal)
 				removal = shared_ptr<script>(new script(d, filename));
 			current = removal;
-		} else if (t->word == "iscr") {
+		} else if (t->word() == "iscr") {
 			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_INSTALLER;
 			else
 				throw caosException("Unexpected RSCR");
 			current = installer;
-		} else if (t->word == "endm") {
+		} else if (t->word() == "endm") {
 			if (state == ST_BODY) {
 				state = ST_INSTALLER;
 				current = installer;
@@ -377,17 +428,17 @@ void caosScript::parseloop(int state, void *info) {
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
 
-		} else if (t->word == "enum"
-				|| t->word == "esee"
-				|| t->word == "etch"
-				|| t->word == "epas"
-				|| t->word == "econ") {
+		} else if (t->word() == "enum"
+				|| t->word() == "esee"
+				|| t->word() == "etch"
+				|| t->word() == "epas"
+				|| t->word() == "econ") {
 			int nextreloc = current->newRelocation();
 			// XXX: copypasta
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc) {
 				if (!ci->argtypes)
-					std::cerr << "Missing argtypes for command " << t->word << "; probably unimplemented." << std::endl;
+					std::cerr << "Missing argtypes for command " << t->word() << "; probably unimplemented." << std::endl;
 				readExpr(ci->argtypes);
 			}
 			emitOp(CAOS_CMD, d->cmd_index(ci));
@@ -396,30 +447,30 @@ void caosScript::parseloop(int state, void *info) {
 			parseloop(ST_ENUM, NULL);
 			current->fixRelocation(nextreloc);
 			emitOp(CAOS_ENUMPOP, startp);
-		} else if (t->word == "next") {
+		} else if (t->word() == "next") {
 			if (state != ST_ENUM) {
 				throw caosException("Unexpected NEXT");
 			}
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
 			return;
 
-		} else if (t->word == "subr") {
+		} else if (t->word() == "subr") {
 			// Yes, this will work in a doif or whatever. This is UB, it may
 			// be made to not compile later.
 			t = getToken(TOK_WORD);
-			std::string label = t->word;
+			std::string label = t->word();
 			emitOp(CAOS_STOP, 0);
 			current->affixLabel(label);
-		} else if (t->word == "gsub") {
+		} else if (t->word() == "gsub") {
 			t = getToken(TOK_WORD);
-			std::string label = t->word;
+			std::string label = t->word();
 			emitOp(CAOS_GSUB, current->getLabel(label));
 
-		} else if (t->word == "loop") {
+		} else if (t->word() == "loop") {
 			int loop = current->getNextIndex();
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
 			parseloop(ST_LOOP, (void *)&loop);			
-		} else if (t->word == "untl") {
+		} else if (t->word() == "untl") {
 			if (state != ST_LOOP)
 				throw caosException("Unexpected UNTL");
 			// TODO: zerocost logic inversion - do in c_UNTL()?
@@ -431,25 +482,25 @@ void caosScript::parseloop(int state, void *info) {
 			emitOp(CAOS_JMP, loop);
 			current->fixRelocation(out);
 			return;
-		} else if (t->word == "ever") {
+		} else if (t->word() == "ever") {
 			if (state != ST_LOOP)
 				throw caosException("Unexpected EVER");
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
 
-		} else if (t->word == "reps") {
+		} else if (t->word() == "reps") {
 			const static ci_type types[] = { CI_NUMERIC, CI_END };
 			readExpr(types);
 			int loop = current->getNextIndex();
 			parseloop(ST_REPS, (void *)&loop);
-		} else if (t->word == "repe") {
+		} else if (t->word() == "repe") {
 			if (state != ST_REPS)
 				throw caosException("Unexpected repe");
 			emitOp(CAOS_DECJNZ, *(int *)info);
 			return;
 
-		} else if (t->word == "doif") {
+		} else if (t->word() == "doif") {
 			struct doifinfo di;
 			di.donereloc = current->newRelocation();
 			di.failreloc = current->newRelocation();
@@ -465,10 +516,10 @@ void caosScript::parseloop(int state, void *info) {
 				current->fixRelocation(di.failreloc);
 			current->fixRelocation(di.donereloc);
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd endi")));
-		} else if (t->word == "elif") {
+		} else if (t->word() == "elif") {
 			if (state != ST_DOIF) {
 				// XXX this is horrible
-				t->word = "doif";
+				t->payload = std::string("doif");
 				continue;
 			}
 			struct doifinfo *di = (struct doifinfo *)info;
@@ -484,7 +535,7 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(okreloc);
 			parseloop(ST_DOIF, info);
 			return;
-		} else if (t->word == "else") {
+		} else if (t->word() == "else") {
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ELSE");
 			struct doifinfo *di = (struct doifinfo *)info;
@@ -494,7 +545,7 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(di->failreloc);
 			di->failreloc = 0;
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd else")));
-		} else if (t->word == "endi") {
+		} else if (t->word() == "endi") {
 			if (state != ST_DOIF) {
 				emitOp(CAOS_DIE, -1);
 				continue;
@@ -504,7 +555,7 @@ void caosScript::parseloop(int state, void *info) {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc) {
 				if (!ci->argtypes)
-					std::cerr << "Missing argtypes for command " << t->word << "; probably unimplemented." << std::endl;
+					std::cerr << "Missing argtypes for command " << t->word() << "; probably unimplemented." << std::endl;
 				readExpr(ci->argtypes);
 			}
 			emitOp(CAOS_CMD, d->cmd_index(ci));
