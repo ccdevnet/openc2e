@@ -350,6 +350,7 @@ void caosScript::parseloop(int state, void *info) {
 				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
+
 		} else if (t->word == "enum"
 				|| t->word == "esee"
 				|| t->word == "etch"
@@ -375,6 +376,7 @@ void caosScript::parseloop(int state, void *info) {
 			}
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
 			return;
+
 		} else if (t->word == "subr") {
 			// Yes, this will work in a doif or whatever. This is UB, it may
 			// be made to not compile later.
@@ -386,6 +388,7 @@ void caosScript::parseloop(int state, void *info) {
 			t = getToken(TOK_WORD);
 			std::string label = t->word;
 			emitOp(CAOS_GSUB, current->getLabel(label));
+
 		} else if (t->word == "loop") {
 			int loop = current->getNextIndex();
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
@@ -408,6 +411,7 @@ void caosScript::parseloop(int state, void *info) {
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
+
 		} else if (t->word == "reps") {
 			const static ci_type types[] = { CI_NUMERIC, CI_END };
 			readExpr(types);
@@ -418,32 +422,43 @@ void caosScript::parseloop(int state, void *info) {
 				throw caosException("Unexpected repe");
 			emitOp(CAOS_DECJNZ, *(int *)info);
 			return;
-		} else if (t->word == "doif" || t->word == "elif") {
+
+		} else if (t->word == "doif") {
 			std::string key("cmd ");
 			key += t->word;
-			if (t->word == "elif" && state == ST_DOIF) {
-				struct doifinfo *di = (struct doifinfo *)info;
-				if (di->failreloc) {
-					emitOp(CAOS_JMP, di->donereloc);
-					current->fixRelocation(di->failreloc);
-					di->failreloc = 0;
-				}
-			}
-			struct doifinfo info;
-			info.failreloc = current->newRelocation();
-			info.donereloc = current->newRelocation();
+
+			struct doifinfo di;
+			di.donereloc = current->newRelocation();
+			di.failreloc = current->newRelocation();
 			int okreloc = current->newRelocation();
 
 			parseCondition();
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command(key.c_str())));
 			emitOp(CAOS_CJMP, okreloc);
-			emitOp(CAOS_JMP, info.failreloc);
+			emitOp(CAOS_JMP, di.failreloc);
 			current->fixRelocation(okreloc);
-			parseloop(ST_DOIF, (void *)&info);
-			if (info.failreloc)				
-				current->fixRelocation(info.failreloc);
-			current->fixRelocation(info.donereloc);
+			parseloop(ST_DOIF, (void *)&di);
+			if (di.failreloc)
+				current->fixRelocation(di.failreloc);
+			current->fixRelocation(di.donereloc);
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd endi")));
+		} else if (t->word == "elif") {
+			std::string key("cmd ");
+			key += t->word;
+
+			struct doifinfo *di = (struct doifinfo *)info;
+			int okreloc = current->newRelocation();
+
+			emitOp(CAOS_JMP, di->donereloc);
+			current->fixRelocation(di->failreloc);
+			di->failreloc = current->newRelocation();
+			parseCondition();
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command(key.c_str())));
+			emitOp(CAOS_CJMP, okreloc);
+			emitOp(CAOS_JMP, di->failreloc);
+			current->fixRelocation(okreloc);
+			parseloop(ST_DOIF, info);
+			return;
 		} else if (t->word == "else") {
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ELSE");
@@ -455,7 +470,6 @@ void caosScript::parseloop(int state, void *info) {
 			di->failreloc = 0;
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd else")));
 		} else if (t->word == "endi") {
-			// endi is implicit
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ENDI");
 			return;
