@@ -65,9 +65,8 @@ script::script(const Dialect *v, const std::string &fn)
 	: fmly(-1), gnus(-1), spcs(-1), scrp(-1),
 		dialect(v), filename(fn)
 {
-	// just so index 0 isn't an undefined piece of memory:
+	// advance past reserved index 0
 	ops.push_back(caosOp(CAOS_NOP, 0));
-	// relocation index 0 isn't used, because relocids are < 0
 	relocations.push_back(0);
 	linked = false;
 }
@@ -322,8 +321,6 @@ void caosScript::parseloop(int state, void *info) {
 		if (t->type != TOK_WORD) {
 			throw caosException("Unexpected non-word token");
 		}
-
-		/* SCRP */
 		if (t->word == "scrp") {
 			if (state != ST_INSTALLER)
 				throw caosException("Unexpected SCRP");
@@ -353,9 +350,6 @@ void caosScript::parseloop(int state, void *info) {
 				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
-
-
-		/* ENUM */
 		} else if (t->word == "enum"
 				|| t->word == "esee"
 				|| t->word == "etch"
@@ -381,9 +375,6 @@ void caosScript::parseloop(int state, void *info) {
 			}
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
 			return;
-
-
-		/* SUBR */
 		} else if (t->word == "subr") {
 			// Yes, this will work in a doif or whatever. This is UB, it may
 			// be made to not compile later.
@@ -395,9 +386,6 @@ void caosScript::parseloop(int state, void *info) {
 			t = getToken(TOK_WORD);
 			std::string label = t->word;
 			emitOp(CAOS_GSUB, current->getLabel(label));
-
-
-		/* LOOP */
 		} else if (t->word == "loop") {
 			int loop = current->getNextIndex();
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd loop")));
@@ -420,9 +408,6 @@ void caosScript::parseloop(int state, void *info) {
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
-
-
-		/* REPS */
 		} else if (t->word == "reps") {
 			const static ci_type types[] = { CI_NUMERIC, CI_END };
 			readExpr(types);
@@ -433,9 +418,6 @@ void caosScript::parseloop(int state, void *info) {
 				throw caosException("Unexpected repe");
 			emitOp(CAOS_DECJNZ, *(int *)info);
 			return;
-
-
-		/* DOIF */
 		} else if (t->word == "doif" || t->word == "elif") {
 			std::string key("cmd ");
 			key += t->word;
@@ -477,8 +459,6 @@ void caosScript::parseloop(int state, void *info) {
 			if (state != ST_DOIF)
 				throw caosException("Unexpected ENDI");
 			return;
-
-
 		} else {
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc) {

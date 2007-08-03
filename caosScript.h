@@ -49,7 +49,8 @@ struct script {
 		std::map<std::string, int> labels;
 		script() {}
 	public:
-		// ops[0] is initted to a nop, because undefined values are meh.
+		// ops[0] is initted to a nop, as address 0 is reserved for a flag value
+		// in the relocation vector
 		std::vector<caosOp> ops;
 		// table of all non-trivial constants in the script
 		// small immediates integers are done with CAOS_CONSTINT
@@ -93,7 +94,7 @@ struct script {
 		std::map<std::string, int> gsub;
 		int getNextIndex() { return ops.size(); }
 		// add op as the next opcode
-		void thread(caosOp *op);
+		void thread(caosOp *op); // FIXME: vestigal code (more like KILLME)
 		script(const Dialect *v, const std::string &fn,
 				int fmly_, int gnus_, int spcs_, int scrp_);
 		script(const Dialect *v, const std::string &fn);
@@ -106,12 +107,10 @@ struct script {
 		int newRelocation() {
 			assert (!linked);
 			int idx = relocations.size();
-			relocations.push_back(0);
+			relocations.push_back(0); 0);
+
 			return -idx;
 		}
-
-		// XXX: maybe make relocations lightweight classes, so we
-		// can identify leaks.
 
 		void fixRelocation(int r, int p) {
 			assert (!linked);
