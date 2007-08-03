@@ -195,13 +195,16 @@ sub sortname {
 sub inject_ns {
 	my $cmds = shift;
 	my %ns;
+	my %names;
 	for my $cmd (@$cmds) {
 		my $type = ($cmd->{type} eq 'command') ? 'command' : 'expression';
 		$ns{$cmd->{namespace}}{$type}++ if defined $cmd->{namespace};
+		$names{lc "$type $cmd->{name}"}++;
 	}
 	for my $ns (keys %ns) {
 		for my $type (keys %{$ns{$ns}}) {
 			next if $ns eq 'face'; # hack
+			next if exists $names{"$type " . lc $ns};
 			my $key = 'k_' . uc $ns;
 			$key =~ s/[^a-zA-Z0-9_]//g;
 			push @$cmds, {
@@ -234,9 +237,11 @@ sub checkdup {
 			print STDERR "No name for $cmd->{key}\n";
 			exit 1;
 		}
-		if ($mark{$cmd->{lookup_key}}++) {
+		push @{$mark{$cmd->{lookup_key}}}, $cmd;
+		if (scalar @{$mark{$cmd->{lookup_key}}} > 1) {
 			print STDERR "Duplicate command in $desc: $cmd->{lookup_key}\n";
-			#exit 1;
+			print STDERR YAML::Dump($mark{$cmd->{lookup_key}});
+			exit 1;
 		}
 	}
 }

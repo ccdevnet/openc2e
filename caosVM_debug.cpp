@@ -190,6 +190,7 @@ void caosVM::c_MANN() {
 
 /**
  DBG: DISA (command) family (integer) genus (integer) species (integer) event (integer)
+ %pragma variants c1 c2 c3 ca cv
  %status ok
 
  Dumps the "bytecode" of the indicated script to the current output channel.
