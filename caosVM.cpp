@@ -90,7 +90,8 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 		case CAOS_CMD:
 			{
 				const cmdinfo *ci = s->dialect->getcmd(op.argument);
-				timeslice -= ci->evalcost;
+				if (!inst)
+					timeslice -= ci->evalcost;
 #ifndef VCPP_BROKENNESS
 				(this->*(ci->handler))();
 #else
@@ -226,7 +227,7 @@ inline void caosVM::runOp() {
 	try {
 		if (trace) {
 			std::cerr
-				<< boost::str(boost::format("optrace: INST=%d TS=%d %p @%08d top=%s ") % (int)inst % (int)timeslice % (void *)this % cip % (valueStack.empty() ? std::string("(empty)") : valueStack.back().dump()))
+				<< boost::str(boost::format("optrace(%s): INST=%d TS=%d %p @%08d top=%s ") % scr->filename.c_str() % (int)inst % (int)timeslice % (void *)this % cip % (valueStack.empty() ? std::string("(empty)") : valueStack.back().dump()))
 				<< dumpOp(op) << std::endl;
 		}
 		runOpCore(scr.get(), op);

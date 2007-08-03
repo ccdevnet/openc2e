@@ -345,8 +345,8 @@ void caosScript::parseloop(int state, void *info) {
 				current = installer;
 			} else {
 				// I hate you. Die in a fire.
-				emitOp(CAOS_DIE, -1);
-				putBackToken(t);
+				//emitOp(CAOS_DIE, -1);
+				//putBackToken(t);
 				return;
 			}
 			// No we will not emit c_ENDM() thankyouverymuch
@@ -424,16 +424,13 @@ void caosScript::parseloop(int state, void *info) {
 			return;
 
 		} else if (t->word == "doif") {
-			std::string key("cmd ");
-			key += t->word;
-
 			struct doifinfo di;
 			di.donereloc = current->newRelocation();
 			di.failreloc = current->newRelocation();
 			int okreloc = current->newRelocation();
 
 			parseCondition();
-			emitOp(CAOS_CMD, d->cmd_index(d->find_command(key.c_str())));
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd doif")));
 			emitOp(CAOS_CJMP, okreloc);
 			emitOp(CAOS_JMP, di.failreloc);
 			current->fixRelocation(okreloc);
@@ -443,9 +440,6 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(di.donereloc);
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd endi")));
 		} else if (t->word == "elif") {
-			std::string key("cmd ");
-			key += t->word;
-
 			struct doifinfo *di = (struct doifinfo *)info;
 			int okreloc = current->newRelocation();
 
@@ -453,7 +447,7 @@ void caosScript::parseloop(int state, void *info) {
 			current->fixRelocation(di->failreloc);
 			di->failreloc = current->newRelocation();
 			parseCondition();
-			emitOp(CAOS_CMD, d->cmd_index(d->find_command(key.c_str())));
+			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd elif")));
 			emitOp(CAOS_CJMP, okreloc);
 			emitOp(CAOS_JMP, di->failreloc);
 			current->fixRelocation(okreloc);
