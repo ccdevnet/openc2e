@@ -104,7 +104,7 @@ std::string script::dump() {
 caosScript::caosScript(const std::string &dialect, const std::string &fn) {
 	d = dialects[dialect].get();
 	if (!d)
-		throw caosException(std::string("Unknown dialect ") + dialect);
+		throw parseException(std::string("Unknown dialect ") + dialect);
 	current = installer = shared_ptr<script> (new script(d, fn));
 	filename = fn;
 }
@@ -237,7 +237,7 @@ void caosScript::emitOp(opcode_t op, int argument) {
 void caosScript::readExpr(const enum ci_type *argp) {
 	// TODO: bytestring
 	// TODO: typecheck
-	if (!argp) throw caosException("Internal error: null argp");
+	if (!argp) throw parseException("Internal error: null argp");
 	while (*argp != CI_END) {
 		if (*argp == CI_BAREWORD) {
 			token *t = getToken(TOK_WORD);
@@ -248,7 +248,7 @@ void caosScript::readExpr(const enum ci_type *argp) {
 		}
 		token *t = getToken(ANYTOKEN);
 		switch (t->type()) {
-			case EOI: throw caosException("Unexpected end of input");
+			case EOI: throw parseException("Unexpected end of input");
 			case TOK_CONST:
 				{
 					if (t->constval().getType() == INTEGER) {
@@ -320,7 +320,7 @@ void caosScript::readExpr(const enum ci_type *argp) {
 					emitOp(CAOS_CMD, d->cmd_index(ci));
 					break;
 				}
-			default: throw caosException("Unexpected token");
+			default: throw parseException("Unexpected token");
 		}
 		argp++;
 	}
@@ -347,7 +347,7 @@ int caosScript::readCond() {
 			return c->cnd;
 		c++;
 	}
-	throw caosException(std::string("Unexpected non-condition word: ") + t->word());
+	throw parseException(std::string("Unexpected non-condition word: ") + t->word());
 }
 
 void caosScript::parseCondition() {
@@ -384,15 +384,15 @@ void caosScript::parseloop(int state, void *info) {
 				case ST_REMOVAL:
 					return;
 				default:
-					throw caosException("Unexpected end of input");
+					throw parseException("Unexpected end of input");
 			}
 		}
 		if (t->type() != TOK_WORD) {
-			throw caosException("Unexpected non-word token");
+			throw parseException("Unexpected non-word token");
 		}
 		if (t->word() == "scrp") {
 			if (state != ST_INSTALLER)
-				throw caosException("Unexpected SCRP");
+				throw parseException("Unexpected SCRP");
 			state = ST_BODY;
 			// TODO: better validation
 			int fmly = getToken(TOK_CONST)->constval().getInt();
@@ -406,7 +406,7 @@ void caosScript::parseloop(int state, void *info) {
 			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_REMOVAL;
 			else
-				throw caosException("Unexpected RSCR");
+				throw parseException("Unexpected RSCR");
 			if (!removal)
 				removal = shared_ptr<script>(new script(d, filename));
 			current = removal;
@@ -414,7 +414,7 @@ void caosScript::parseloop(int state, void *info) {
 			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_INSTALLER;
 			else
-				throw caosException("Unexpected RSCR");
+				throw parseException("Unexpected RSCR");
 			current = installer;
 		} else if (t->word() == "endm") {
 			if (state == ST_BODY) {
@@ -449,7 +449,7 @@ void caosScript::parseloop(int state, void *info) {
 			emitOp(CAOS_ENUMPOP, startp);
 		} else if (t->word() == "next") {
 			if (state != ST_ENUM) {
-				throw caosException("Unexpected NEXT");
+				throw parseException("Unexpected NEXT");
 			}
 			emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd next")));
 			return;
@@ -472,7 +472,7 @@ void caosScript::parseloop(int state, void *info) {
 			parseloop(ST_LOOP, (void *)&loop);			
 		} else if (t->word() == "untl") {
 			if (state != ST_LOOP)
-				throw caosException("Unexpected UNTL");
+				throw parseException("Unexpected UNTL");
 			// TODO: zerocost logic inversion - do in c_UNTL()?
 			int loop = *(int *)info;
 			int out  = current->newRelocation();
@@ -484,7 +484,7 @@ void caosScript::parseloop(int state, void *info) {
 			return;
 		} else if (t->word() == "ever") {
 			if (state != ST_LOOP)
-				throw caosException("Unexpected EVER");
+				throw parseException("Unexpected EVER");
 			int loop = *(int *)info;
 			emitOp(CAOS_JMP, loop);
 			return;
@@ -496,7 +496,7 @@ void caosScript::parseloop(int state, void *info) {
 			parseloop(ST_REPS, (void *)&loop);
 		} else if (t->word() == "repe") {
 			if (state != ST_REPS)
-				throw caosException("Unexpected repe");
+				throw parseException("Unexpected repe");
 			emitOp(CAOS_DECJNZ, *(int *)info);
 			return;
 
@@ -537,10 +537,10 @@ void caosScript::parseloop(int state, void *info) {
 			return;
 		} else if (t->word() == "else") {
 			if (state != ST_DOIF)
-				throw caosException("Unexpected ELSE");
+				throw parseException("Unexpected ELSE");
 			struct doifinfo *di = (struct doifinfo *)info;
 			if (!di->failreloc)
-				throw caosException("Duplicate ELSE");
+				throw parseException("Duplicate ELSE");
 			emitOp(CAOS_JMP, di->donereloc);
 			current->fixRelocation(di->failreloc);
 			di->failreloc = 0;
