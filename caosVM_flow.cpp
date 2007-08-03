@@ -83,6 +83,7 @@ void caosVM::c_ENDI() {
  %pragma parser new parseREPS()
  %status maybe
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
 
  The start of a REPS...REPE loop. The body of the loop will be executed (reps) times.
 */
@@ -95,6 +96,7 @@ void caosVM::c_REPS() {
  %pragma noparse
  %status maybe
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
 
  The end of a REPS...REPE loop.
 */
@@ -107,6 +109,7 @@ void caosVM::c_REPE() {
  %pragma parser new parseLOOP()
  %status maybe
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
  
  The start of a LOOP...EVER or LOOP...UNTL loop.
 */
@@ -131,6 +134,7 @@ void caosVM::c_EVER() {
  %pragma noparse
  %status maybe
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
  
  Jumps back to the matching LOOP unless the condition evaluates to true.
 */
@@ -186,6 +190,7 @@ void caosVM::c_RETN() {
  %pragma noparse
  %status maybe
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
 
  The end of an ENUM...NEXT loop.
 */
@@ -199,6 +204,7 @@ void caosVM::c_NEXT() {
  %pragma parserclass ENUMhelper
  %pragma retc -1
  %pragma variants c1 c2 cv c3
+ %cost c1,c2 0
 
  Loops through all agents with the given classifier.  0 on any field is a
  wildcard. The loop body is terminated by a NEXT.
