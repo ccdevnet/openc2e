@@ -310,8 +310,19 @@ void caosScript::readExpr(const enum ci_type *argp) {
 	if (!argp) throw parseException("Internal error: null argp");
 	while (*argp != CI_END) {
 		if (*argp == CI_BAREWORD) {
-			token *t = getToken(TOK_WORD);
-			current->consts.push_back(t->word());
+			token *t = getToken(ANYTOKEN);
+			switch (t->type()) {
+				case TOK_WORD:
+					current->consts.push_back(t->word());
+					break;
+				case TOK_CONST:
+					if (t->constval().getType() != STRING)
+						t->unexpected();
+					current->consts.push_back(t->constval());
+					break;
+				default:
+					t->unexpected();
+			}
 			emitOp(CAOS_CONST, current->consts.size() - 1);
 			argp++;
 			continue;
