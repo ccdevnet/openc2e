@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
+class script;
 
 class creaturesException : public std::exception {
 protected:
@@ -51,83 +52,24 @@ public:
 	const char* what() const throw() { return r; }
 };
 
-class caosException : public std::exception {
+class caosException : public creaturesException {
 	protected:
-		bool desc_is_mine;
-		bool fn_is_mine;
-		char *desc;
-		char *filename;
-		int line;
-		class caosOp *op;
-		boost::shared_ptr<class script> scr;
+		boost::shared_ptr<class script> script;
+		int traceindex;
 
-		mutable const char *cache;
-		
-		const char *cacheDesc() const throw();
 	public:
+		/* debug hook, removeme */
+		virtual const char *what() const throw() { return this->creaturesException::what(); }
 
-		~caosException() throw() {
-			if (cache && cache != desc)
-				free(const_cast<char *>(cache));
-			if (fn_is_mine)
-				free(filename); // free(NULL) is safe
-			if (desc_is_mine)
-				free(desc);
-		}
+		~caosException() throw() { }
 		
-		caosException(const std::string &d) throw() {
-			desc_is_mine = true;
-			fn_is_mine = false;
-			desc = strdup(d.c_str());
-			if (!desc) abort();
-			filename = NULL;
-			line = -1;
-			op = NULL;
-			cache = NULL;
-		}
+		caosException(const std::string &d) throw() : creaturesException(d), traceindex(-1) { }
 
-		caosException(const std::string &d, const char *file, int line) throw() {
-			try {
-				std::ostringstream oss;
-				oss << d << " from " << file << ':' << line;
-				desc_is_mine = true;
-				fn_is_mine = false;
-				desc = strdup(oss.str().c_str());
-				filename = NULL;
-				this->line = -1;
-				op = NULL;
-				cache = NULL;
-			} catch(...) { abort(); }
-		}
+		caosException(const char *d) throw() : creaturesException(d), traceindex(-1) { }
 
-		caosException(const char *d) throw() {
-			desc_is_mine = false;
-			fn_is_mine = false;
-			desc = const_cast<char *>(d);
-			assert(desc);
-			filename = NULL;
-			line = -1;
-			op = NULL;
-			cache = NULL;
-		}
+		void trace(boost::shared_ptr<class script> scr, int traceindex = -1) throw();
 
-		const char *what() const throw() {
-			return cacheDesc();
-		}
-
-		void trace(const char *filename, int line, boost::shared_ptr<script> s, caosOp *op) {
-			scr = s;
-			this->filename = strdup(filename);
-			fn_is_mine = true;
-			this->line = line;
-			this->op = op;
-			if (cache && cache != desc)
-				free(const_cast<char *>(cache));
-			cache = NULL;
-		}
-
-		caosOp *getOp() const { return op; }
-		boost::shared_ptr<script> getScript() const { return scr; }
+		virtual std::string prettyPrint();
 };
 		
 		

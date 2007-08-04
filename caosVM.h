@@ -1007,8 +1007,8 @@ class notEnoughParamsException : public caosException {
 class invalidAgentException : public caosException {
 	public:
 		invalidAgentException() : caosException("Invalid agent handle") {}
-		invalidAgentException(const std::string &d, const char *file, int line)
-			: caosException(d, file, line) {}
+		invalidAgentException(const char *s) : caosException(s) {}
+		invalidAgentException(const std::string &s) : caosException(s) {}
 };
 
 #define VM_VERIFY_SIZE(n) // no-op, we assert in the pops. orig: if (params.size() != n) { throw notEnoughParamsException(); }
@@ -1042,7 +1042,8 @@ static inline void VM_STACK_CHECK(const caosVM *vm) {
 
 #define STUB throw caosException("stub in " __FILE__)
 
-#define valid_agent(x) { if (!(x)) throw invalidAgentException("Invalid agent handle: " #x, __FILE__, __LINE__); }
+// FIXME: use do { ... } while (0)
+#define valid_agent(x) { if (!(x)) throw invalidAgentException(boost::str(boost::format("Invalid agent handle: %s thrown from %s:%d") % #x % __FILE__ % __LINE__)); }
 
 #endif
 /* vim: set noet: */

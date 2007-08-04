@@ -138,12 +138,15 @@ static inline bool op_is_relocatable(opcode_t opcode) {
 struct caosOp {
 	enum opcode_t opcode : 8;
 	int argument : 24;
+	int traceindex; // -1 if unknown
 
-	caosOp(enum opcode_t oc, int arg) {
+	caosOp(enum opcode_t oc, int arg, int ti){
 		assert(op_is_valid(oc));
 		assert(arg >= -(1 << 24) && arg < (1 << 24));
+		assert(ti >= -1);
 		opcode = oc;
 		argument = arg;
+		traceindex = ti;
 	}
 };
 
