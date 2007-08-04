@@ -250,10 +250,10 @@ void caosScript::parse(std::istream &in) {
 			rightct += leftct - errindex;
 			leftct = errindex;
 		}
-		if ((size_t)(errindex + rightct) >= tokens->size()) {
-			int overflow = errindex + rightct - tokens->size();
+		if ((size_t)(errindex + rightct + 1) >= tokens->size()) {
+			int overflow = errindex + rightct + 1 - tokens->size();
 			rightct -= overflow;
-			while (overflow > 0 && errindex >= leftct) {
+			while (overflow > 0 && errindex > leftct) {
 				overflow--;
 				leftct++;
 			}
