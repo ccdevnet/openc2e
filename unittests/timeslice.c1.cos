@@ -2,17 +2,34 @@
 * nornagon 04/08/07
 
 dbg: outs "# Time slicing and evalcosts"
-dbg: outs "1..1"
+dbg: outs "1..2"
 
+* setv
 setv va00 100
 dbg: tslc va00
 setv va01 42
 subv va00 dbg: tslc
-outs "cost for setv is "
-outv va00
-outs "\n"
 doif va00 eq 0
 	dbg: outs "ok 1"
 else
 	dbg: outs "not ok 1"
+endi
+
+* doif
+setv va00 100
+dbg: tslc va00
+
+doif 1 eq 2
+	dbg: outs "not ok 2"
+elif 3 eq 4
+	dbg: outs "not ok 2"
+else
+	setv va01 2
+endi
+
+subv va00 dbg: tslc
+doif va00 eq 0
+	dbg: outs "ok 2"
+else
+	dbg: outs "not ok 2"
 endi
