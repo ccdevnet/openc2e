@@ -152,7 +152,7 @@ struct doifinfo {
 
 
 token *caosScript::tokenPeek() {
-	if (curindex >= tokens->size())
+	if ((size_t)curindex >= tokens->size())
 		return NULL;
 	return &(*tokens)[curindex];
 }
@@ -214,7 +214,7 @@ void caosScript::parse(std::istream &in) {
 		e.filename = filename;
 		if (!tokens)
 			throw;
-		if (errindex < 0 || errindex >= tokens->size())
+		if (errindex < 0 || (size_t)errindex >= tokens->size())
 			throw;
 		e.lineno = (*tokens)[errindex].lineno;
 		e.context = boost::shared_ptr<std::vector<token> >(new std::vector<token>());
@@ -229,7 +229,7 @@ void caosScript::parse(std::istream &in) {
 			rightct += leftct - errindex;
 			leftct = errindex;
 		}
-		if (errindex + rightct >= tokens->size()) {
+		if ((size_t)(errindex + rightct) >= tokens->size()) {
 			int overflow = errindex + rightct - tokens->size();
 			rightct -= overflow;
 			while (overflow > 0 && errindex >= leftct) {
@@ -237,7 +237,7 @@ void caosScript::parse(std::istream &in) {
 				leftct++;
 			}
 		}
-		assert(leftct >= 0 && rightct >= 0 && errindex >= leftct && errindex + rightct < tokens->size());
+		assert(leftct >= 0 && rightct >= 0 && errindex >= leftct && (size_t)(errindex + rightct) < tokens->size());
 
 		if (errindex - leftct != 0) {
 			e.context->push_back(token());
@@ -259,8 +259,6 @@ void caosScript::parse(std::istream &in) {
 const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 	std::string fullname = prefix + t->word();
 	const cmdinfo *ci = d->find_command(fullname.c_str());
-	if (!ci)
-		throw parseException(std::string("Can't find command ") + fullname);
 	// See if there'{s a subcommand namespace
 	token *t2 = NULL;
 	try {
@@ -599,6 +597,20 @@ void caosScript::parseloop(int state, void *info) {
 			}
 			return;
 		} else {
+			if (t->word() == "dbg:") {
+				token *t2 = tokenPeek();
+				if (t2 && t2->type() == TOK_WORD && t2->word() == "asrt") {
+					getToken(TOK_WORD);
+					emitOp(CAOS_CONSTINT, 1);
+					parseCondition();
+					int endreloc = current->newRelocation();
+					emitOp(CAOS_CJMP, endreloc);
+					emitOp(CAOS_CMD, d->cmd_index(d->find_command("cmd dbg: asrt")));
+					current->fixRelocation(endreloc);
+					continue;
+				}
+			}
+				
 			const cmdinfo *ci = readCommand(t, std::string("cmd "));
 			if (ci->argc) {
 				if (!ci->argtypes)
