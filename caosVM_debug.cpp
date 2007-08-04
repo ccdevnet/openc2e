@@ -97,6 +97,7 @@ void caosVM::c_DBUG() {
 /**
  UNID (integer)
  %status maybe
+ %pragma variants c2 c3 ca cv
 
  Returns the unique ID of the target agent.
  This is currently no good for persisting.
