@@ -89,7 +89,7 @@ void caosVM::v_TOUC() {
 /**
  RTAR (command) family (integer) genus (integer) species (integer)
  %status maybe
- %pragma variants c2 cv c3
+ %pragma variants c1 c2 cv c3
  %cost c1,c2 0
 
  Sets TARG to a random agent with the given family/genus/species.
