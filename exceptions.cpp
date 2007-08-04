@@ -86,7 +86,7 @@ std::string caosException::prettyPrint() {
     }
     oss << ":" << std::endl;
 
-    int linelen  = 78;
+    int linelen  = 73; // XXX, margins aren't being counted it seems
     int contextl = (linelen - tr.width) / 2;
     int contextr = linelen - contextl;
     int marginl  = 0;
