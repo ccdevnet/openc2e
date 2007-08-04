@@ -164,13 +164,15 @@ token *caosScript::getToken(toktype expected) {
 
 	if (expected != ANYTOKEN && r.type() != expected)
 		r.unexpected();
-	curindex++;
 	errindex = curindex;
+	curindex++;
 	return t;
 }
 
 void caosScript::putBackToken(token *) {
 	curindex--;
+	errindex = curindex - 1; // curindex refers to the /next/ token to be parsed
+							 // so make sure we refer to the token before it
 }
 
 void caosScript::parse(std::istream &in) {
@@ -199,14 +201,59 @@ void caosScript::parse(std::istream &in) {
 	}
 	curindex = errindex = traceindex = 0;
 
-	parseloop(ST_INSTALLER, NULL);
+	try {
+		parseloop(ST_INSTALLER, NULL);
 
-	installer->link();
-	if (removal)
-		removal->link();
-	std::vector<shared_ptr<script> >::iterator i = scripts.begin();
-	while (i != scripts.end())
-		(*i++)->link();
+		installer->link();
+		if (removal)
+			removal->link();
+		std::vector<shared_ptr<script> >::iterator i = scripts.begin();
+		while (i != scripts.end())
+			(*i++)->link();
+	} catch (parseException &e) {
+		e.filename = filename;
+		if (!tokens)
+			throw;
+		if (errindex < 0 || errindex >= tokens->size())
+			throw;
+		e.lineno = (*tokens)[errindex].lineno;
+		e.context = boost::shared_ptr<std::vector<token> >(new std::vector<token>());
+		/* We'd like to capture N tokens on each side of the target, but
+		 * if we can't get all those from one side, get it from the other.
+		 */
+		int contextlen = 5;
+		int leftct = contextlen;
+		int rightct = contextlen;
+
+		if (errindex < leftct) {
+			rightct += leftct - errindex;
+			leftct = errindex;
+		}
+		if (errindex + rightct >= tokens->size()) {
+			int overflow = errindex + rightct - tokens->size();
+			rightct -= overflow;
+			while (overflow > 0 && errindex >= leftct) {
+				overflow--;
+				leftct++;
+			}
+		}
+		assert(leftct >= 0 && rightct >= 0 && errindex >= leftct && errindex + rightct < tokens->size());
+
+		if (errindex - leftct != 0) {
+			e.context->push_back(token());
+			e.context->back().payload = std::string("...");
+		}
+
+		for (int i = errindex - leftct; i < errindex + rightct; i++) {
+			e.context->push_back((*tokens)[i]);
+		}
+		if (errindex + rightct + 1 < tokens->size()) {
+			e.context->push_back(token());
+			e.context->back().payload = std::string("...");
+		}
+		e.ctxoffset = errindex;
+		throw;
+	}
 }
 
 const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {

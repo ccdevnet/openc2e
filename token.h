@@ -26,6 +26,7 @@
 #include <iostream>
 #include <sstream>
 #include <boost/variant.hpp>
+#include <boost/format.hpp>
 
 void yyrestart(std::istream *stream, bool use_c2);
 
@@ -53,6 +54,45 @@ struct token {
 			return oss.str();
 		}
 	};
+	struct fmt_visitor : boost::static_visitor<std::string> {
+		std::string operator()(const token_eoi) const { return std::string("<EOI>"); }
+		std::string operator()(const caosVar &v) const {
+			if (v.hasInt()) {
+				return boost::str(boost::format("%d") % v.getInt());
+			} else if (v.hasFloat()) {
+				return boost::str(boost::format("%f") % v.getInt());
+			} else if (v.hasString()) {
+				std::ostringstream outbuf;
+				std::string inbuf = v.getString();
+				outbuf << '"';
+				for (size_t i = 0; i < inbuf.size(); i++) {
+					switch (inbuf[i]) {
+						case '\n': outbuf << "\\\n"; break;
+						case '\r': outbuf << "\\\r"; break;
+						case '\t': outbuf << "\\\t"; break;
+						case '\"': outbuf << "\\\""; break;
+						default:   outbuf << inbuf[i]; break;
+					}
+				}
+				outbuf << '"';
+				return outbuf.str();
+			} else {
+				throw creaturesException(std::string("Impossible caosvar type in token: ") + v.dump());
+			}
+		}
+		std::string operator()(const std::string &word) const { return word; }
+		std::string operator()(const bytestring_t &bs) const {
+			std::ostringstream oss;
+			oss << "[ ";
+			for (size_t i = 0; i < bs.size(); i++)
+				oss << i << " ";
+			oss << "]";
+			return oss.str();
+		}
+	};
+
+				
+
 
 	boost::variant<token_eoi, std::string, caosVar, bytestring_t> payload;
 
@@ -88,6 +128,10 @@ struct token {
 		oss << boost::apply_visitor(dump_visitor(), payload);
 		oss << " (line " << lineno << ")";
 		return oss.str();
+	}
+
+	std::string format() const {
+		return boost::apply_visitor(fmt_visitor(), payload);
 	}
 
 	void unexpected() const {

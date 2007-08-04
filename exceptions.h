@@ -23,9 +23,12 @@
 #include <exception>
 #include <cstdlib>
 #include <string>
+#include <vector>
 #include <sstream>
 #include <assert.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
+
 
 class creaturesException : public std::exception {
 protected:
@@ -33,6 +36,7 @@ protected:
 	const char *r;
 
 public:
+	virtual std::string prettyPrint() const { return std::string(what()); }
 	creaturesException(const char *s) throw() { r = s; malloced = false; }
 	creaturesException(const std::string &s) throw() {
 		r = strdup(s.c_str());
@@ -149,8 +153,18 @@ public:
 
 class parseFailure : public creaturesException {
 public:
-	parseFailure(const char *s) throw() : creaturesException(s) { }
-	parseFailure(const std::string &s) throw() : creaturesException(s) { }
+	parseFailure(const char *s) throw()
+		: creaturesException(s), lineno(-1) { }
+	parseFailure(const std::string &s) throw()
+		: creaturesException(s), lineno(-1) { }
+	~parseFailure() throw() { }
+
+	boost::shared_ptr<std::vector<class token> > context;
+	int ctxoffset;
+	std::string filename;
+	int lineno;
+
+	std::string prettyPrint() const;
 };
 
 typedef parseFailure parseException;
