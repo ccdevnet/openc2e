@@ -231,13 +231,11 @@ inline void caosVM::runOp() {
 				<< dumpOp(op) << std::endl;
 		}
 		runOpCore(scr.get(), op);
-	} catch (creaturesException &e) {
-		//std::cerr << "script stopped due to exception " << e.what() << endl;
+	} catch (caosException &e) {
+		e.trace(currentscript, op.traceindex);
 		stop();
 		throw;
-	} catch (caosException &e) {
-		//e.trace(scr->filename.c_str(), 42 /* TODO VM lineno */, scr, op);
-		//std::cerr << "script stopped due to exception " << e.what() << endl;
+	} catch (creaturesException &e) {
 		stop();
 		throw;
 	}

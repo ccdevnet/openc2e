@@ -45,7 +45,7 @@ script::~script() {
 
 // resolve relocations into fixed addresses
 void script::link() {
-	ops.push_back(caosOp(CAOS_STOP, 0));
+	ops.push_back(caosOp(CAOS_STOP, 0, -1));
 	assert(!linked);
 //	std::cout << "Pre-link:" << std::endl << dump();
 	// check relocations
@@ -70,7 +70,7 @@ script::script(const Dialect *v, const std::string &fn)
 		dialect(v), filename(fn)
 {
 	// advance past reserved index 0
-	ops.push_back(caosOp(CAOS_NOP, 0));
+	ops.push_back(caosOp(CAOS_NOP, 0, -1));
 	relocations.push_back(0);
 	linked = false;
 }
@@ -80,7 +80,7 @@ script::script(const Dialect *v, const std::string &fn,
 	: fmly(fmly_), gnus(gnus_), spcs(spcs_), scrp(scrp_),
 		dialect(v), filename(fn)
 {
-	ops.push_back(caosOp(CAOS_NOP, 0));
+	ops.push_back(caosOp(CAOS_NOP, 0, -1));
 	relocations.push_back(0);
 	linked = false;
 }
@@ -204,12 +204,33 @@ void caosScript::parse(std::istream &in) {
 	try {
 		parseloop(ST_INSTALLER, NULL);
 
+		std::ostringstream oss;
+		shared_ptr<std::vector<toktrace> > tokinfo(new std::vector<toktrace>());
+		for (size_t p = 0; p < tokens->size(); p++) {
+			std::string tok = (*tokens)[p].format();
+			int len = tok.size();
+			if (len > 65535) {
+				errindex = p;
+				throw parseException("Overlong token");
+			}
+			oss << tok << " ";
+			tokinfo->push_back(toktrace(len, (*tokens)[p].lineno));
+		}
+		std::string code = oss.str();
+		installer->code = code;
+		installer->tokinfo = tokinfo;
 		installer->link();
-		if (removal)
+		if (removal) {
 			removal->link();
+			removal->tokinfo = tokinfo;
+			removal->code = code;
+		}
 		std::vector<shared_ptr<script> >::iterator i = scripts.begin();
-		while (i != scripts.end())
+		while (i != scripts.end()) {
+			(*i)->tokinfo = tokinfo;
+			(*i)->code = code;
 			(*i++)->link();
+		}
 	} catch (parseException &e) {
 		e.filename = filename;
 		if (!tokens)
@@ -276,12 +297,13 @@ const cmdinfo *caosScript::readCommand(token *t, const std::string &prefix) {
 }
 
 void caosScript::emitOp(opcode_t op, int argument) {
-	current->ops.push_back(caosOp(op, argument));
+	current->ops.push_back(caosOp(op, argument, traceindex));
 }
 
 void caosScript::readExpr(const enum ci_type *argp) {
 	// TODO: bytestring
 	// TODO: typecheck
+	int saved_trace = traceindex;
 	if (!argp) throw parseException("Internal error: null argp");
 	while (*argp != CI_END) {
 		if (*argp == CI_BAREWORD) {
@@ -292,6 +314,7 @@ void caosScript::readExpr(const enum ci_type *argp) {
 			continue;
 		}
 		token *t = getToken(ANYTOKEN);
+		traceindex = errindex;
 		switch (t->type()) {
 			case EOI: throw parseException("Unexpected end of input");
 			case TOK_CONST:
@@ -369,6 +392,7 @@ void caosScript::readExpr(const enum ci_type *argp) {
 		}
 		argp++;
 	}
+	traceindex = saved_trace;
 }
 
 int caosScript::readCond() {
@@ -422,6 +446,7 @@ void caosScript::parseCondition() {
 void caosScript::parseloop(int state, void *info) {
 	token *t;
 	while ((t = getToken(ANYTOKEN))) {
+		traceindex = errindex;
 		if (t->type() == EOI) {
 			switch (state) {
 				case ST_INSTALLER:

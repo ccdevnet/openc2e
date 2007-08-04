@@ -36,6 +36,13 @@
 
 class Agent;
 
+struct toktrace {
+	unsigned short width;
+	unsigned short lineno;
+
+	toktrace(unsigned short w, unsigned short l) : width(w), lineno(l) { }
+};
+
 struct script {
 	protected:
 		FRIEND_SERIALIZE(script);
@@ -60,6 +67,9 @@ struct script {
 		// because caosVar doesn't store bytestrings, we store them in a separate
 		// table
 		std::vector<bytestring_t> bytestrs;
+		// a normalized copy of the script source. this is used for error tracing
+		std::string code;
+		shared_ptr<std::vector<toktrace> > tokinfo;
 
 	public:
 		int fmly, gnus, spcs, scrp;
@@ -70,7 +80,7 @@ struct script {
 
 		caosOp getOp(int idx) const {
 			assert (idx >= 0);
-			return (size_t)idx >= ops.size() ? caosOp(CAOS_DIE, -1) : ops[idx];
+			return (size_t)idx >= ops.size() ? caosOp(CAOS_DIE, -1, -1) : ops[idx];
 		}
 
 		int scriptLength() const {
