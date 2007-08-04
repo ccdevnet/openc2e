@@ -271,4 +271,31 @@ void caosVM::v_DBG_STOK() {
 	result.setString(bareword);
 }
 
+/**
+ DBG: TSLC (command) timeslice (integer)
+ %status ok
+ %pragma variants c1 c2 c3 ca cv
+ %cost 0
+
+ Sets the currently executing script's remaining timeslice value. This command
+ affects only the current timeslice; future slices use the normal amount for
+ the dialect in question.
+*/
+void caosVM::c_DBG_TSLC() {
+	VM_PARAM_INTEGER(tslc);
+	timeslice = tslc;
+}
+
+/**
+ DBG: TSLC (integer)
+ %status ok
+ %pragma variants c1 c2 c3 ca cv
+ 
+ Returns the number of ticks left in the current script's remaining timeslice.
+*/
+void caosVM::v_DBG_TSLC() {
+	result.setInt(timeslice);
+}
+
+
 /* vim: set noet: */

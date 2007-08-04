@@ -451,6 +451,8 @@ public:
 	void c_DBG_PROF();
 	void c_DBG_CPRO();
 	void v_DBG_STOK();
+	void c_DBG_TSLC();
+	void v_DBG_TSLC();
 
 	// agent
 	void c_NEW_COMP();
