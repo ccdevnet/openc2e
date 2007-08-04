@@ -305,12 +305,12 @@ void caosScript::readExpr(const enum ci_type *argp) {
 						break;
 					}
 					// obvx
-					if (t->word().size() == 4 && strncmp(t->word().c_str(), "obv", 3) && isdigit(t->word()[3])) {
+					if (t->word().size() == 4 && !strncmp(t->word().c_str(), "obv", 3) && isdigit(t->word()[3])) {
 						emitOp(CAOS_OVXX, atoi(t->word().c_str() + 3));
 						break;
 					}
 					// varx
-					if (t->word().size() == 4 && strncmp(t->word().c_str(), "var", 3) && isdigit(t->word()[3])) {
+					if (t->word().size() == 4 && !strncmp(t->word().c_str(), "var", 3) && isdigit(t->word()[3])) {
 						emitOp(CAOS_VAXX, atoi(t->word().c_str() + 3));
 						break;
 					}
