@@ -60,6 +60,7 @@ void caosVM::c_OUTX() {
 /**
  OUTS (command) val (string)
  %status maybe
+ %pragma variants all
 
  Prints the given string to the output stream.  Does nothing when run inside a script.
 */
@@ -80,6 +81,7 @@ void caosVM::c_OUTS() {
 /**
  OUTV (command) val (decimal)
  %status maybe
+ %pragma variants all
 
  Prints the given decimal value to the ouput stream.  Does nothing when run inside a script.
 */

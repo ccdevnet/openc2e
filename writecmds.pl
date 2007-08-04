@@ -83,7 +83,7 @@ sub miscprep {
 		$cmd->{evalcost}{$variant} = $cmd->{evalcost}{default} unless defined $cmd->{evalcost}{$variant};
 		if ($cmd->{type} ne 'command' && $cmd->{evalcost}{$variant} != 0) {
 			print STDERR "$cmd->{lookup_key} has non-zero evalcost in an expression cost.";
-			print STDERR "This is a race condition which can potentially lead to crashes.";
+			print STDERR "This causes a race condition which can potentially lead to crashes.";
 			print STDERR "If you really need this, please contact bd_. Aborting for now.";
 			exit 1;
 		}
@@ -239,6 +239,8 @@ sub checkdup {
 		}
 		push @{$mark{$cmd->{lookup_key}}}, $cmd;
 		if (scalar @{$mark{$cmd->{lookup_key}}} > 1) {
+			# Please do not disable this assert
+			# bsearch()'s behavior is unpredictable with duplicate keys
 			print STDERR "Duplicate command in $desc: $cmd->{lookup_key}\n";
 			print STDERR YAML::Dump($mark{$cmd->{lookup_key}});
 			exit 1;
