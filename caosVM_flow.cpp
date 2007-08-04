@@ -42,6 +42,7 @@ void caosVM::c_DOIF() {
 /**
  ELIF (command) condition (condition)
  %pragma parser new DoifParser()
+ %pragma variants all
  %status maybe
  %cost c1,c2 0
  
