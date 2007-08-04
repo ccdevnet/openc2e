@@ -37,6 +37,7 @@ using std::cout;
 /**
  DBG: OUTS (command) val (string)
  %status maybe
+ %pragma variants all
 
  Outputs a string to the debug log.
 */
@@ -56,6 +57,7 @@ void caosVM::c_DBG_OUTS() {
 /**
  DBG: OUTV (command) val (decimal)
  %status maybe
+ %pragma variants all
  
  Outputs a decimal value to the debug log.
 */
@@ -155,7 +157,7 @@ void caosVM::c_DBG_MALLOC() {
 /**
  DBG: DUMP (command)
  %status ok
- %pragma variants c1 c2 c3 ca cv
+ %pragma variants all
 
  Dumps the current script's bytecode to stderr.
 */
@@ -166,7 +168,7 @@ void caosVM::c_DBG_DUMP() {
 /**
  DBG: TRACE (command) enable (integer)
  %status ok
- %pragma variants c1 c2 c3 ca cv
+ %pragma variants all
 
  Enables/disables opcode tracing to cerr.
 */
@@ -190,7 +192,7 @@ void caosVM::c_MANN() {
 
 /**
  DBG: DISA (command) family (integer) genus (integer) species (integer) event (integer)
- %pragma variants c1 c2 c3 ca cv
+ %pragma variants all
  %status ok
 
  Dumps the "bytecode" of the indicated script to the current output channel.
@@ -214,6 +216,7 @@ void caosVM::c_DBG_DISA() {
 /**
  DBG: ASRT (command) condition (condition)
  %pragma parser new AssertParser()
+ %pragma variants all
  %status maybe
 
  Blows up unless the given condition is true.
@@ -225,6 +228,7 @@ void caosVM::c_DBG_ASRT() {
 /**
  DBG: IDNT (string) agent (agent)
  %status ok
+ %pragma variants all
 
  (openc2e-only)
  Return a nicely-formatted string identifying the classifier of the agent,
@@ -262,6 +266,7 @@ void caosVM::c_DBG_CPRO() {
 /**
  DBG: STOK (string) bareword (bareword)
  %status ok
+ %pragma variants all
 
  Returns the bare token in 'bareword' as a string.
 */
@@ -274,7 +279,7 @@ void caosVM::v_DBG_STOK() {
 /**
  DBG: TSLC (command) timeslice (integer)
  %status ok
- %pragma variants c1 c2 c3 ca cv
+ %pragma variants all
  %cost 0
 
  Sets the currently executing script's remaining timeslice value. This command
@@ -289,7 +294,7 @@ void caosVM::c_DBG_TSLC() {
 /**
  DBG: TSLC (integer)
  %status ok
- %pragma variants c1 c2 c3 ca cv
+ %pragma variants all
  
  Returns the number of ticks left in the current script's remaining timeslice.
 */
