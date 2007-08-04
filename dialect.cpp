@@ -1,4 +1,5 @@
 #include "dialect.h"
+#include "exceptions.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,7 +28,10 @@ Dialect::Dialect(const cmdinfo *cmds_, const std::string &n) : name(n) {
 }
 
 const cmdinfo *Dialect::find_command(const char *name) const {
-    return find_cmd(cmds, cmdcnt, name);
+    const cmdinfo *ci = find_cmd(cmds, cmdcnt, name);
+	if (!ci)
+		throw parseException(std::string("Command not found: ") + name);
+	return ci;
 }
 
 int Dialect::cmd_index(const cmdinfo *ci) const {
