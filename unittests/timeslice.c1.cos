@@ -1,0 +1,18 @@
+* unit tests for time slicing
+* nornagon 04/08/07
+
+dbg: outs "# Time slicing and evalcosts"
+dbg: outs "1..1"
+
+setv va00 100
+dbg: tslc va00
+setv va01 42
+subv va00 dbg: tslc
+outs "cost for setv is "
+outv va00
+outs "\n"
+doif va00 eq 0
+	dbg: outs "ok 1"
+else
+	dbg: outs "not ok 1"
+endi
