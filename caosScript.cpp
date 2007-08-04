@@ -162,10 +162,13 @@ token *caosScript::getToken(toktype expected) {
 	token dummy;
 	token &r = (t ? *t : dummy);
 
+	errindex = curindex;
+
 	if (expected != ANYTOKEN && r.type() != expected)
 		r.unexpected();
-	errindex = curindex;
+
 	curindex++;
+
 	return t;
 }
 
