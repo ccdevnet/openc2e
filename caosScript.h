@@ -89,23 +89,25 @@ struct script {
 
 		caosVar getConstant(int idx) const {
 			if (idx < 0 || (size_t)idx >= consts.size()) {
-				caosVar v;
-				v.reset();
-				return v; // XXX throw
+				throw caosException(boost::str(
+						boost::format("Internal error: const %d out of range") % idx
+				));
 			}
 			return consts[idx];
 		}
 
 		bytestring_t getBytestr(int idx) const {
-			if (idx < 0 || (size_t)idx >= bytestrs.size())
-				return bytestring_t(); // XXX throw
+			if (idx < 0 || (size_t)idx >= bytestrs.size()) {
+				throw caosException(boost::str(
+						boost::format("Internal error: const %d out of range") % idx
+				));
+			}
 			return bytestrs[idx];
 		}
 		
 		std::map<std::string, int> gsub;
 		int getNextIndex() { return ops.size(); }
 		// add op as the next opcode
-		void thread(caosOp *op); // FIXME: vestigal code (more like KILLME)
 		script(const Dialect *v, const std::string &fn,
 				int fmly_, int gnus_, int spcs_, int scrp_);
 		script(const Dialect *v, const std::string &fn);

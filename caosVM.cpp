@@ -63,10 +63,14 @@ void caosVM::startBlocking(blockCond *whileWhat) {
 
 inline void caosVM::safeJMP(int dest) {
 //	std::cerr << "jmp from " << cip << " to " << dest << "(old nip = " << nip << ") in script of length " << currentscript->scriptLength() << std::endl;
-	if (dest < 0)
-		throw creaturesException(std::string("Unrelocated jump at ") + "???" /* cip */); /* XXX */
-	if (dest >= currentscript->scriptLength())
-		throw creaturesException(std::string("Jump out of bounds at ") + "???" /* cip */);
+	if (dest < 0) {
+		std::cerr << currentscript->dump();
+		throw caosException(boost::str(boost::format("Internal error: Unrelocated jump at %08x") % cip));
+	}
+	if (dest >= currentscript->scriptLength()) {
+		std::cerr << currentscript->dump();
+		throw creaturesException(boost::str(boost::format("Internal error: Jump out of bounds at %08x") % cip));
+	}
 	nip = dest;
 }
 
