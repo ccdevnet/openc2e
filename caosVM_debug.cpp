@@ -187,8 +187,19 @@ void caosVM::c_DBG_TRACE() {
 */
 void caosVM::c_MANN() {
 	VM_PARAM_STRING(cmd)
-	// TODO VM
-	result.setString("bug bd about this function.");
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), toupper);
+	const cmdinfo *i = currentscript->dialect->cmdbase();
+	// This isn't performance critical, so just use a dumb loop
+	while (i->lookup_key) {
+		if (cmd == i->fullname)
+			break;
+		i++;
+	}
+	if (!i->lookup_key) {
+		result.setString("Not found");
+		return;
+	}
+	result.setString(std::string(i->docs));
 }
 
 /**
