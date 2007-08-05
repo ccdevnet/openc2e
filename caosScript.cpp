@@ -304,7 +304,6 @@ void caosScript::emitOp(opcode_t op, int argument) {
 }
 
 void caosScript::readExpr(const enum ci_type *argp) {
-	// TODO: bytestring
 	// TODO: typecheck
 	int saved_trace = traceindex;
 	if (!argp) throw parseException("Internal error: null argp");
@@ -478,15 +477,20 @@ void caosScript::parseloop(int state, void *info) {
 			if (state != ST_INSTALLER)
 				throw parseException("Unexpected SCRP");
 			state = ST_BODY;
-			// TODO: better validation
-			int fmly = getToken(TOK_CONST)->constval().getInt();
-			int gnus = getToken(TOK_CONST)->constval().getInt();
-			int spcs = getToken(TOK_CONST)->constval().getInt();
-			int scrp = getToken(TOK_CONST)->constval().getInt();
+			int bits[4];
+			for (int i = 0; i < 4; i++) {
+				caosVar val = getToken(TOK_CONST)->constval();
+				if (!val.getType() == INTEGER)
+					throw parseException("Expected integer constant");
+				bits[i] = val.getInt();
+			}
+			int fmly = bits[0];
+			int gnus = bits[1];
+			int spcs = bits[2];
+			int scrp = bits[3];
 			scripts.push_back(shared_ptr<script>(new script(d, filename, fmly, gnus, spcs, scrp)));
 			current = scripts.back();
 		} else if (t->word() == "rscr") {
-			// TODO: Are multiple RSCRs valid?
 			if (state == ST_INSTALLER || state == ST_BODY || state == ST_REMOVAL)
 				state = ST_REMOVAL;
 			else

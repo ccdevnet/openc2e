@@ -87,7 +87,6 @@ void prayManager::update() {
 						prayFile *p = new prayFile(*d);
 						addFile(p);
 					} catch (creaturesException &e) {
-						// TODO VM XXX why doesn't this build?!
 						std::cerr << "PRAY file \"" << d->path().native_directory_string() << "\" failed to load: " << e.what() << std::endl;
 					}
 				}
