@@ -1107,7 +1107,7 @@ void caosVM::c_RNGE() {
 	VM_VERIFY_SIZE(1)
 	VM_PARAM_FLOAT(distance)
 
-	valid_agent(targ)
+	valid_agent(targ);
 	targ->range = distance;
 }
 
@@ -1282,7 +1282,7 @@ void caosVM::c_SETV_PUPT() {
  Stop the script running in TARG, if any.
 */
 void caosVM::c_STPT() {
-	valid_agent(targ)
+	valid_agent(targ);
 	targ->stopScript();
 }
 
