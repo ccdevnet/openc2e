@@ -97,7 +97,7 @@ void caosVM::c_DBUG() {
 /**
  UNID (integer)
  %status maybe
- %pragma variants c2 c3 ca cv
+ %pragma variants c3 ca cv
 
  Returns the unique ID of the target agent.
  This is currently no good for persisting.
@@ -109,6 +109,21 @@ void caosVM::v_UNID() {
 	VM_VERIFY_SIZE(0)
 	valid_agent(targ);
 	result.setInt(targ->getUNID());
+}
+
+/**
+ UNID (agent)
+ %status maybe
+ %pragma variants c2
+
+ Returns the unique ID of the target agent.
+ This is currently no good for persisting.
+ %pragma implementation caosVM::v_UNID_c2
+*/
+void caosVM::v_UNID_c2() {
+	VM_VERIFY_SIZE(0)
+	valid_agent(targ);
+	result.setAgent(targ);
 }
 
 /**

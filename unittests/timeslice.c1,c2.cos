@@ -2,7 +2,7 @@
 * nornagon 04/08/07
 
 dbg: outs "# Time slicing and evalcosts"
-dbg: outs "1..8"
+dbg: outs "1..9"
 
 * setv
 setv va00 100
@@ -116,4 +116,15 @@ doif va00 eq 0
 	dbg: outs "ok 8"
 else
 	dbg: outs "not ok 8"
+endi
+
+* stim
+setv va00 100
+dbg: tslc va00
+stim shou 100 1 30 0 0 0 0 0 0 0 0 0
+subv va00 dbg: tslc
+doif va00 eq 0
+	dbg: outs "ok 9"
+else
+	dbg: outs "not ok 9"
 endi
