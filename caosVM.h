@@ -446,6 +446,7 @@ public:
 	void c_MANN();
 	void c_DBG_DISA();
 	void v_UNID();
+	void v_UNID_c2();
 	void v_AGNT();
 	void v_DBG_IDNT();
 	void c_DBG_PROF();
