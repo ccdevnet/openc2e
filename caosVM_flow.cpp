@@ -188,15 +188,14 @@ void caosVM::c_RETN() {
 
 /**
  NEXT (command)
- %pragma noparse
  %status maybe
- %pragma variants c1 c2 cv c3
+ %pragma variants all
  %cost c1,c2 0
 
  The end of an ENUM...NEXT loop.
 */
 void caosVM::c_NEXT() {
-	// Handled elsewhere.
+	targ = owner;
 }
 
 /**
