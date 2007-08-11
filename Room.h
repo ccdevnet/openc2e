@@ -40,6 +40,7 @@ struct RoomDoor {
 
 class Room {
 public:
+	// keys are rooms we're connected to
 	std::map<boost::weak_ptr<Room>,RoomDoor *> doors;
 	unsigned int x_left, x_right, y_left_ceiling, y_right_ceiling;
 	unsigned int y_left_floor, y_right_floor;
@@ -47,7 +48,7 @@ public:
 	std::vector<std::pair<unsigned int, unsigned int> > floorpoints;
 
 	Line left, right, top, bot;
-	
+
 	caosVar type;
 
 	// Creatures 2

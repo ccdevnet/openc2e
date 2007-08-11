@@ -109,7 +109,7 @@ class Line {
 				return containsX(p.x) && fabs(point_on_line.y - p.y) < 1;
 			}
 		}
-					
+
 		Point pointAtX(double x) const
 			{ 
 				assert(type != VERTICAL);

@@ -134,12 +134,7 @@ bool Map::collideLineWithRoomBoundaries(Point src, Point dest, shared_ptr<Room> 
 
 	newroom.reset();
 
-	/* if (room->containsPoint(dest.x, dest.y)) {
-		where = dest;
-		return false;
-	}*/
-
-	float distance = 100000000.0f; // TODO: lots.
+	float distance = INFINITY;
 	bool foundsomething = false;
 	bool previousroom = (newroom);
 	Point oldpoint = where;
