@@ -190,7 +190,7 @@ public:
 	
 	unsigned int getWidth() { return part(0)->getWidth(); }
 	unsigned int getHeight() { return part(0)->getHeight(); }
-	Point boundingBoxPoint(unsigned int n);
+	Point boundingBoxPoint(unsigned int n); // { 0, 1, 2, 3 } :: { left, right, top, bottom }
 	static Point boundingBoxPoint(unsigned int n, Point p, unsigned int w, unsigned int h);
 	
 	virtual void tick();

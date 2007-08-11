@@ -27,6 +27,9 @@
 #include "Backend.h"
 #include <boost/format.hpp>
 #include "Room.h"
+#include <float.h>
+#include <boost/tuple/tuple.hpp>
+using boost::get;
 
 void Agent::core_init() {
 	initialized = false;
@@ -396,16 +399,23 @@ bool Agent::validInRoomSystem(Point p, unsigned int w, unsigned int h, int testp
 	return true;
 }
 
+// dist2: distance²
+static inline float dist2(float x1, float y1, float x2, float y2) {
+	float dx = x2-x1, dy = y2-y1;
+	return dx*dx + dy*dy;
+}
+static inline float dist2(Point const &a, Point const &b) {
+	return dist2(a.x, a.y, b.x, b.y);
+}
+
 void Agent::physicsTick() {
 	if (engine.version == 1) return; // C1 has no physics, and different attributes.
-
 	if (carriedby) return; // We don't move when carried, so what's the point?
-
 	if (x == 0 && y == 0) return; // TODO: is this correct behaviour? :P
 
 	// set destination point based on velocities
-	float destx = x + velx.getFloat();
-	float desty = y + vely.getFloat();
+	float dx = velx.getFloat();
+	float dy = vely.getFloat();
 
 	if (sufferphysics()) {
 		// TODO: falling behaviour needs looking at more closely..
@@ -413,122 +423,292 @@ void Agent::physicsTick() {
 		falling = false;
 		// increase speed according to accg
 		// TODO: should we be changing vely first, instead of after a successful move (below)?
-		desty += accg.getFloat();
+		dy += accg.getFloat();
 	}
 	
 	if (suffercollisions()) {
-		float lastdistance = 1000000.0f;
-		bool collided = false;
-		Line wall; // only valid when collided
-		unsigned int collidedirection = 0; // only valid when collided
-		Point bestmove;
+		float lastdistance = INFINITY;
+		Point newpoint(x + dx, y + dy);
+		int collidedirection;
+		int pointcollided = 5;
+		Line* wall = NULL; // only valid when collided
+		Vector<float> velocityNorm = Vector<float>(dx,dy).scaleToMagnitude(1);
 
-		// iterate through all four points of the bounding box
-		for (unsigned int i = 0; i < 4; i++) {
-			// this mess is because we want to start with the bottom point - DOWN (3) - before the others, for efficiency
-			Point src = boundingBoxPoint((i == 0) ? 3 : i - 1);
+		std::vector<boost::tuple<int, Line*, shared_ptr<Room> > > lines;
+		MetaRoom *mr = world.map.metaRoomAt(x, y);
+		assert(mr);
+		// snaffle all the lines in the current metaroom
+		for (std::vector<shared_ptr<Room> >::iterator r = mr->rooms.begin(); r != mr->rooms.end(); r++) {
+			lines.push_back(make_tuple(0, &(*r)->left, *r));
+			lines.push_back(make_tuple(1, &(*r)->right, *r));
+			lines.push_back(make_tuple(2, &(*r)->top, *r));
+			lines.push_back(make_tuple(3, &(*r)->bot, *r));
+		}
 
-			// store values
-			float srcx = src.x, srcy = src.y;
-			
-			shared_ptr<Room> ourRoom = world.map.roomAt(srcx, srcy);
-			if (!ourRoom) {
-				if (!displaycore)
-					unhandledException(boost::str(boost::format("out of room system at (%f, %f)") % srcx % srcy), false);
-				displaycore = true;
-				return; // out of room system
+		std::vector<Line> outline;
+		outline.push_back(Line(boundingBoxPoint(0), boundingBoxPoint(2)));
+		outline.push_back(Line(boundingBoxPoint(2), boundingBoxPoint(1)));
+		outline.push_back(Line(boundingBoxPoint(1), boundingBoxPoint(3)));
+		outline.push_back(Line(boundingBoxPoint(3), boundingBoxPoint(0)));
+
+		for (std::vector<boost::tuple<int, Line*, shared_ptr<Room> > >::iterator rl = lines.begin(); rl != lines.end(); rl++) {
+			for (int j = 3; j >= 0; j--) {
+				Point src = boundingBoxPoint(j);
+				Line vel(src, Point(src.x + dx, src.y + dy));
+				Point i;
+				if (vel.intersect(*get<1>(*rl), i)) {
+					float ourdist = dist2(src, i);
+					if (ourdist < lastdistance) {
+						shared_ptr<Room> from_room = get<2>(*rl);//world.map.roomAt(i.x - velocityNorm.x, i.y - velocityNorm.y);
+						if (!from_room) {
+							printf("i(%f,%f) ; wall from (%f,%f) to (%f,%f) ; dx = %f, dy = %f\n", i.x, i.y, get<1>(*rl)->getStart().x, get<1>(*rl)->getStart().y, get<1>(*rl)->getEnd().x, get<1>(*rl)->getEnd().y, dx, dy);
+						}
+						assert(from_room);
+						bool wall_permeable = false;
+						switch (get<0>(*rl)) {
+							case 0: // collided with the left wall of a room
+								for (std::map<boost::weak_ptr<Room>,RoomDoor *>::iterator rd = from_room->doors.begin();
+										rd != from_room->doors.end(); rd++) {
+									if (!(rd->first.lock()) || !(rd->second)) continue; // TODO: assert here? remove the door?
+									Line *l = &(rd->first.lock()->right);
+									if (l->getStart().x == i.x && l->containsY(i.y) &&
+											rd->second->perm > perm) {
+										wall_permeable = true;
+										break;
+										// move along, no collision here
+									}
+								}
+								break;
+							case 1: // right wall
+								// TODO: copypasta
+								for (std::map<boost::weak_ptr<Room>,RoomDoor *>::iterator rd = from_room->doors.begin();
+										rd != from_room->doors.end(); rd++) {
+									if (!rd->first.lock() || !rd->second) continue; // TODO: assert here? remove the door?
+									Line *l = &(rd->first.lock()->left);
+									if (l->getStart().x == i.x && l->containsY(i.y) &&
+											rd->second->perm > perm) {
+										wall_permeable = true;
+										break;
+										// move along, no collision here
+									}
+								}
+								break;
+							case 2: // top wall
+								{
+									shared_ptr<Room> to_room = world.map.roomAt(i.x, i.y - 1); // all rooms are at least three pixels tall everywhere
+									for (std::map<boost::weak_ptr<Room>,RoomDoor *>::iterator rd = from_room->doors.begin();
+											rd != from_room->doors.end(); rd++) {
+										if (!rd->first.lock() || !rd->second) continue;
+										if (rd->first.lock() == to_room && rd->second->perm > perm) {
+											wall_permeable = true;
+											break;
+										}
+									}
+								}
+								break;
+							case 3: // bottom wall
+								// TODO: copypasta
+								{
+									shared_ptr<Room> to_room = world.map.roomAt(i.x, i.y + 1); // all rooms are at least three pixels tall everywhere
+									if (!to_room) break;// printf("no to_room\n");
+									for (std::map<boost::weak_ptr<Room>,RoomDoor *>::iterator rd = from_room->doors.begin();
+											rd != from_room->doors.end(); rd++) {
+										if (!rd->first.lock() || !rd->second) continue;
+										if (rd->first.lock() == to_room && rd->second->perm > perm) {
+											wall_permeable = true;
+											break;
+										}
+									}
+								}
+								break;
+						}
+						if (wall_permeable) continue;
+						collidedirection = get<0>(*rl);
+						switch (j) {
+							case 0: // left
+								newpoint = Point(i.x, i.y - getHeight() / 2);
+								break;
+							case 1: // right
+								newpoint = Point(i.x - getWidth(), i.y - getHeight() / 2);
+								break;
+							case 2: // top
+								newpoint = Point(i.x - getWidth() / 2, i.y);
+								break;
+							case 3: // bottom
+								newpoint = Point(i.x - getWidth() / 2, i.y - getHeight());
+								break;
+							default:
+								assert(0 && "unreachable");
+						}
+						pointcollided = j;
+						wall = get<1>(*rl);
+						lastdistance = ourdist;
+					}
+				}
 			}
-			
-			Point dest(destx + (srcx - x), desty + (srcy - y));
-			unsigned int local_collidedirection;
-			Line local_wall;
-		
-			// this changes src to the point at which we end up
-			bool local_collided = world.map.collideLineWithRoomSystem(src, dest, ourRoom, src, local_wall, local_collidedirection, perm);
-
-			float dist;
-			if (src.x == srcx && src.y == srcy)
-				dist = 0.0f;
-			else {
-				float xdiff = src.x - srcx;
-				float ydiff = src.y - srcy;
-				dist = xdiff*xdiff + ydiff*ydiff;
+			for (std::vector<Line>::iterator ol = outline.begin(); ol != outline.end(); ol++) {
+				Point const &start = get<1>(*rl)->getStart();
+				Line l(start, Point(start.x - dx, start.y - dy));
+				Point i;
+				if (ol->intersect(l, i)) {
+					float ourdist = dist2(i, start);
+					collidedirection = get<0>(*rl); // TODO: needs testing in c2e
+					if (ourdist < lastdistance) {
+						wall = get<1>(*rl);
+						lastdistance = ourdist;
+						newpoint = Point(start.x - i.x + x , start.y - i.y + y);
+					}
+				}
 			}
-
-			if (dist >= lastdistance) {
-				assert(i != 0); // this had better not be our first collision!
-				continue; // further away than a previous collision
-			}
-
-			lastdistance = dist;
-			bestmove.x = x + (src.x - srcx);
-			bestmove.y = y + (src.y - srcy);
-			collidedirection = local_collidedirection;
-			wall = local_wall;
-			collided = local_collided;
-
-			if (dist == 0.0f)
-				break; // no point checking any more, is there?
-		}	
+		}
 
 		// *** do actual movement
-		if (lastdistance != 0.0f) {	
-			moveTo(bestmove.x, bestmove.y);
-		
-			if (collided) {
-				lastcollidedirection = collidedirection;
-				queueScript(6, 0, velx, vely); // TODO: include this? .. we need to include SOMETHING, c3 ball checks for <3
-
-				if (elas != 0) {
-					if (wall.getType() == HORIZONTAL) {
-						vely.setFloat(-vely.getFloat());
-					} else if (wall.getType() == VERTICAL) {
-						velx.setFloat(-velx.getFloat());
-					} else {
-						// line starts always have a lower x value than the end
-						float xdiff = wall.getEnd().x - wall.getStart().x;
-						float ydiff = wall.getEnd().y - wall.getStart().y;
-						float fvelx = velx.getFloat(), fvely = vely.getFloat();
-					
-						// calculate input/slope angles
-						double inputangle;
-						if (fvelx == 0.0f) {
-							if (fvely > 0.0f)
-								inputangle = M_PI / 2.0;
-							else
-								inputangle = 3 * (M_PI / 2.0);
-						} else {
-							inputangle = atan(fvely / fvelx);
-						}
-						double slopeangle = atan(-ydiff / xdiff); // xdiff != 0 because wall isn't vertical
-
-						// calculate output angle
-						double outputangle = slopeangle + (slopeangle - inputangle) + M_PI;
-
-						// turn back into component velocities
-						double vectorlength = sqrt(fvelx*fvelx + fvely*fvely);
-						float xoutput = cos(outputangle) * vectorlength;
-						float youtput = sin(outputangle) * vectorlength;
-
-						velx.setFloat(xoutput);
-						vely.setFloat(-youtput);
-					}
-
-					if (elas != 100.0f) {
-						velx.setFloat(velx.getFloat() * (elas / 100.0f));
-						vely.setFloat(vely.getFloat() * (elas / 100.0f));
-					}
-				} else				
-					vely.setFloat(0);
-			} else if (sufferphysics() && accg != 0) {
-				falling = true; // TODO: icky
-				vely.setFloat(vely.getFloat() + accg.getFloat());
+		if (lastdistance == INFINITY) { // no collision
+			//printf("No collision, moving to (%f,%f)\n", newpoint.x, newpoint.y);
+			moveTo(newpoint.x, newpoint.y);
+			if (sufferphysics()) vely.setFloat(vely.getFloat() + accg.getFloat());
+			//printf("New velocity (after gravity): %f,%f\n", velx.getFloat(), vely.getFloat());
+			falling = true;
+		} else if (lastdistance < FLT_EPSILON) { // collision at current location
+			assert(wall);
+			//printf("Wall: (%f, %f) to (%f, %f)\n", wall->getStart().x, wall->getStart().y, wall->getEnd().x, wall->getEnd().y);
+			//printf("lastdistance zero, vel (%f,%f)\n", velx.getFloat(), vely.getFloat());
+			//velx.setFloat(0); vely.setFloat(0); // TODO: correct?
+		} else if (fabs(velx.getFloat()) > FLT_EPSILON || fabs(vely.getFloat()) > FLT_EPSILON) {
+			Vector<float> normal;
+			assert(wall);
+			if (wall->getType() == HORIZONTAL) {
+				if (dy < 0)
+					normal.y = 1;
+				else
+					normal.y = -1;
+				normal.x = 0;
+			} else if (wall->getType() == VERTICAL) {
+				if (dx < 0)
+					normal.x = 1;
+				else
+					normal.x = -1;
+				normal.y = 0;
+			} else {
+				normal = Vector<float>(wall->getEnd().y - wall->getStart().y, -(wall->getEnd().x - wall->getStart().x)).scaleToMagnitude(1);
+				if (normal.y * dy + normal.x * dx > (-normal.y) * dy + (-normal.x) * dx) {
+					//printf("flipped normal\n");
+					normal.x = -normal.x;
+					normal.y = -normal.y;
+				}
 			}
-		} else { velx.setFloat(0); vely.setFloat(0); } // TODO: correct?
+			newpoint.x += normal.x * 0.1;
+			newpoint.y += normal.y * 0.1;
+			if (family == 2 && genus == 21 && species == 20) {
+				printf("Normal vector: %f,%f\n", normal.x, normal.y);
+				printf("Collision, moving to (%f,%f)\n", newpoint.x, newpoint.y);
+			}
+			moveTo(newpoint.x, newpoint.y);
+			if (elas == 0) {
+				vely.setFloat(0);
+				velx.setFloat(0);
+			} else {
+				if (wall->getType() == HORIZONTAL) {
+					velx.setFloat(velx.getFloat() * elas / 100.0);
+					vely.setFloat(-vely.getFloat() * elas / 100.0);
+				if (family == 2 && genus == 21 && species == 20) {
+					switch (pointcollided) {
+						case 0:
+							printf("Left: (%f,%f)\n", newpoint.x, newpoint.y + getHeight() / 2);
+							break;
+						case 1:
+							printf("Right: (%f,%f)\n", newpoint.x + getWidth(), newpoint.y + getHeight() / 2);
+							break;
+						case 2:
+							printf("Top: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y);
+							break;
+						case 3:
+							printf("Bottom: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y + getHeight());
+							break;
+						default:;
+							printf("Abnormal collision direction: %d\n", pointcollided);
+					}
+					printf("Wall: (%f, %f) to (%f, %f)\n", wall->getStart().x, wall->getStart().y, wall->getEnd().x, wall->getEnd().y);
+					printf("Collided with horizontal wall, new velocity: %f,%f\n", velx.getFloat(), vely.getFloat());
+				}
+				} else if (wall->getType() == VERTICAL) {
+					velx.setFloat(-velx.getFloat() * elas / 100.0);
+					vely.setFloat(vely.getFloat() * elas / 100.0);
+				if (family == 2 && genus == 21 && species == 20) {
+					switch (pointcollided) {
+						case 0:
+							printf("Left: (%f,%f)\n", newpoint.x, newpoint.y + getHeight() / 2);
+							break;
+						case 1:
+							printf("Right: (%f,%f)\n", newpoint.x + getWidth(), newpoint.y + getHeight() / 2);
+							break;
+						case 2:
+							printf("Top: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y);
+							break;
+						case 3:
+							printf("Bottom: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y + getHeight());
+							break;
+						default:;
+							printf("Abnormal collision direction: %d\n", pointcollided);
+					}
+					printf("Wall: (%f, %f) to (%f, %f)\n", wall->getStart().x, wall->getStart().y, wall->getEnd().x, wall->getEnd().y);
+					printf("Collided with vertical wall, new velocity: %f,%f\n", velx.getFloat(), vely.getFloat());
+				}
+				} else {
+					// I' = I - 2*(N·I)*N
+					// I is the incident vector
+					// N is the normal vector
+					// I' is the reflected vector
+					float incident_x = dx;
+					float incident_y = dy;
+					float two_i_dot_n = 2 * (incident_x * normal.x + incident_y * normal.y);
+					float two_ni_n_x = two_i_dot_n * normal.x;
+					float two_ni_n_y = two_i_dot_n * normal.y;
+					float i_dash_x = incident_x - two_ni_n_x;
+					float i_dash_y = incident_y - two_ni_n_y;
+					i_dash_x *= (elas / 100.0);
+					i_dash_y *= (elas / 100.0);
+					if (fabs(i_dash_y) < 1)
+						i_dash_y = 0;
+					if (fabs(i_dash_x) < 1)
+						i_dash_x = 0;
+			if (family == 2 && genus == 21 && species == 20) {
+					switch (pointcollided) {
+						case 0:
+							printf("Left: (%f,%f)\n", newpoint.x, newpoint.y + getHeight() / 2);
+							break;
+						case 1:
+							printf("Right: (%f,%f)\n", newpoint.x + getWidth(), newpoint.y + getHeight() / 2);
+							break;
+						case 2:
+							printf("Top: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y);
+							break;
+						case 3:
+							printf("Bottom: (%f,%f)\n", newpoint.x + getWidth() / 2, newpoint.y + getHeight());
+							break;
+						default:;
+							printf("Abnormal collision direction: %d\n", pointcollided);
+					}
+					printf("Wall: (%f,%f) to (%f,%f)\n", wall->getStart().x, wall->getStart().y, wall->getEnd().x, wall->getEnd().y);
+					printf("Collided with a wall, velocity was %f,%f now %f,%f\n", velx.getFloat(), vely.getFloat(), i_dash_x, i_dash_y);
+			}
+					velx.setFloat(i_dash_x);
+					vely.setFloat(i_dash_y);
+				}
+			}
+			if (sufferphysics()) {
+				/*vely.setFloat(vely.getFloat() + accg.getFloat());
+				printf("Gravity suffered, new velocity: %f,%f\n", velx.getFloat(), vely.getFloat());*/
+			}
+		}
 	} else {
-		if (vely.hasDecimal() || velx.hasDecimal())
-			moveTo(destx, desty);
+		if (vely.hasDecimal() || velx.hasDecimal()) {
+			moveTo(x + dx, y + dy);
+			//printf("No collisions suffered, moving to (%f,%f)\n", x + dx, y + dy);
+		}
 	}
+	//fflush(stdout);
+	//printf("END\n");
 
 	if (sufferphysics() && (aero != 0)) {
 		// reduce speed according to AERO

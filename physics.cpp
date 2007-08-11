@@ -60,74 +60,41 @@ Line::Line(Point s, Point e) {
 	}
 }
 
+static inline bool isBetween(float x, float a, float b) {
+	return (a <= x && x <= b) || (b <= x && x <= a);
+}
+
 bool Line::intersect(const Line &l, Point &where) const {
-	if (type == HORIZONTAL) {
-		if (l.type == HORIZONTAL)
-			//return l.start.y == start.y;
-			return false;
-		// XXX: set where to something useful
-		if (l.type == VERTICAL) {
-			if (!(l.containsY(start.y) && containsX(l.start.x)))
-				return false;
-			where.x = l.start.x;
-			where.y = start.y;
-			return true;
-		}
-		if (l.type == NORMAL) {
-			/* mx + b = y
-			 * mx = y - b
-			 * x = (y - b) / m
-			 */
-			double x = (start.y - l.y_icept) / l.slope;
-			if (l.containsX(x) && containsX(x)) {
-				where = Point(x, start.y);
-				return true;
-			}
-			else return false;
-		}
-		
-	}
 	if (type == VERTICAL) {
-		if (l.type == VERTICAL)
-			//return l.start.x == start.x;
-			return false;
-		// XXX: set where to something useful
-		if (l.type == HORIZONTAL) {
-			if (!(l.containsX(start.x) && containsY(l.start.y)))
-				return false;
-			where.x = start.x;
-			where.y = l.start.y;
+		if (l.type == VERTICAL) return false; // TODO?
+		float x1 = l.start.x,
+					x2 = l.end.x;
+		float y = l.pointAtX(start.x).y;
+		if (isBetween(start.x, x1, x2) && isBetween(y, start.y, end.y)) {
+			where = Point(start.x, y);
 			return true;
 		}
-		if (!l.containsX(start.x))
-			return false;
-		where = l.pointAtX(start.x);
-		return containsY(where.y);
+		return false;
 	}
-
-	if (l.type != NORMAL)
-		return l.intersect(*this, where);
-	
-	assert(l.type == NORMAL && type == NORMAL);
-	
-	double x, y;
-
-	if (slope == l.slope)
-		return false; // XXX handle parallel overlap sanely
-
-	/* y = m1 * x + b1
-	 * y = m2 * x + b2
-	 *
-	 * m1 * x + b1 = m2 * x + b2
-	 * Solving for x:
-	 * b1 - b2 = (m2 - m1) x
-	 * x = (b1 - b2) / (m2 - m1)
-	 */
-	x = (y_icept - l.y_icept) / (l.slope - slope);
-	y = slope * x + y_icept;
-	
-	if (containsX(x) && l.containsX(x)) {
-		where = Point(x,y);
+	if (l.type == VERTICAL) {
+		if (type == VERTICAL) return false; // TODO?
+		float x1 = start.x,
+					x2 = end.x;
+		float y = pointAtX(l.start.x).y;
+		if (isBetween(l.start.x, x1, x2) && isBetween(y, l.start.y, l.end.y)) {
+			where = Point(l.start.x, y);
+			return true;
+		}
+		return false;
+	}
+	if (slope == l.slope) {
+		return false; // TODO: maybe test if the lines really do intersect? no real meaning to it though
+	}
+	float c = start.y - slope * start.x;
+	float d = l.start.y - l.slope * l.start.x;
+	float x = (d - c) / (slope - l.slope);
+	if (isBetween(x, start.x, end.x) && isBetween(x, l.start.x, l.end.x)) {
+		where = Point(x, slope * x + c);
 		return true;
 	}
 	return false;
