@@ -25,6 +25,7 @@
 #include <sstream>
 #include "caosVM.h"
 #include "Backend.h"
+#include "AudioBackend.h"
 #include <boost/format.hpp>
 #include "Room.h"
 #include <float.h>
@@ -64,7 +65,6 @@ Agent::Agent(unsigned char f, unsigned char g, unsigned short s, unsigned int p)
 	dying = false;
 	unid = -1;
 
-	soundslot = 0;
 	paused = displaycore = false;
 
 	cr_can_push = cr_can_pull = cr_can_stop = cr_can_hit = cr_can_eat = cr_can_pickup = false; // TODO: check this
@@ -164,7 +164,7 @@ shared_ptr<script> Agent::findScript(unsigned short event) {
 
 #include "PointerAgent.h"
 #include "CreatureAgent.h"
-bool Agent::fireScript(unsigned short event, Agent *from) {
+bool Agent::fireScript(unsigned short event, Agent *from, caosVar one, caosVar two) {
 	// Start running the specified script on the VM of this agent, with FROM set to the provided agent.
 
 	if (dying) return false;
@@ -205,7 +205,6 @@ bool Agent::fireScript(unsigned short event, Agent *from) {
 		case 5: // drop
 			if (!from) return false;
 			if (from != carriedby) return false;
-			from->dropCarried(); // TODO: correct?
 			break;
 		case 12: // eat
 			if (c && !cr_can_eat) return false;
@@ -230,22 +229,32 @@ bool Agent::fireScript(unsigned short event, Agent *from) {
 			break;
 	}
 
+	bool ranscript = false;
+
 	shared_ptr<script> s = findScript(event);
-	if (!s) return false;
+	if (s) {
+		bool madevm = false;
+		if (!vm) { madevm = true; vm = world.getVM(this); }
 	
-	bool madevm = false;
-	if (!vm) { madevm = true; vm = world.getVM(this); }
-	
-	if (vm->fireScript(s, (event == 9), from)) {
-		lastScript = event;
-		zotstack();
-		return true;
-	} else if (madevm) {
-		world.freeVM(vm);
-		vm = 0;
+		if (vm->fireScript(s, (event == 9), from)) {
+			lastScript = event;
+			zotstack();
+			vm->setVariables(one, two);
+			vmTick();
+			ranscript = true;
+		} else if (madevm) {
+			world.freeVM(vm);
+			vm = 0;
+		}	
 	}
 
-	return false;
+	switch (event) {
+		case 5:
+			from->dropCarried(); // TODO: correct?
+			break;
+	}
+	
+	return ranscript;
 }
 
 bool Agent::queueScript(unsigned short event, AgentRef from, caosVar p0, caosVar p1) {
@@ -301,36 +310,25 @@ void Agent::handleClick(float clickx, float clicky) {
 	}
 }
 
-void Agent::positionAudio(SoundSlot *slot) {
-	assert(slot);
+void Agent::playAudio(std::string filename, bool controlled, bool loop) {
+	assert(!dying);
 
-	// TODO: No idea if this is at all similar to what c2e does, but it seems to sort of work okay.
-	float xoff = x + (getWidth() / 2) - world.camera.getXCentre(),
-				yoff = y + (getHeight() / 2) - world.camera.getYCentre();
-	double dist = sqrt(xoff*xoff + yoff*yoff) / 128;
-	int panconst = xoff/10;
-	if (panconst > 127) panconst = 127;
-	if (panconst < -127) panconst = -127;
+	sound.reset();
+	world.playAudio(filename, this, controlled, loop);
+}
 
-	// panning proportional to xoff
-	// overall volume proportional to dist
-	slot->adjustPanning((127-panconst)/dist, (127+panconst)/dist);
+bool agentOnCamera(Agent *targ, bool checkall = false); // caosVM_camera.cpp
 
-	/*double angle;
-	// TODO: this is horribly, horribly broken
-	if (xoff == 0) {
-		if (yoff > 0) angle = 180;
-		else angle = 0;
-	} else {
-		angle = (atanf(yoff / xoff) * (180 / M_PI));
-		if (xoff > 0) // 1st & 2nd quadrants
-			angle += 90;
-		else // 3rd & 4th quadrants
-			angle += 270;
-	}
+void Agent::updateAudio(boost::shared_ptr<AudioSource> s) {
+	assert(s);
 
-	dist *= (double)(255 / 1000);
-	if (dist > 255) dist = 255;*/
+	s->setPos(x + getWidth() / 2, y + getHeight() / 2, zorder);
+	s->setMute(
+		world.camera.getMetaRoom() != world.map.metaRoomAt(x, y)
+		&&
+		!agentOnCamera(this)
+		);
+	// TODO: setVelocity?
 }
 
 Point Agent::boundingBoxPoint(unsigned int n) {
@@ -723,8 +721,16 @@ void Agent::tick() {
 	LifeAssert la(this);
 	if (dying) return;
 	
-	// reposition audio if we're playing any
-	if (soundslot) positionAudio(soundslot);
+	if (sound) {
+		// if the sound is no longer playing...
+		if (sound->getState() != SS_PLAY) {
+			// ...release our reference to it
+			sound.reset();
+		} else {
+			// otherwise, reposition audio
+			updateAudio(sound);
+		}
+	}
 
 	// don't tick paused agents
 	if (paused) return;
@@ -852,7 +858,11 @@ void Agent::kill() {
 	zotstack();
 	zotrefs();
 	agents_iter->reset();
-	if (soundslot) soundslot->stop();
+
+	if (sound) {
+		sound->stop();
+		sound.reset();
+	}
 }
 
 void Agent::zotrefs() {

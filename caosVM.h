@@ -789,6 +789,7 @@ public:
 	void c_SEZZ();
 	void c_VOIS();
 	void c_MIDI();
+	void c_PLDS();
 
 	// time
 	void v_PACE();
@@ -1006,6 +1007,7 @@ public:
 	bool fireScript(shared_ptr<script> s, bool nointerrupt, Agent *frm = 0);
 
 	caosVM(const AgentRef &o);
+	~caosVM();
 
 	bool stopped() { return !currentscript; }
 

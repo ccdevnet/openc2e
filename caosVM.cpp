@@ -41,6 +41,10 @@ caosVM::caosVM(const AgentRef &o)
 	trace = false;
 }
 
+caosVM::~caosVM() {
+	resetCore(); // delete blocking, close streams
+}
+
 bool caosVM::isBlocking() {
 	if (!blocking) return false;
 	bool bl = (*blocking)();
@@ -325,6 +329,7 @@ void caosVM::resetCore() {
 
 void caosVM::tick() {
 	stop_loop = false;
+	runops = 0;
 	while (currentscript && !stop_loop && (timeslice > 0 || inst)) {
 		if (isBlocking()) return;
 		runOp();
