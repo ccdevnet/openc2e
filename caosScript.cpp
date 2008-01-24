@@ -451,7 +451,7 @@ boost::shared_ptr<CAOSExpression> caosScript::readExpr(const enum ci_type xtype)
 		// OBVx VARx hacks
 		if (	!strncmp(t->word().c_str(), "obv", 3)
 			||	!strncmp(t->word().c_str(), "var", 3)) {
-			int idx = atoi(t->word().c_str() + 2);
+			int idx = atoi(t->word().c_str() + 3);
 			t->payload = t->word().substr(0, 3) + "x";
 			const cmdinfo *op = readCommand(t, std::string("expr "));
 			t->payload = oldpayload;
