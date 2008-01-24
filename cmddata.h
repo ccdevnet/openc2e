@@ -24,6 +24,7 @@ class caosVM;
 enum ci_type {
 	CI_OTHER = -1,
 	CI_END = 0,
+	CI_COMMAND,
 	CI_NUMERIC,
 	CI_STRING,
 	CI_AGENT,
@@ -38,8 +39,10 @@ enum ci_type {
 struct cmdinfo {
 #ifndef VCPP_BROKENNESS
 	void (caosVM::*handler)();
+	void (caosVM::*savehandler)();
 #else
 	int handler_idx;
+	int savehandler_idx;
 #endif
 	const char *lookup_key;
 	const char *key;
@@ -49,6 +52,7 @@ struct cmdinfo {
 	int argc;
 	int retc;
 	const enum ci_type *argtypes;
+	enum ci_type rettype;
 	int evalcost;
 };
 

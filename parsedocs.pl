@@ -78,10 +78,11 @@ while (<>) {
 	my $fullname = ($cns ? "$cns " : "") . $cname;
 
 	my $impl;
+	my $saveimpl;
 	if ($ctype eq 'command') {
-		$impl .= 'c_';
+		$impl = 'c_';
 	} else {
-		$impl .= 'v_';
+		$impl = 'v_';
 	}
 	if ($cns && $cns ne '') {
 		$_ = $cns . "_";
@@ -93,6 +94,8 @@ while (<>) {
 	$impl .= $_;
 	my $key = $impl;
 	$impl = "caosVM::$impl";
+
+
 
 	my @args;
 	while ($argdata =~ s/.*?(\w+)\s*\(([^)]+)\)\s*//) {
@@ -177,7 +180,16 @@ while (<>) {
 	if ($pragma{implementation}) {
 		$impl = $pragma{implementation};
 	}
-
+	if ($pragma{saveimpl}) {
+		$saveimpl = $pragma{saveimpl};
+	} else {
+		if ($ctype eq 'variable') {
+			$saveimpl = $impl;
+			$saveimpl =~ s/caosVM::v/caosVM::s/;
+		} else {
+			$saveimpl = "caosVM::dummy_cmd";
+		}
+	}
 	$firstline =~ s/^\s*//;
 	my $desc = join("\n", @lines);
 	$desc .= "\n";
@@ -191,6 +203,7 @@ while (<>) {
 		description => @lines ? $desc : undef,
 		filename => $file,
 		implementation => $impl,
+		saveimpl => $saveimpl,
 		status => $status,
 		category => $cat,
 		evalcost => \%evalcost,
