@@ -441,7 +441,7 @@ void caosVM::v_GNAM() {
 }
 
 /**
- ABSV (command) var (decimal variable)
+ ABSV (command) var (variable)
  %status maybe
  
  Modifies the given variable, if negative, so that its value is positive (absolute value).
