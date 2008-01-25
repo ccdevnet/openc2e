@@ -50,7 +50,7 @@ struct cmdinfo {
 	const char *fullname;
 	const char *docs;
 	int argc;
-	int retc;
+	int stackdelta;
 	const enum ci_type *argtypes;
 	enum ci_type rettype;
 	int evalcost;

@@ -90,6 +90,38 @@ inline void caosVM::safeJMP(int dest) {
 	nip = dest;
 }
 
+inline void caosVM::invoke_cmd(script *s, bool is_saver, int opidx) {
+	const cmdinfo *ci = s->dialect->getcmd(opidx);
+	// We subtract two here to account for a) the missing return, and b)
+	// consuming the new value.
+	int stackdelta = ci->stackdelta - (is_saver ? 2 : 0);
+	int stackstart = valueStack.size();
+	assert(result.isNull());
+#ifndef VCPP_BROKENNESS
+	if (is_saver)
+		(this->*(ci->savehandler))();
+	else
+		(this->*(ci->handler))();
+#else
+	if (is_saver)
+		dispatchCAOS(this, ci->savehandler_idx);
+	else
+		dispatchCAOS(this, ci->handler_idx);
+#endif
+	if (!is_saver && !result.isNull()) {
+		valueStack.push_back(result);
+		result.reset();
+	} else {
+		assert(result.isNull());
+	}
+	if (stackdelta < INT_MAX - 1) {
+		if (stackstart + stackdelta != valueStack.size()) {
+			dumpStack(this);
+			throw caosException("Stack imbalance detected");
+		}
+	}
+}
+
 inline void caosVM::runOpCore(script *s, caosOp op) {
 	switch (op.opcode) {
 		case CAOS_NOP: break;
@@ -109,30 +141,12 @@ inline void caosVM::runOpCore(script *s, caosOp op) {
 			}
 		case CAOS_SAVE_CMD:
 			{
-				const cmdinfo *ci = s->dialect->getcmd(op.argument);
-				assert(result.isNull());
-				result.reset();
-#ifndef VCPP_BROKENNESS
-				(this->*(ci->savehandler))();
-#else
-				dispatchCAOS(this, ci->savehandler_idx);
-#endif
-				assert(result.isNull());
+				invoke_cmd(s, true, op.argument);
 				break;
 			}
 		case CAOS_CMD:
 			{
-				const cmdinfo *ci = s->dialect->getcmd(op.argument);
-				assert(result.isNull());
-				result.reset();
-#ifndef VCPP_BROKENNESS
-				(this->*(ci->handler))();
-#else
-				dispatchCAOS(this, ci->handler_idx);
-#endif
-				if (!result.isNull())
-					valueStack.push_back(result);
-				result.reset();
+				invoke_cmd(s, false, op.argument);
 				break;
 			}
 		case CAOS_YIELD:

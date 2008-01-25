@@ -43,7 +43,8 @@ print qq{// DO NOT EDIT\n};
 print qq{// Generated at }, strftime("%c", localtime(time)), qq{\n};
 print qq{\n\n};
 print qq{#include <string>\n};
-print qq{#include <stdio.h>\n};
+print qq{#include <cstdio>\n};
+print qq{#include <climits>\n};
 print qq{#include "cmddata.h"\n};
 print qq{#include "caosVM.h"\n};
 print qq{#include "openc2e.h"\n};
@@ -178,7 +179,7 @@ sub printarr {
 		$buf .= qq{\t\t"$cmd->{name}", // fullname\n};
 		$buf .= qq{\t\t"}. cescape($cmd->{description}). qq{", // docs\n};
 		$buf .= "\t\t". scalar(@{$cmd->{arguments}}). ", // argc\n";
-		$buf .= "\t\t". ($cmd->{type} eq 'command' ? 0 : 1). ", // retc\n";
+		$buf .= "\t\t$cmd->{stackdelta}, // stackdelta\n";
 		$buf .= "\t\t$argp, // argtypes\n";
 		
 		my $rettype = $tdisp{$cmd->{type}};
@@ -233,6 +234,7 @@ sub inject_ns {
 				key => $key,
 				type => $type,
 				syntaxstring => (uc $ns) . " (command/expr) subcommand (subcommand)\n",
+				stackdelta => "INT_MAX",
 			};
 		}
 	}
