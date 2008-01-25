@@ -94,6 +94,7 @@ while (<>) {
 	$impl .= $_;
 	my $key = $impl;
 	$impl = "caosVM::$impl";
+	my $stackdelta = ($ctype eq 'command' ? 0 : 1);
 
 
 
@@ -104,6 +105,7 @@ while (<>) {
 			name => $argname,
 			type => $argtype,
 		};
+		$stackdelta-- unless $argtype =~ /variable/;
 	}
 
 	my @lines;
@@ -176,6 +178,10 @@ while (<>) {
 		$cat = lc $fnmap{$file} || 'unknown';
 	}
 
+	$stackdelta = $pragma{stackdelta} if defined $pragma{stackdelta};
+	$stackdelta = "INT_MAX" if lc $pragma{stackdelta} eq "any";
+	die "Deprecated use of pragma retc for $fullname" if defined $pragma{retc};
+
 
 	if ($pragma{implementation}) {
 		$impl = $pragma{implementation};
@@ -207,6 +213,7 @@ while (<>) {
 		status => $status,
 		category => $cat,
 		evalcost => \%evalcost,
+		stackdelta => $stackdelta,
 	};
 	if (%pragma) {
 		$cd->{pragma} = \%pragma;

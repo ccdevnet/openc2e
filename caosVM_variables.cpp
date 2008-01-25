@@ -38,6 +38,7 @@
 /**
  VAxx (variable)
  %status maybe
+ %pragma stackdelta 0
  %pragma variants c2 cv c3
 
  Script-local variables (exist only in the current script) with xx being from 00 to 99.  Examples: VA01, VA45. 
@@ -52,6 +53,7 @@ CAOS_LVALUE(VAxx,
  VARx (variable)
  %status maybe
  %pragma variants c1 c2
+ %pragma stackdelta 0
  %pragma implementation caosVM::v_VAxx
  %pragma saveimpl caosVM::s_VAxx
 
@@ -60,6 +62,7 @@ CAOS_LVALUE(VAxx,
 
 /**
  MVxx (variable)
+ %pragma stackdelta 0
  %status maybe
 
  Like OVxx, only for OWNR, not TARG.
@@ -145,6 +148,7 @@ void caosVM::c_SETA() {
 /**
  OVxx (variable)
  %status maybe
+ %pragma stackdelta 0
  %pragma variants c2 cv c3
 
  Agent-local variables (exist only in the current agent's VM) from TARG, with xx being from 00 to 99.  Examples: OV01, OV45.
@@ -157,6 +161,7 @@ CAOS_LVALUE_TARG(OVxx,
 /**
  OBVx (variable)
  %status maybe
+ %pragma stackdelta 0
  %pragma variants c1 c2
  %pragma implementation caosVM::v_OVxx
  %pragma saveimpl caosVM::s_OVxx

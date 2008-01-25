@@ -140,8 +140,8 @@ saveVisit::saveVisit(caosScript *s)
 { }
 
 void saveVisit::operator()(const CAOSCmd &cmd) const {
+	scr->errindex = scr->traceindex = cmd.traceidx - 1;
 	if (cmd.op->rettype != CI_VARIABLE) {
-		scr->errindex = cmd.traceidx;
 		throw parseException("RValue used where LValue expected");
 	}
 	scr->emitOp(CAOS_RESTORE_AUX, cmd.arguments.size());
@@ -159,6 +159,7 @@ void evalVisit::operator()(const CAOSCmd &cmd) const {
 		bool save_there = (cmd.op->argtypes[i] == CI_VARIABLE);
 		cmd.arguments[i]->eval(scr, save_there);
 	}
+	scr->traceindex = cmd.traceidx - 1;
 	// If we're to be invoked to save our result later,
 	// stash our args for that time.
 	if (save_here) {
