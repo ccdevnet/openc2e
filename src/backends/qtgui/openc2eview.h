@@ -19,6 +19,7 @@
 
 #include <QAbstractScrollArea>
 #include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
 #include "Backend.h"
 
 class openc2eView : public QAbstractScrollArea {
@@ -46,10 +47,13 @@ protected:
 
 	void scrollContentsBy(int dx, int dy);
 
+	bool viewportEvent(QEvent *event);
+
 	// variables
 	boost::shared_ptr<class QtBackend> backend;
 	int lastmousex, lastmousey;
 	class MetaRoom *lastMetaroom;
+	boost::weak_ptr<class Agent> was_under_mouse;
 
 	// helpers
 	void resizescrollbars();

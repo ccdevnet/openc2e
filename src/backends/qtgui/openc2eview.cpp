@@ -26,6 +26,9 @@
 #include <windows.h>
 #endif
 
+#include "Engine.h"
+#include "Agent.h"
+
 /*
  * TODO:
  *
@@ -104,6 +107,16 @@ void openc2eView::paintEvent(QPaintEvent *) {
 }
 
 void openc2eView::mouseMoveEvent(QMouseEvent *m) {
+	int x = world.camera->getX() + m->x();
+	int y = world.camera->getY() + m->y();
+	Agent *under_mouse = world.agentAt(x, y);
+	if (!under_mouse || was_under_mouse.lock().get() != under_mouse) {
+		// force-hide tooltips immediately
+		QToolTip::showText(QPoint(-10000, -10000), " ");
+		QToolTip::hideText();
+		was_under_mouse.reset();
+	}
+
 	// add mouse move event to backend queue
 	SomeEvent e;
 	e.type = eventmousemove;
@@ -178,5 +191,43 @@ void openc2eView::tick() {
 
 bool openc2eView::needsRender() {
 	return backend->needsRender();
+}
+
+bool openc2eView::viewportEvent(QEvent *event) {
+	if (event->type() == QEvent::ToolTip) {
+		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+		int x = world.camera->getX() + helpEvent->pos().x();
+		int y = world.camera->getY() + helpEvent->pos().y();
+		Agent *under_mouse = world.agentAt(x, y);
+		// TODO: handle transparency somehow?
+		bool valid = under_mouse;
+		if (valid) {
+			valid = under_mouse->category != -1;
+			if (valid) {
+				valid = (unsigned int)under_mouse->category + 16 < engine.wordlist.size();
+			}
+		}
+		if (!valid) {
+			QToolTip::showText(QPoint(-10000, -10000), " ");
+			QToolTip::hideText();
+			was_under_mouse.reset();
+			event->ignore();
+		} else {
+			// TODO: better tooltips
+			std::string desc = engine.wordlist[under_mouse->category + 16];
+
+			if (was_under_mouse.lock().get() != under_mouse) {
+				QToolTip::hideText();
+				QToolTip::showText(helpEvent->globalPos(), desc.c_str());
+				was_under_mouse = under_mouse->shared_from_this();
+			} else {
+				if (!QToolTip::isVisible())
+					QToolTip::showText(helpEvent->globalPos(), desc.c_str());
+			}
+		}
+
+		return true;
+	}
+	return QAbstractScrollArea::viewportEvent(event);
 }
 
