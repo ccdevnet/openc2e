@@ -197,7 +197,7 @@ ENDIF(OPENC2E_USE_OPENAL MATCHES "^(YES|AUTO)$")
 FIND_PACKAGE(ALUT)
 
 FIND_PACKAGE(Boost 1.34.0 COMPONENTS program_options filesystem thread regex serialization REQUIRED)
-FIND_LIBRARY(BOOST_SYSTEM_LIBRARY NAMES boost_system-mt)
+FIND_LIBRARY(BOOST_SYSTEM_LIBRARY NAMES boost_system)
 IF(OPENC2E_USE_QT)
 	find_package(Qt4 REQUIRED)
 ENDIF(OPENC2E_USE_QT)
@@ -267,14 +267,14 @@ TARGET_LINK_LIBRARIES(openc2e z m pthread
 	${OPENAL_LIBRARY}
 	${ALUT_LIBRARY}
 	${FRONTEND_LIBS}
-	boost_program_options-mt
-	boost_serialization-mt
-	boost_filesystem-mt
-	boost_thread-mt
-	boost_regex-mt
+	boost_program_options
+	boost_serialization
+	boost_filesystem
+	boost_thread
+	boost_regex
 	)
 IF(BOOST_SYSTEM_LIBRARY)
-TARGET_LINK_LIBRARIES(openc2e boost_system-mt)
+TARGET_LINK_LIBRARIES(openc2e boost_system)
 ENDIF(BOOST_SYSTEM_LIBRARY)
 
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})

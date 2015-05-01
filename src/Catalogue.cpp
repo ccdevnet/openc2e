@@ -130,7 +130,7 @@ void Catalogue::initFrom(fs::path path) {
 	assert(fs::exists(path));
 	assert(fs::is_directory(path));
 	
-	//std::cout << "Catalogue is reading " << path.native_directory_string() << std::endl;
+	//std::cout << "Catalogue is reading " << path.string() << std::endl;
 
 	fs::directory_iterator end;
 	std::string file;
@@ -148,7 +148,7 @@ void Catalogue::initFrom(fs::path path) {
 			}
 		}
 		catch (const std::exception &ex) {
-			std::cerr << "directory_iterator died on '" << i->path().leaf() << "' with " << ex.what() << std::endl;
+			std::cerr << "directory_iterator died on '" << i->path().filename().string() << "' with " << ex.what() << std::endl;
 		}
 	}	
 }

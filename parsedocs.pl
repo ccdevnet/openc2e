@@ -176,11 +176,21 @@ while (<>) {
 	}
 
 	if (!$cat) {
-		$cat = lc $fnmap{$file} || 'unknown';
+		if ($fnmap{$file}) {
+			$cat = lc $fnmap{$file};
+		} else {
+			$cat = lc 'unknown';
+		}
 	}
-
-	$stackdelta = $pragma{stackdelta} if defined $pragma{stackdelta};
-	$stackdelta = "INT_MAX" if lc $pragma{stackdelta} eq "any";
+	
+	if (defined $pragma{stackdelta}) {
+		$stackdelta = $pragma{stackdelta};
+	}
+	
+	if (defined $pragma{stackdelta} && lc $pragma{stackdelta} eq "any") {
+		$stackdelta = "INT_MAX";
+	}
+	
 	die "Deprecated use of pragma retc for $fullname" if defined $pragma{retc};
 
 
