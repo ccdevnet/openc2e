@@ -65,7 +65,7 @@ void MusicManager::tick() {
 		// TODO: this behaviour is different in C2, and should probably be cleverer
 		MetaRoom *m = world.camera->getMetaRoom();
 		if (m) {
-			shared_ptr<Room> r = m->roomAt(world.camera->getXCentre(), world.camera->getYCentre());
+			boost::shared_ptr<Room> r = m->roomAt(world.camera->getXCentre(), world.camera->getYCentre());
 			if (r && r->music.size()) {
 				playTrack(r->music, 0);
 			} else if (m->music.size()) {
@@ -146,13 +146,13 @@ void MusicManager::playTrack(std::string track, unsigned int latency) {
 		return; // TODO: exception?
 	}
 
-	shared_ptr<MusicTrack> tracknode(new MusicTrack(file, file->tracks[trackname]));
+	boost::shared_ptr<MusicTrack> tracknode(new MusicTrack(file, file->tracks[trackname]));
 	tracknode->init();
 	playTrack(tracknode);
 	current_latency = latency;
 }
 
-void MusicManager::playTrack(shared_ptr<MusicTrack> track) {
+void MusicManager::playTrack(boost::shared_ptr<MusicTrack> track) {
 	playing_silence = false;
 	track->startFadeIn();
 	if (!currenttrack) {
@@ -166,13 +166,13 @@ void MusicManager::playTrack(shared_ptr<MusicTrack> track) {
 }
 
 void MusicManager::startPlayback() {
-	shared_ptr<AudioSource> src = engine.audio->getBGMSource();
+	boost::shared_ptr<AudioSource> src = engine.audio->getBGMSource();
 	if (!src) return;
 
 	if (!stream) {
 		// we assume no-one else ever steals the BGM stream from
 		// under us, but what are we meant to do then anyway?
-		stream = shared_ptr<MusicStream>(new MusicStream);
+		stream = boost::shared_ptr<MusicStream>(new MusicStream);
 		src->setStream(stream);
 		src->play();
 	}
@@ -374,7 +374,7 @@ MusicEffect::MusicEffect(MNGEffectDecNode *n) {
 	node = n;
 
 	for (std::list<MNGStageNode *>::iterator i = node->children->begin(); i != node->children->end(); i++) {
-		shared_ptr<MusicStage> stage(new MusicStage(*i));
+		boost::shared_ptr<MusicStage> stage(new MusicStage(*i));
 		stages.push_back(stage);
 	}
 }
@@ -382,7 +382,7 @@ MusicEffect::MusicEffect(MNGEffectDecNode *n) {
 std::vector<FloatAudioBuffer> MusicEffect::applyEffect(class MusicTrack *t, std::vector<FloatAudioBuffer> src, float beatlength) {
 	std::vector<FloatAudioBuffer> buffers;
 
-	for (std::vector<shared_ptr<MusicStage> >::iterator i = stages.begin(); i != stages.end(); i++) {
+	for (std::vector<boost::shared_ptr<MusicStage> >::iterator i = stages.begin(); i != stages.end(); i++) {
 		std::vector<FloatAudioBuffer> newbuffers = (*i)->applyStage(src, beatlength);
 		for (std::vector<FloatAudioBuffer>::iterator j = newbuffers.begin(); j != newbuffers.end(); j++) {
 			buffers.push_back(*j);
@@ -392,7 +392,7 @@ std::vector<FloatAudioBuffer> MusicEffect::applyEffect(class MusicTrack *t, std:
 	return buffers;
 }
 
-MusicVoice::MusicVoice(shared_ptr<MusicLayer> p, MNGVoiceNode *n) {
+MusicVoice::MusicVoice(boost::shared_ptr<MusicLayer> p, MNGVoiceNode *n) {
 	node = n;
 	parent = p.get();
 
@@ -408,7 +408,7 @@ MusicVoice::MusicVoice(shared_ptr<MusicLayer> p, MNGVoiceNode *n) {
 		MNGWaveNode *e = dynamic_cast<MNGWaveNode *>(n);
 		if (e) {
 			// TODO: share duplicate MusicWaves
-			wave = shared_ptr<MusicWave>(new MusicWave(p->getParent()->getParent(), e));
+			wave = boost::shared_ptr<MusicWave>(new MusicWave(p->getParent()->getParent(), e));
 			continue;
 		}
 
@@ -441,7 +441,7 @@ MusicVoice::MusicVoice(shared_ptr<MusicLayer> p, MNGVoiceNode *n) {
 				throw MNGFileException("couldn't find effect '" + eff->getName() + "'");
 
 			MNGEffectDecNode *n = effects[eff->getName()];
-			effect = shared_ptr<MusicEffect>(new MusicEffect(n));
+			effect = boost::shared_ptr<MusicEffect>(new MusicEffect(n));
 			continue;
 		}
 
@@ -460,7 +460,7 @@ bool MusicVoice::shouldPlay() {
 	return true;
 }
 
-MusicLayer::MusicLayer(shared_ptr<MusicTrack> p) {
+MusicLayer::MusicLayer(boost::shared_ptr<MusicTrack> p) {
 	parent = p.get();
 
 	updaterate = 1.0f;
@@ -535,7 +535,7 @@ void MusicVoice::runUpdateBlock() {
 	}
 }
 
-MusicAleotoricLayer::MusicAleotoricLayer(MNGAleotoricLayerNode *n, shared_ptr<MusicTrack> p) : MusicLayer(p) {
+MusicAleotoricLayer::MusicAleotoricLayer(MNGAleotoricLayerNode *n, boost::shared_ptr<MusicTrack> p) : MusicLayer(p) {
 	node = n;
 }
 
@@ -554,13 +554,13 @@ void MusicAleotoricLayer::init() {
 				throw MNGFileException("couldn't find effect '" + e->getName() + "'");
 
 			MNGEffectDecNode *n = effects[e->getName()];
-			effect = shared_ptr<MusicEffect>(new MusicEffect(n));
+			effect = boost::shared_ptr<MusicEffect>(new MusicEffect(n));
 			continue;
 		}
 
 		MNGVoiceNode *v = dynamic_cast<MNGVoiceNode *>(n);
 		if (v) {
-			shared_ptr<MusicVoice> voice(new MusicVoice(shared_from_this(), v));
+			boost::shared_ptr<MusicVoice> voice(new MusicVoice(shared_from_this(), v));
 			voices.push_back(voice);
 			continue;
 		}
@@ -618,13 +618,13 @@ void MusicAleotoricLayer::update(unsigned int latency) {
 	std::vector<FloatAudioBuffer> buffers;
 
 	float our_volume = volume * parent->getVolume();
-	for (std::vector<shared_ptr<MusicVoice> >::iterator i = voices.begin(); i != voices.end(); i++) {
+	for (std::vector<boost::shared_ptr<MusicVoice> >::iterator i = voices.begin(); i != voices.end(); i++) {
 		if (!(*i)->shouldPlay()) continue;
 
 		if ((*i)->getWave()) {
 			FloatAudioBuffer &data = (*i)->getWave()->getData();
 			FloatAudioBuffer voicebuffer = FloatAudioBuffer(data.data, data.len, offset, our_volume, pan);
-			shared_ptr<MusicEffect> voice_effect = (*i)->getEffect();
+			boost::shared_ptr<MusicEffect> voice_effect = (*i)->getEffect();
 			if (voice_effect) {
 				std::vector<FloatAudioBuffer> newbuffers;
 				newbuffers.push_back(voicebuffer);
@@ -658,7 +658,7 @@ void MusicAleotoricLayer::update(unsigned int latency) {
 	next_offset = offset;
 }
 
-MusicLoopLayer::MusicLoopLayer(MNGLoopLayerNode *n, shared_ptr<MusicTrack> p) : MusicLayer(p) {
+MusicLoopLayer::MusicLoopLayer(MNGLoopLayerNode *n, boost::shared_ptr<MusicTrack> p) : MusicLayer(p) {
 	node = n;
 	update_period = 0;
 }
@@ -670,7 +670,7 @@ void MusicLoopLayer::init() {
 		MNGWaveNode *e = dynamic_cast<MNGWaveNode *>(n);
 		if (e) {
 			// TODO: share duplicate MusicWaves
-			wave = shared_ptr<MusicWave>(new MusicWave(parent->getParent(), e));
+			wave = boost::shared_ptr<MusicWave>(new MusicWave(parent->getParent(), e));
 			continue;
 		}
 
@@ -743,7 +743,7 @@ void MusicTrack::init() {
 		MNGAleotoricLayerNode *al = dynamic_cast<MNGAleotoricLayerNode *>(n);
 		if (al) {
 			MusicAleotoricLayer *ptr = new MusicAleotoricLayer(al, shared_from_this());
-			shared_ptr<MusicLayer> mal(ptr);
+			boost::shared_ptr<MusicLayer> mal(ptr);
 			ptr->init();
 			layers.push_back(mal);
 			continue;
@@ -752,7 +752,7 @@ void MusicTrack::init() {
 		MNGLoopLayerNode *ll = dynamic_cast<MNGLoopLayerNode *>(n);
 		if (ll) {
 			MusicLoopLayer *ptr = new MusicLoopLayer(ll, shared_from_this());
-			shared_ptr<MusicLayer> mll(ptr);
+			boost::shared_ptr<MusicLayer> mll(ptr);
 			ptr->init();
 			layers.push_back(mll);
 			continue;
@@ -790,7 +790,7 @@ MusicTrack::~MusicTrack() {
 }
 
 void MusicTrack::update(unsigned int latency) {
-	for (std::vector<shared_ptr<MusicLayer> >::iterator i = layers.begin(); i != layers.end(); i++) {
+	for (std::vector<boost::shared_ptr<MusicLayer> >::iterator i = layers.begin(); i != layers.end(); i++) {
 		(*i)->update(latency);
 	}
 }
