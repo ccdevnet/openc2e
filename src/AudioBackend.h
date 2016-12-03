@@ -28,34 +28,24 @@
 
 class AudioBuffer;
 
-namespace boost {
-	static inline void intrusive_ptr_add_ref(AudioBuffer *p);
-	static inline void intrusive_ptr_release(AudioBuffer *p);
-}
-
 class AudioBuffer {
-	friend void boost::intrusive_ptr_add_ref(AudioBuffer *p);
-	friend void boost::intrusive_ptr_release(AudioBuffer *p);
-
-protected:
-	virtual void add_ref() = 0;
-	virtual void del_ref() = 0;
-
+	
+	friend void intrusive_ptr_add_ref(AudioBuffer *p) {
+		p->add_ref();
+	}
+	friend void intrusive_ptr_release(AudioBuffer *p) {
+		p->del_ref();
+	}
+	
 public:
 	virtual ~AudioBuffer() { }
 	virtual unsigned int length_ms() const = 0; /* milliseconds */
 	virtual unsigned int length_samples() const = 0;
+	virtual void add_ref() = 0;
+	virtual void del_ref() = 0;
 };
 
 typedef boost::intrusive_ptr<AudioBuffer> AudioClip;
-namespace boost {
-	static inline void intrusive_ptr_add_ref(AudioBuffer *p) {
-		p->add_ref();
-	}
-	static inline void intrusive_ptr_release(AudioBuffer *p) {
-		p->del_ref();
-	}
-}
 
 /* Base class for sources of streaming data (eg, MNG music)
  *

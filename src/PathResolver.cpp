@@ -48,13 +48,13 @@ static string toLowerCase(string in) {
 }
 
 static path lcpath(path &orig) {
-	return path(toLowerCase(orig.string()), native);
+	return path(toLowerCase(orig.string()));
 }
 
 static path lcleaf(path &orig) {
 	path br, leaf;
-	br = orig.branch_path();
-	leaf = path(toLowerCase(orig.leaf()), native);
+	br = orig.parent_path();
+	leaf = path(toLowerCase(orig.filename().string()));
 	return br / leaf;
 }
 
@@ -68,7 +68,7 @@ bool resolveFile(path &p) {
 		if (!resolveFile(s))
 			return false;
 	}
-	p = path(s, native);
+	p = path(s);
 	return true;
 #else
 	return exists(p);
@@ -76,20 +76,21 @@ bool resolveFile(path &p) {
 }
 
 bool resolveFile_(string &srcPath) {
-	path orig(srcPath, native);
+	path orig(srcPath);
+	
 	if (exists(orig))
 		return true;
 	
 	orig.normalize();
-	path dir = orig.branch_path();
-	path leaf = path(orig.leaf(), native);
+	path dir = orig.parent_path();
+	path leaf = orig.filename();
 
 	if (!checkDirCache(dir))
 		return false;
 
 	orig = dir / lcpath(leaf);
 	string fn = orig.string();
-
+	
 	if (exists(orig)) {
 		srcPath = fn;
 		return true;
@@ -180,7 +181,7 @@ std::vector<std::string> findByWildcard(std::string dir, std::string wild) {
 
 	wild = toLowerCase(wild);
 
-	path dirp(dir, native);
+	path dirp(dir);
 	dirp.normalize();
 	if (!resolveFile(dirp))
 		return std::vector<std::string>();

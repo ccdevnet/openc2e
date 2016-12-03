@@ -432,7 +432,7 @@ void SkeletalCreature::snapDownFoot() {
 	}
 
 	bool newroomchosen = (newroom != downfootroom) && downfootroom;
-	bool hadroom = (downfootroom);
+	boost::shared_ptr<Room> hadroom = (downfootroom);
 	downfootroom = newroom;
 	
 	if (!downfootroom /*|| !falling */) {
@@ -476,7 +476,7 @@ void SkeletalCreature::snapDownFoot() {
 
 	if (engine.version > 1) {
 		// TODO: hilar hack: enable gravity if we're snapping by much
-		if (newroomchosen && abs(y - (newy - (footy - y))) > 20) {
+		if (newroomchosen && std::abs(y - (newy - (footy - y))) > 20) {
 			falling = true;
 			return;
 		}
